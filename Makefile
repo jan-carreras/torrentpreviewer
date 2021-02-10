@@ -10,4 +10,4 @@ generate:
 
 PHONY: test
 test: generate
-	go test -cover ./...
+	go test -cover ./... | grep -v "mocks"
