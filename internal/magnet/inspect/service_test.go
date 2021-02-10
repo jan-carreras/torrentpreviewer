@@ -18,7 +18,7 @@ func Test_MagnetService_Inspect_Succeed(t *testing.T) {
 	assert.NoError(t, err)
 
 	repo := new(clientmocks.FileDescriber)
-	repo.On("DescribeFiles", mock.Anything, mag).Return(nil, nil)
+	repo.On("GetMagnetInfo", mock.Anything, mag).Return(magnet.Info{}, nil)
 
 	s := inspect.NewService(repo)
 	err = s.Inspect(context.Background(), inspect.ServiceCMD{Magnet: inputMagnet})
@@ -32,7 +32,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 	assert.NoError(t, err)
 
 	repo := new(clientmocks.FileDescriber)
-	repo.On("DescribeFiles", mock.Anything, mag).Return(nil, errors.New("fake repo error"))
+	repo.On("GetMagnetInfo", mock.Anything, mag).Return(magnet.Info{}, errors.New("fake repo error"))
 
 	s := inspect.NewService(repo)
 	err = s.Inspect(context.Background(), inspect.ServiceCMD{Magnet: inputMagnet})
@@ -48,5 +48,3 @@ func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
 	err := s.Inspect(context.Background(), inspect.ServiceCMD{Magnet: inputMagnet})
 	assert.Error(t, err)
 }
-
-

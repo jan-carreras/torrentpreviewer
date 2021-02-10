@@ -23,7 +23,7 @@ func (s *Service) Inspect(ctx context.Context, cmd ServiceCMD) error {
 		return err
 	}
 
-	if _, err := s.fileDescriberRepository.DescribeFiles(ctx, m); err != nil {
+	if _, err := s.fileDescriberRepository.GetMagnetInfo(ctx, m); err != nil {
 		return err
 	}
 	return nil
