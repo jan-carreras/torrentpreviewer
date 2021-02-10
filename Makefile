@@ -5,7 +5,8 @@
 
 PHONY: generate
 generate:
-	cd internal/magnet && go generate
+	find ./internal -type d -name "*mocks" -delete
+	go generate ./...
 
 PHONY: test
 test: generate
