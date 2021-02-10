@@ -1,3 +1,5 @@
-- [ ] Given a Magnet link, be able to list all the files there are available and store them somewhere
+- [x] Given a Magnet link, be able to list all the files there are available
+- [ ] Store the information from a Magnet link somewhere
+- [ ] Find out a way to test the bittorrent client locally
 - [ ] Given a file on a magnet link, find the mp4 files on them and extract 10 images from each
     - [ ] The images need to be stored on a public accessible storage
