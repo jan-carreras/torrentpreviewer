@@ -1,34 +1,16 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/bencode"
 	"github.com/anacrolix/torrent/metainfo"
+	"io/ioutil"
+	"path"
 	"prevtorrent/internal/magnet"
 )
-
-//go:generate mockery --case=snake --outpkg=httpmocks --output=httpmocks --name=TorrentClient
-type TorrentClient interface {
-	GetInfo(ctx context.Context, magnet string) (*metainfo.Info, error)
-}
-
-type TorrentRepository struct {
-	client TorrentClient
-}
-
-func NewTorrentRepository(client TorrentClient) *TorrentRepository {
-	return &TorrentRepository{client: client}
-}
-
-func (r *TorrentRepository) GetMagnetInfo(ctx context.Context, m magnet.Magnet) (magnet.Info, error) {
-	info, err := r.client.GetInfo(ctx, m.Value())
-	if err != nil {
-		return magnet.Info{}, err
-	}
-
-	return magnet.NewInfo(int(info.PieceLength), info.Name, int(info.Length), nil)
-}
 
 type TorrentIntegration struct {
 	client *torrent.Client
@@ -38,16 +20,50 @@ func NewTorrentIntegration(client *torrent.Client) *TorrentIntegration {
 	return &TorrentIntegration{client: client}
 }
 
-func (i *TorrentIntegration) GetInfo(ctx context.Context, magnet string) (*metainfo.Info, error) {
-	t, err := i.client.AddMagnet(magnet)
+func (r *TorrentIntegration) Resolve(ctx context.Context, m magnet.Magnet) ([]byte, error) {
+	t, err := r.client.AddMagnet(m.Value())
 	if err != nil {
 		return nil, err
 	}
 
+	if err := r.waitForInfo(ctx, t); err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = t.Metainfo().Write(buf)
+	return buf.Bytes(), err
+}
+
+func (r *TorrentIntegration) waitForInfo(ctx context.Context, t *torrent.Torrent) error {
 	select {
 	case <-t.GotInfo():
-		return t.Info(), nil
+		return nil
 	case <-ctx.Done():
-		return nil, errors.New("context cancelled while trying to get info")
+		return errors.New("context cancelled while trying to get info")
 	}
+}
+
+type TorrentRepository struct {
+	torrentDir string
+}
+
+func NewTorrentRepository() *TorrentRepository {
+	return &TorrentRepository{}
+}
+
+func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
+	buf := bytes.NewBuffer(data)
+	d := bencode.NewDecoder(buf)
+
+	metaInfo := new(metainfo.MetaInfo)
+	err := d.Decode(metaInfo)
+	if err != nil {
+		return err
+	}
+
+	info, err := metaInfo.UnmarshalInfo()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path.Join("/tmp/", info.Name+".torrent"), data, 0666)
 }

@@ -8,9 +8,14 @@ import (
 
 var magnetValidationRegexp = regexp.MustCompile("magnet:\\?xt=urn:btih:[a-zA-Z0-9]*")
 
-//go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=FileDescriber
-type FileDescriber interface {
-	GetMagnetInfo(context.Context, Magnet) (Info, error)
+//go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=MagnetResolver
+type MagnetResolver interface {
+	Resolve(context.Context, Magnet) ([]byte, error)
+}
+
+//go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=TorrentRepository
+type TorrentRepository interface {
+	Persist(context.Context, []byte) error
 }
 
 type Magnet struct {
