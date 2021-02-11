@@ -9,7 +9,7 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"io/ioutil"
 	"path"
-	"prevtorrent/internal/magnet"
+	"prevtorrent/internal/preview"
 )
 
 type TorrentIntegration struct {
@@ -20,7 +20,7 @@ func NewTorrentIntegration(client *torrent.Client) *TorrentIntegration {
 	return &TorrentIntegration{client: client}
 }
 
-func (r *TorrentIntegration) Resolve(ctx context.Context, m magnet.Magnet) ([]byte, error) {
+func (r *TorrentIntegration) Resolve(ctx context.Context, m preview.Magnet) ([]byte, error) {
 	t, err := r.client.AddMagnet(m.Value())
 	if err != nil {
 		return nil, err

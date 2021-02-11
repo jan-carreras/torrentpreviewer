@@ -2,17 +2,17 @@ package transform
 
 import (
 	"context"
-	"prevtorrent/internal/magnet"
+	"prevtorrent/internal/preview"
 )
 
 type Service struct {
-	magnetResolver    magnet.MagnetResolver
-	torrentRepository magnet.TorrentRepository
+	magnetResolver    preview.MagnetResolver
+	torrentRepository preview.TorrentRepository
 }
 
 func NewService(
-	magnetResolver magnet.MagnetResolver,
-	torrentRepository magnet.TorrentRepository,
+	magnetResolver preview.MagnetResolver,
+	torrentRepository preview.TorrentRepository,
 ) *Service {
 	return &Service{
 		magnetResolver:    magnetResolver,
@@ -25,7 +25,7 @@ type ServiceCMD struct {
 }
 
 func (s *Service) ToTorrent(ctx context.Context, cmd ServiceCMD) error {
-	m, err := magnet.NewMagnet(cmd.Magnet)
+	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
 		return err
 	}

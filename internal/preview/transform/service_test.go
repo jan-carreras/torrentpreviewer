@@ -5,9 +5,9 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"prevtorrent/internal/magnet"
-	"prevtorrent/internal/magnet/platform/client/clientmocks"
-	"prevtorrent/internal/magnet/transform"
+	"prevtorrent/internal/preview"
+	"prevtorrent/internal/preview/platform/client/clientmocks"
+	"prevtorrent/internal/preview/transform"
 	"testing"
 )
 
@@ -15,7 +15,7 @@ func Test_MagnetService_Inspect_Succeed(t *testing.T) {
 	inputMagnet := "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU"
 	torrentData := []byte("torrent-data")
 
-	mag, err := magnet.NewMagnet(inputMagnet)
+	mag, err := preview.NewMagnet(inputMagnet)
 	assert.NoError(t, err)
 
 	resolverRepo := new(clientmocks.MagnetResolver)
@@ -32,7 +32,7 @@ func Test_MagnetService_Inspect_Succeed(t *testing.T) {
 func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 	inputMagnet := "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU"
 
-	mag, err := magnet.NewMagnet(inputMagnet)
+	mag, err := preview.NewMagnet(inputMagnet)
 	assert.NoError(t, err)
 
 	resolverRepo := new(clientmocks.MagnetResolver)
