@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	MiB = 1 << (10 * 2)
+	mb = 1 << (10 * 2) // MiB, really
 )
 
 type Service struct {
@@ -29,11 +29,14 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 
 	downloadPlan := preview.NewDownloadPlan(info)
 	for _, file := range info.SupportedFiles() {
-		if err := downloadPlan.Download(file, 100*MiB, 0); err != nil {
+		if err := downloadPlan.Download(file, 100*mb, 0); err != nil {
 			return err
 		}
 	}
 	downloads, err := s.magnetClient.DownloadParts(ctx, *downloadPlan)
 	_ = downloads // TODO: Store them in disk, ofc
+
+	// TODO: If we don't need the files in bold.db those can be deleted
+
 	return err
 }
