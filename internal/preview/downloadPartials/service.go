@@ -34,7 +34,6 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 
 	downloadPlan := preview.NewDownloadPlan(info)
 	for _, file := range info.SupportedFiles() {
-		file.IsSupportedExtension()
 		if err := downloadPlan.Download(file, file.DownloadSize(), 0); err != nil {
 			return err
 		}
