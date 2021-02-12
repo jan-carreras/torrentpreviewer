@@ -7,23 +7,25 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"os"
 	"path"
 	"prevtorrent/internal/preview"
 )
 
 type TorrentRepository struct {
-	torrentDir string
-	logger     *logrus.Logger
+	torrentDir   string
+	downloadsDir string
+	logger       *logrus.Logger
 }
 
 func NewTorrentRepository(
-	torrentDir string,
 	logger *logrus.Logger,
+	torrentDir string,
+	downloadsDir string,
 ) *TorrentRepository {
 	return &TorrentRepository{
-		torrentDir: torrentDir,
-		logger:     logger,
+		logger:       logger,
+		torrentDir:   torrentDir,
+		downloadsDir: downloadsDir,
 	}
 }
 
@@ -42,19 +44,11 @@ func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
 		return err
 	}
 
-	if err := r.ensureDirectoryExists(); err != nil {
+	if err := ensureDirectoryExists(r.torrentDir); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path.Join(r.torrentDir, info.Name+".torrent"), data, 0600)
-}
-
-func (r *TorrentRepository) ensureDirectoryExists() error {
-	if _, err := os.Stat(r.torrentDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(r.torrentDir, 0700); err != nil {
-			return err
-		}
-	}
-	return nil
+	dst := path.Join(r.torrentDir, info.Name+".torrent")
+	return ioutil.WriteFile(dst, data, 0600)
 }
 
 func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {
@@ -80,6 +74,13 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 		files,
 		raw,
 	)
+}
+
+func (r *TorrentRepository) PersistFile(ctx context.Context, id string, data []byte) error {
+	if err := ensureDirectoryExists(r.downloadsDir); err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path.Join(r.downloadsDir, id+".jpg"), data, 0600)
 }
 
 func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (metainfo.Info, error) {

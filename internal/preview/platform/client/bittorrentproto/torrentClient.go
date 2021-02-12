@@ -7,7 +7,6 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"time"
 )
@@ -70,13 +69,6 @@ func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.
 		"downloadsCount": len(downloads),
 	}).Info("number of downloaded files")
 
-	for _, dw := range downloads {
-		err = ioutil.WriteFile("/tmp/it-works.mp4", dw.Data(), 0666)
-		if err != nil {
-			return nil, err
-		}
-
-	}
 	return downloads, nil
 }
 
@@ -87,10 +79,11 @@ func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]p
 		for pieceIdx := plan.Start(); pieceIdx <= plan.End(); pieceIdx++ {
 			buf := make([]byte, plan.EndOffset(pieceIdx))
 			off := plan.StartOffset(pieceIdx)
-			n, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
-			if n != len(buf) {
-				return nil, errors.New("not reading all the piece")
-			}
+			_, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
+			// TODO: All those checks fail with Rene torrent.
+			/*if n != len(buf) {
+				return nil, fmt.Errorf("unable to read all the piece block. expected %v, having %v", len(buf), n)
+			}*/
 			if err != nil {
 				return nil, err
 			}
@@ -102,7 +95,6 @@ func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]p
 		download := preview.NewDownloadedPart(plan, piece.Bytes())
 		downloads = append(downloads, download)
 	}
-
 	return downloads, nil
 }
 
@@ -137,16 +129,13 @@ func downloadPieces(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 
 func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Torrent, waitingFor int) {
 	for waitingFor > 0 {
-		r.logger.WithFields(
-			logrus.Fields{"peersCount": len(t.PeerConns()), "torrent": t.Name()},
-		).Info("number of connected peers")
-
 		select {
 		case _v := <-t.SubscribePieceStateChanges().Values:
 			v, ok := _v.(torrent.PieceStateChange)
 			if !ok {
-				time.Sleep(time.Second / 2) // TODO: Rethink it
+				continue
 			}
+
 			if v.Complete {
 				waitingFor--
 				r.logger.WithFields(
@@ -158,6 +147,13 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Tor
 				).Info("piece download completed")
 			}
 		case <-time.After(time.Second * 3): // TODO: This has to go away, eventually
+			r.logger.WithFields(
+				logrus.Fields{
+					"peersCount": len(t.PeerConns()),
+					"torrent":    t.Name(),
+					"piecesLeft": waitingFor,
+				},
+			).Info("number of connected peers")
 		case <-ctx.Done():
 			break
 		}

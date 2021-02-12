@@ -5,20 +5,25 @@ import (
 	"prevtorrent/internal/preview"
 )
 
-const (
-	mb = 1 << (10 * 2) // MiB, really
-)
-
 type Service struct {
 	torrentRepository preview.TorrentRepository
 	magnetClient      preview.MagnetClient
+	imageExtractor    preview.ImageExtractor
+	imageRepository   preview.ImageRepository
 }
 
 func NewService(
 	torrentRepository preview.TorrentRepository,
 	magnetClient preview.MagnetClient,
+	imageExtractor preview.ImageExtractor,
+	imageRepository preview.ImageRepository,
 ) Service {
-	return Service{torrentRepository: torrentRepository, magnetClient: magnetClient}
+	return Service{
+		torrentRepository: torrentRepository,
+		magnetClient:      magnetClient,
+		imageExtractor:    imageExtractor,
+		imageRepository:   imageRepository,
+	}
 }
 
 func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
@@ -29,14 +34,24 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 
 	downloadPlan := preview.NewDownloadPlan(info)
 	for _, file := range info.SupportedFiles() {
-		if err := downloadPlan.Download(file, 10*mb, 0); err != nil {
+		file.IsSupportedExtension()
+		if err := downloadPlan.Download(file, file.DownloadSize(), 0); err != nil {
 			return err
 		}
 	}
 	downloads, err := s.magnetClient.DownloadParts(ctx, *downloadPlan)
-	_ = downloads // TODO: Store them in disk, ofc
+
+	for _, download := range downloads {
+		data, err := s.imageExtractor.ExtractImage(ctx, download.Data(), 0)
+		if err != nil {
+			continue // TODO: We are ignoring the error to try to see if other videos can be recovered
+		}
+		err = s.imageRepository.PersistFile(ctx, download.PieceRange().Name()+".jpg", data)
+		if err != nil {
+			return err
+		}
+	}
 
 	// TODO: If we don't need the files in bold.db those can be deleted
-
 	return err
 }
