@@ -7,6 +7,7 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"os"
 	"path"
 	"prevtorrent/internal/preview"
 )
@@ -16,9 +17,13 @@ type TorrentRepository struct {
 	logger     *logrus.Logger
 }
 
-func NewTorrentRepository(logger *logrus.Logger) *TorrentRepository {
+func NewTorrentRepository(
+	torrentDir string,
+	logger *logrus.Logger,
+) *TorrentRepository {
 	return &TorrentRepository{
-		logger: logger,
+		torrentDir: torrentDir,
+		logger:     logger,
 	}
 }
 
@@ -36,8 +41,20 @@ func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
 	if err != nil {
 		return err
 	}
-	// TODO: Hardcoded directory. Use torrentDir instead
-	return ioutil.WriteFile(path.Join("/tmp/", info.Name+".torrent"), data, 0666)
+
+	if err := r.ensureDirectoryExists(); err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path.Join(r.torrentDir, info.Name+".torrent"), data, 0600)
+}
+
+func (r *TorrentRepository) ensureDirectoryExists() error {
+	if _, err := os.Stat(r.torrentDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(r.torrentDir, 0700); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {

@@ -6,6 +6,7 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/storage"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview"
@@ -15,6 +16,8 @@ import (
 	"prevtorrent/internal/preview/transform"
 	"prevtorrent/kit/command"
 )
+
+const projectName = "prevtorrent"
 
 func Run() error {
 	c, err := newContainer()
@@ -52,17 +55,38 @@ func trans(bus command.Bus) error {
 }
 
 func download(bus command.Bus) error {
-	return bus.Dispatch(context.Background(), downloadPartials.CMD{
-		ID: "/tmp/Star Wars Episode V The Empire Strikes Back (1980) [1080p].torrent",
-	})
+	if len(os.Args) != 3 {
+		return errors.New("second parameter must be the path to a valid torrent")
+	}
+	torr := os.Args[2]
+	return bus.Dispatch(context.Background(), downloadPartials.CMD{ID: torr})
+}
+
+func getConfig() error {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("$HOME/.config/" + projectName)
+	viper.AddConfigPath("$HOME/." + projectName)
+	viper.AddConfigPath(".")
+	viper.SetDefault("TorrentDir", "./tmp/torrents")
+	viper.SetDefault("BoltDBDir", "./")
+
+	if err := viper.ReadInConfig(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func newContainer() (container, error) {
+	if err := getConfig(); err != nil {
+		return container{}, err
+	}
+
 	logger := logrus.New()
 	logger.Formatter = &logrus.JSONFormatter{}
 
 	conf := torrent.NewDefaultClientConfig()
-	conf.DefaultStorage = storage.NewBoltDB("/Users/jan/Documents/projects/langs/go/src/prevtorrent")
+	conf.DefaultStorage = storage.NewBoltDB(viper.GetString("BoltDBDir"))
 
 	torrentClient, err := torrent.NewClient(conf)
 	if err != nil {
@@ -70,7 +94,7 @@ func newContainer() (container, error) {
 	}
 
 	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
-	torrentRepo := file.NewTorrentRepository(logger)
+	torrentRepo := file.NewTorrentRepository(viper.GetString("TorrentDir"), logger)
 
 	return container{
 		torrentIntegration: torrentIntegration,
