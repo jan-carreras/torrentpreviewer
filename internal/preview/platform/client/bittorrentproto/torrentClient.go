@@ -146,14 +146,14 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Tor
 					},
 				).Info("piece download completed")
 			}
-		case <-time.After(time.Second * 3): // TODO: This has to go away, eventually
+		case <-time.After(time.Second * 3):
 			r.logger.WithFields(
 				logrus.Fields{
 					"peersCount": len(t.PeerConns()),
 					"torrent":    t.Name(),
 					"piecesLeft": waitingFor,
 				},
-			).Info("number of connected peers")
+			).Debug("number of connected peers")
 		case <-ctx.Done():
 			break
 		}
