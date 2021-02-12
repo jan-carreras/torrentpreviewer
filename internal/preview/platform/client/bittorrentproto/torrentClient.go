@@ -116,16 +116,16 @@ func (r *TorrentClient) getTorrent(plan preview.DownloadPlan) (*torrent.Torrent,
 }
 
 func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.DownloadPlan) int {
-	waitingFor := 0
+	uniquePartsWaitingFor := make(map[int]interface{})
 	for _, plan := range downloadPlan.GetPlan() {
 		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
 			if t.Piece(pIdx).State().Complete {
 				continue
 			}
-			waitingFor++
+			uniquePartsWaitingFor[pIdx] = struct{}{}
 		}
 	}
-	return waitingFor
+	return len(uniquePartsWaitingFor)
 }
 
 func downloadPieces(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
