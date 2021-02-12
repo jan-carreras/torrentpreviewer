@@ -29,7 +29,7 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 
 	downloadPlan := preview.NewDownloadPlan(info)
 	for _, file := range info.SupportedFiles() {
-		if err := downloadPlan.Download(file, 100*mb, 0); err != nil {
+		if err := downloadPlan.Download(file, 10*mb, 0); err != nil {
 			return err
 		}
 	}

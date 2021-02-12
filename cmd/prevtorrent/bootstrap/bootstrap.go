@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/storage"
+	"github.com/sirupsen/logrus"
 	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview"
@@ -57,6 +58,9 @@ func download(bus command.Bus) error {
 }
 
 func newContainer() (container, error) {
+	logger := logrus.New()
+	logger.Formatter = &logrus.JSONFormatter{}
+
 	conf := torrent.NewDefaultClientConfig()
 	conf.DefaultStorage = storage.NewBoltDB("/Users/jan/Documents/projects/langs/go/src/prevtorrent")
 
@@ -65,12 +69,13 @@ func newContainer() (container, error) {
 		return container{}, err
 	}
 
-	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient)
-	torrentRepo := file.NewTorrentRepository()
+	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
+	torrentRepo := file.NewTorrentRepository(logger)
 
 	return container{
 		torrentIntegration: torrentIntegration,
 		torrentRepo:        torrentRepo,
+		logger:             logger,
 	}, nil
 }
 
@@ -100,4 +105,5 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 type container struct {
 	torrentIntegration preview.MagnetClient
 	torrentRepo        preview.TorrentRepository
+	logger             *logrus.Logger
 }

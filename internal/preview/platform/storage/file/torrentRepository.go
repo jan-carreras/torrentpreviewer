@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/anacrolix/torrent/bencode"
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"path"
 	"prevtorrent/internal/preview"
@@ -12,10 +13,13 @@ import (
 
 type TorrentRepository struct {
 	torrentDir string
+	logger     *logrus.Logger
 }
 
-func NewTorrentRepository() *TorrentRepository {
-	return &TorrentRepository{}
+func NewTorrentRepository(logger *logrus.Logger) *TorrentRepository {
+	return &TorrentRepository{
+		logger: logger,
+	}
 }
 
 func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
@@ -32,6 +36,7 @@ func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
 	if err != nil {
 		return err
 	}
+	// TODO: Hardcoded directory. Use torrentDir instead
 	return ioutil.WriteFile(path.Join("/tmp/", info.Name+".torrent"), data, 0666)
 }
 
@@ -77,17 +82,18 @@ func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (metainfo.Info, err
 func (r *TorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, error) {
 	files := make([]preview.FileInfo, 0)
 	for _, file := range i.UpvertedFiles() {
-		if len(file.Path) == 0 {
-			// TODO logger.Printf("torrent has 0 files. should at least have one")
+		filePath := file.DisplayPath(&i)
+		if len(filePath) == 0 {
+			r.logger.WithFields(logrus.Fields{
+				"torrent":  i.Name,
+				"filePath": filePath,
+			}).Warn("torrent filename is empty. shouldn't be something? ignoring")
 			continue
-		}
-		if len(file.Path) > 1 {
-			// TODO: Add proper logging
 		}
 
 		fi, err := preview.NewFileInfo(
 			int(file.Length),
-			file.Path[0],
+			filePath,
 			file.DisplayPath(&i),
 		)
 		if err != nil {

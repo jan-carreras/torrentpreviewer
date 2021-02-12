@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"time"
@@ -14,10 +15,11 @@ import (
 
 type TorrentClient struct {
 	client *torrent.Client
+	logger *logrus.Logger
 }
 
-func NewTorrentClient(client *torrent.Client) *TorrentClient {
-	return &TorrentClient{client: client}
+func NewTorrentClient(client *torrent.Client, logger *logrus.Logger) *TorrentClient {
+	return &TorrentClient{client: client, logger: logger}
 }
 
 func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) ([]byte, error) {
@@ -43,7 +45,7 @@ func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) err
 	}
 }
 
-// TODO: Maybe pass the torrent ID would be better instead of passwing a DownloadPlan with a raw... IDK
+// TODO: Maybe pass the torrent ID would be better instead of passing a DownloadPlan with a raw... IDK
 func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) ([]preview.DownloadedPart, error) {
 	t, err := r.getTorrent(downloadPlan)
 	if err != nil {
@@ -52,16 +54,23 @@ func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.
 
 	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
 	downloadPieces(t, downloadPlan)
-	waitPiecesToDownload(ctx, t, waitingFor)
+	r.waitPiecesToDownload(ctx, t, waitingFor)
 
-	fmt.Println("We have all the pieces, we can start bundling them together as a response!")
+	r.logger.WithFields(logrus.Fields{
+		"torrent":         t.Name(),
+		"partsWaitingFor": waitingFor,
+	}).Info("we have all the pieces, we can start bundling them together as a response")
 
 	downloads, err := bundleResponses(t, downloadPlan)
 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("downloads=", len(downloads))
+	r.logger.WithFields(logrus.Fields{
+		"torrent":        t.Name(),
+		"downloadsCount": len(downloads),
+	}).Info("number of downloaded files")
+
 	for i, dw := range downloads {
 		fmt.Println(i, len(dw.Data()), dw.PieceRange())
 		err = ioutil.WriteFile("/tmp/it-works.mp4", dw.Data(), 0666)
@@ -128,18 +137,27 @@ func downloadPieces(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 	}
 }
 
-func waitPiecesToDownload(ctx context.Context, t *torrent.Torrent, waitingFor int) {
+func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Torrent, waitingFor int) {
 	for waitingFor > 0 {
-		fmt.Println("number of connected peers:", len(t.PeerConns())) // TODO: To logger
+		r.logger.WithFields(
+			logrus.Fields{"peersCount": len(t.PeerConns()), "torrent": t.Name()},
+		).Info("number of connected peers")
+
 		select {
 		case _v := <-t.SubscribePieceStateChanges().Values:
 			v, ok := _v.(torrent.PieceStateChange)
 			if !ok {
-				break
+				time.Sleep(time.Second / 2) // TODO: Rethink it
 			}
 			if v.Complete {
-				fmt.Println(v.Index, "complete:", v.Complete)
 				waitingFor--
+				r.logger.WithFields(
+					logrus.Fields{"pieceIdx": v.Index,
+						"complete":   v.Complete,
+						"waitingFor": waitingFor,
+						"torrent":    t.Name(),
+					},
+				).Info("piece download completed")
 			}
 		case <-time.After(time.Second * 3): // TODO: This has to go away, eventually
 		case <-ctx.Done():
