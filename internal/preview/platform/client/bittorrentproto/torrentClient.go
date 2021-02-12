@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
@@ -71,8 +70,7 @@ func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.
 		"downloadsCount": len(downloads),
 	}).Info("number of downloaded files")
 
-	for i, dw := range downloads {
-		fmt.Println(i, len(dw.Data()), dw.PieceRange())
+	for _, dw := range downloads {
 		err = ioutil.WriteFile("/tmp/it-works.mp4", dw.Data(), 0666)
 		if err != nil {
 			return nil, err

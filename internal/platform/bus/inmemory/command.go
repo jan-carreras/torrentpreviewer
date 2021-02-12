@@ -2,31 +2,37 @@ package inmemory
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"prevtorrent/kit/command"
 )
 
 type SyncCommandBus struct {
 	handlers map[command.Type]command.Handler
+	logger   *logrus.Logger
 }
 
-func NewSyncCommandBus() *SyncCommandBus {
+func NewSyncCommandBus(logger *logrus.Logger) *SyncCommandBus {
 	return &SyncCommandBus{
 		handlers: make(map[command.Type]command.Handler),
+		logger:   logger,
 	}
 }
 
 func (b *SyncCommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
 	handler, ok := b.handlers[cmd.Type()]
 	if !ok {
-		fmt.Println("oh, right... we don't find anything and we don't even fail :/")
+		b.logger.WithFields(logrus.Fields{
+			"cmdType": cmd.Type(),
+		}).Error("there is no handler registered for this command")
 		return nil
 	}
 
 	err := handler.Handle(ctx, cmd)
 	if err != nil {
-		log.Printf("Error while handling %s - %s\n", cmd.Type(), err)
+		b.logger.WithFields(logrus.Fields{
+			"cmdType": cmd.Type(),
+			"err":     err.Error(),
+		}).Error("error while handling a command")
 	}
 
 	return nil

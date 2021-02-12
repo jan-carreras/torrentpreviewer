@@ -80,7 +80,7 @@ func newContainer() (container, error) {
 }
 
 func makeCommandBus(c container) *inmemory.SyncCommandBus {
-	commandBus := inmemory.NewSyncCommandBus()
+	commandBus := inmemory.NewSyncCommandBus(c.logger)
 
 	commandBus.Register(
 		transform.CommandType,

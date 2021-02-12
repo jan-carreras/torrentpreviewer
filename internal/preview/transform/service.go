@@ -2,7 +2,6 @@ package transform
 
 import (
 	"context"
-	"fmt"
 	"prevtorrent/internal/preview"
 )
 
@@ -32,10 +31,5 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
-	if err := s.torrentRepository.Persist(ctx, torrent); err != nil {
-		return err
-	}
-
-	fmt.Println("hi there")
-	return nil
+	return s.torrentRepository.Persist(ctx, torrent)
 }
