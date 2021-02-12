@@ -17,15 +17,11 @@ type Service struct {
 func NewService(
 	torrentRepository preview.TorrentRepository,
 	magnetClient preview.MagnetClient,
-) *Service {
-	return &Service{torrentRepository: torrentRepository, magnetClient: magnetClient}
+) Service {
+	return Service{torrentRepository: torrentRepository, magnetClient: magnetClient}
 }
 
-type CMD struct {
-	ID string
-}
-
-func (s *Service) DownloadPartials(ctx context.Context, cmd CMD) error {
+func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 	info, err := s.torrentRepository.Get(ctx, cmd.ID)
 	if err != nil {
 		return err

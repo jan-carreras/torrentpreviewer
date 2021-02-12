@@ -2,6 +2,7 @@ package transform
 
 import (
 	"context"
+	"fmt"
 	"prevtorrent/internal/preview"
 )
 
@@ -13,18 +14,14 @@ type Service struct {
 func NewService(
 	magnetResolver preview.MagnetClient,
 	torrentRepository preview.TorrentRepository,
-) *Service {
-	return &Service{
+) Service {
+	return Service{
 		magnetResolver:    magnetResolver,
 		torrentRepository: torrentRepository,
 	}
 }
 
-type ServiceCMD struct {
-	Magnet string
-}
-
-func (s *Service) ToTorrent(ctx context.Context, cmd ServiceCMD) error {
+func (s Service) Handle(ctx context.Context, cmd ServiceCMD) error {
 	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
 		return err
@@ -39,5 +36,6 @@ func (s *Service) ToTorrent(ctx context.Context, cmd ServiceCMD) error {
 		return err
 	}
 
+	fmt.Println("hi there")
 	return nil
 }
