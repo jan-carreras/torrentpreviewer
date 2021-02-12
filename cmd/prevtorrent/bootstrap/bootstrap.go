@@ -1,14 +1,11 @@
 package bootstrap
 
 import (
-	"context"
-	"errors"
 	"github.com/spf13/viper"
-	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
+	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/transform"
-	"prevtorrent/kit/command"
 )
 
 const projectName = "prevtorrent"
@@ -19,44 +16,7 @@ func Run() error {
 		return err
 	}
 	bus := makeCommandBus(c)
-	return processCommand(bus)
-}
-
-// TODO: Move this method to wherever we should put the controllers or commands
-func processCommand(bus command.Bus) error {
-	action := "unknown"
-	if len(os.Args) >= 2 {
-		action = os.Args[1]
-	}
-
-	if action == "download" {
-		return download(bus)
-	} else if action == "transform" {
-		return trans(bus)
-	} else {
-		return errors.New("unknown command")
-	}
-}
-
-// TODO: Move this method to wherever we should put the controllers or commands
-func trans(bus command.Bus) error {
-	if len(os.Args) != 3 {
-		return errors.New("invalid arguments. Second parameter must be a magnet")
-	}
-	magnet := os.Args[2]
-
-	return bus.Dispatch(context.Background(), transform.CMD{
-		Magnet: magnet,
-	})
-}
-
-// TODO: Move this method to wherever we should put the controllers or commands
-func download(bus command.Bus) error {
-	if len(os.Args) != 3 {
-		return errors.New("second parameter must be the path to a valid torrent")
-	}
-	torr := os.Args[2]
-	return bus.Dispatch(context.Background(), downloadPartials.CMD{ID: torr})
+	return cli.Run(bus)
 }
 
 func getConfig() error {
