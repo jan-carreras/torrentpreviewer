@@ -6,12 +6,12 @@ import (
 )
 
 type Service struct {
-	magnetResolver    preview.MagnetResolver
+	magnetResolver    preview.MagnetClient
 	torrentRepository preview.TorrentRepository
 }
 
 func NewService(
-	magnetResolver preview.MagnetResolver,
+	magnetResolver preview.MagnetClient,
 	torrentRepository preview.TorrentRepository,
 ) *Service {
 	return &Service{

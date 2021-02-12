@@ -3,34 +3,57 @@ package preview
 import (
 	"context"
 	"errors"
+	"path/filepath"
 )
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
 	Persist(ctx context.Context, data []byte) error
-	Get(ctx context.Context, name string) (Info, error)
+	Get(ctx context.Context, id string) (Info, error)
 }
 
 type Info struct {
+	name        string
 	pieceLength int
 	pieces      int
-	name        string
 	files       []FileInfo
 	raw         []byte
+}
+
+func (i Info) Raw() []byte {
+	return i.raw
 }
 
 var ErrInfoNameCannotBeEmpty = errors.New("info.name cannot be empty")
 
 func NewInfo(
-	pieceLength int,
 	name string,
+	pieceLength int,
+	pieces int,
 	files []FileInfo,
+	raw []byte,
 ) (Info, error) {
 	if name == "" {
 		return Info{}, ErrInfoNameCannotBeEmpty
 	}
+	return Info{
+		name:        name,
+		pieceLength: pieceLength,
+		pieces:      pieces,
+		files:       files,
+		raw:         raw,
+	}, nil
+}
 
-	return Info{pieceLength: pieceLength, name: name, files: files}, nil
+func (i Info) SupportedFiles() []FileInfo {
+	fi := make([]FileInfo, 0)
+	for _, f := range i.files {
+		_f := f
+		if f.IsSupportedExtension() {
+			fi = append(fi, _f)
+		}
+	}
+	return fi
 }
 
 type FileInfo struct {
@@ -39,6 +62,16 @@ type FileInfo struct {
 	path   string
 }
 
-func NewFileInfo(l int, p string) (FileInfo, error) {
-	return FileInfo{length: l, path: p}, nil
+func (fi FileInfo) IsSupportedExtension() bool {
+	supported := map[string]interface{}{
+		".mp4": struct{}{},
+	}
+
+	ext := filepath.Ext(fi.name)
+	_, found := supported[ext]
+	return found
+}
+
+func NewFileInfo(length int, name string, path string) (FileInfo, error) {
+	return FileInfo{length: length, name: name, path: path}, nil
 }

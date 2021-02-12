@@ -19,7 +19,7 @@ func Test_MagnetService_Inspect_Succeed(t *testing.T) {
 	mag, err := preview.NewMagnet(inputMagnet)
 	assert.NoError(t, err)
 
-	resolverRepo := new(clientmocks.MagnetResolver)
+	resolverRepo := new(clientmocks.MagnetClient)
 	resolverRepo.On("Resolve", mock.Anything, mag).Return(torrentData, nil)
 
 	torrentRepo := new(storagemocks.TorrentRepository)
@@ -36,7 +36,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 	mag, err := preview.NewMagnet(inputMagnet)
 	assert.NoError(t, err)
 
-	resolverRepo := new(clientmocks.MagnetResolver)
+	resolverRepo := new(clientmocks.MagnetClient)
 	resolverRepo.On("Resolve", mock.Anything, mag).Return(nil, errors.New("fake repo error"))
 
 	torrentRepo := new(storagemocks.TorrentRepository)
@@ -49,7 +49,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
 	inputMagnet := "invalid magnet"
 
-	resolverRepo := new(clientmocks.MagnetResolver)
+	resolverRepo := new(clientmocks.MagnetClient)
 	torrentRepo := new(storagemocks.TorrentRepository)
 
 	s := transform.NewService(resolverRepo, torrentRepo)
