@@ -31,8 +31,6 @@ func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
 }
 
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
-	// TODO: Simplify the randomness
-
 	frameExtractionTime := "0:00:03.000"
 
 	id, err := uuid.NewRandom()
@@ -41,7 +39,7 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 	}
 
 	filename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id))
-	defer tryDeleteImage(filename)
+	defer rmImage(filename)
 
 	cmd := exec.Command(command,
 		"-ss", frameExtractionTime,
@@ -77,6 +75,6 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 	return ioutil.ReadFile(filename)
 }
 
-func tryDeleteImage(src string) {
+func rmImage(src string) {
 	_ = os.Remove(src)
 }
