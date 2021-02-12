@@ -2,6 +2,8 @@
 
 
 
+clean:
+	go mod tidy
 
 PHONY: generate
 generate:
