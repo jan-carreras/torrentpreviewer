@@ -45,7 +45,7 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		if err != nil {
 			continue // TODO: We are ignoring the error to try to see if other videos can be recovered
 		}
-		err = s.imageRepository.PersistFile(ctx, download.PieceRange().Name()+".jpg", data)
+		err = s.imageRepository.PersistFile(ctx, download.Name(), data)
 		if err != nil {
 			return err
 		}

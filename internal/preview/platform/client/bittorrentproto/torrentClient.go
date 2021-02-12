@@ -43,7 +43,6 @@ func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) err
 	}
 }
 
-// TODO: Maybe pass the torrent ID would be better instead of passing a DownloadPlan with a raw... IDK
 func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) ([]preview.DownloadedPart, error) {
 	t, err := r.getTorrent(downloadPlan)
 	if err != nil {
@@ -92,7 +91,7 @@ func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]p
 				return nil, err
 			}
 		}
-		download := preview.NewDownloadedPart(plan, piece.Bytes())
+		download := preview.NewDownloadedPart(t.InfoHash().HexString(), plan, piece.Bytes())
 		downloads = append(downloads, download)
 	}
 	return downloads, nil

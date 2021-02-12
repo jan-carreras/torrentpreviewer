@@ -2,6 +2,7 @@ package preview
 
 import (
 	"fmt"
+	"strings"
 )
 
 type DownloadPlan struct {
@@ -70,7 +71,7 @@ type PieceRange struct {
 }
 
 func (p PieceRange) Name() string {
-	return p.fi.name // TODO: meh. Might have slashes or might collision with other names
+	return strings.ReplaceAll(p.fi.name, "/", "--")
 }
 
 func (p PieceRange) Start() int {
@@ -107,12 +108,24 @@ func findStartingByteOfFile(t Info, fi FileInfo) int {
 }
 
 type DownloadedPart struct {
+	torrentID  string
 	pieceRange PieceRange
 	data       []byte
 }
 
-func NewDownloadedPart(pieceRange PieceRange, data []byte) DownloadedPart {
-	return DownloadedPart{pieceRange: pieceRange, data: data}
+func NewDownloadedPart(torrentID string, pieceRange PieceRange, data []byte) DownloadedPart {
+	return DownloadedPart{torrentID: torrentID, pieceRange: pieceRange, data: data}
+}
+
+func (p DownloadedPart) Name() string {
+
+	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
+		p.torrentID,
+		p.pieceRange.fi.idx,
+		p.pieceRange.Start(),
+		p.pieceRange.End(),
+		p.pieceRange.Name(),
+	)
 }
 
 func (p DownloadedPart) PieceRange() PieceRange {

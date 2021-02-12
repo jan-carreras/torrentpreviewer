@@ -99,7 +99,7 @@ func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (metainfo.Info, err
 
 func (r *TorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, error) {
 	files := make([]preview.FileInfo, 0)
-	for _, file := range i.UpvertedFiles() {
+	for idx, file := range i.UpvertedFiles() {
 		filePath := file.DisplayPath(&i)
 		if len(filePath) == 0 {
 			r.logger.WithFields(logrus.Fields{
@@ -110,6 +110,7 @@ func (r *TorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, 
 		}
 
 		fi, err := preview.NewFileInfo(
+			idx,
 			int(file.Length),
 			filePath,
 			file.DisplayPath(&i),

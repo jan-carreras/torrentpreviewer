@@ -63,6 +63,7 @@ func (i Info) SupportedFiles() []FileInfo {
 }
 
 type FileInfo struct {
+	idx    int
 	length int
 	name   string
 	path   string
@@ -86,6 +87,6 @@ func (fi FileInfo) IsSupportedExtension() bool {
 	return found
 }
 
-func NewFileInfo(length int, name string, path string) (FileInfo, error) {
-	return FileInfo{length: length, name: name, path: path}, nil
+func NewFileInfo(idx int, length int, name string, path string) (FileInfo, error) {
+	return FileInfo{idx: idx, length: length, name: name, path: path}, nil
 }
