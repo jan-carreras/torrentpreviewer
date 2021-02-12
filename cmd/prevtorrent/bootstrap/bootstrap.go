@@ -3,16 +3,10 @@ package bootstrap
 import (
 	"context"
 	"errors"
-	"github.com/anacrolix/torrent"
-	"github.com/anacrolix/torrent/storage"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
-	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
-	"prevtorrent/internal/preview/platform/client/bittorrentproto"
-	"prevtorrent/internal/preview/platform/storage/file"
 	"prevtorrent/internal/preview/transform"
 	"prevtorrent/kit/command"
 )
@@ -28,6 +22,7 @@ func Run() error {
 	return processCommand(bus)
 }
 
+// TODO: Move this method to wherever we should put the controllers or commands
 func processCommand(bus command.Bus) error {
 	action := "unknown"
 	if len(os.Args) >= 2 {
@@ -43,6 +38,7 @@ func processCommand(bus command.Bus) error {
 	}
 }
 
+// TODO: Move this method to wherever we should put the controllers or commands
 func trans(bus command.Bus) error {
 	if len(os.Args) != 3 {
 		return errors.New("invalid arguments. Second parameter must be a magnet")
@@ -54,6 +50,7 @@ func trans(bus command.Bus) error {
 	})
 }
 
+// TODO: Move this method to wherever we should put the controllers or commands
 func download(bus command.Bus) error {
 	if len(os.Args) != 3 {
 		return errors.New("second parameter must be the path to a valid torrent")
@@ -70,37 +67,13 @@ func getConfig() error {
 	viper.AddConfigPath(".")
 	viper.SetDefault("TorrentDir", "./tmp/torrents")
 	viper.SetDefault("BoltDBDir", "./")
+	viper.SetDefault("DownloadsDir", "./tmp/downloads")
+	viper.SetDefault("ImageDir", "./tmp/images")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 	return nil
-}
-
-func newContainer() (container, error) {
-	if err := getConfig(); err != nil {
-		return container{}, err
-	}
-
-	logger := logrus.New()
-	logger.Formatter = &logrus.JSONFormatter{}
-
-	conf := torrent.NewDefaultClientConfig()
-	conf.DefaultStorage = storage.NewBoltDB(viper.GetString("BoltDBDir"))
-
-	torrentClient, err := torrent.NewClient(conf)
-	if err != nil {
-		return container{}, err
-	}
-
-	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
-	torrentRepo := file.NewTorrentRepository(viper.GetString("TorrentDir"), logger)
-
-	return container{
-		torrentIntegration: torrentIntegration,
-		torrentRepo:        torrentRepo,
-		logger:             logger,
-	}, nil
 }
 
 func makeCommandBus(c container) *inmemory.SyncCommandBus {
@@ -119,15 +92,14 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 	commandBus.Register(
 		downloadPartials.CommandType,
 		downloadPartials.NewCommandHandler(
-			downloadPartials.NewService(c.torrentRepo, c.torrentIntegration),
+			downloadPartials.NewService(
+				c.torrentRepo,
+				c.torrentIntegration,
+				c.imageExtractor,
+				c.imageRepository,
+			),
 		),
 	)
 
 	return commandBus
-}
-
-type container struct {
-	torrentIntegration preview.MagnetClient
-	torrentRepo        preview.TorrentRepository
-	logger             *logrus.Logger
 }

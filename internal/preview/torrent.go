@@ -6,10 +6,16 @@ import (
 	"path/filepath"
 )
 
+const (
+	mb           = 1 << (10 * 2) // MiB, really
+	downloadSize = 8 * mb
+)
+
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
 	Persist(ctx context.Context, data []byte) error
 	Get(ctx context.Context, id string) (Info, error)
+	PersistFile(ctx context.Context, id string, data []byte) error
 }
 
 type Info struct {
@@ -60,6 +66,14 @@ type FileInfo struct {
 	length int
 	name   string
 	path   string
+}
+
+func (fi FileInfo) DownloadSize() int {
+	size := downloadSize
+	if size > fi.length {
+		return fi.length
+	}
+	return downloadSize
 }
 
 func (fi FileInfo) IsSupportedExtension() bool {

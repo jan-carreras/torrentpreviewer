@@ -69,6 +69,10 @@ type PieceRange struct {
 	pieceLength      int
 }
 
+func (p PieceRange) Name() string {
+	return p.fi.name // TODO: meh. Might have slashes or might collision with other names
+}
+
 func (p PieceRange) Start() int {
 	return p.start
 }
