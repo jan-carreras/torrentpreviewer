@@ -21,7 +21,7 @@ func NewService(
 	}
 }
 
-func (s Service) Handle(ctx context.Context, cmd ServiceCMD) error {
+func (s Service) Handle(ctx context.Context, cmd CMD) error {
 	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
 		return err

@@ -26,7 +26,7 @@ func Test_MagnetService_Inspect_Succeed(t *testing.T) {
 	torrentRepo.On("Persist", mock.Anything, torrentData).Return(nil)
 
 	s := transform.NewService(resolverRepo, torrentRepo)
-	err = s.Handle(context.Background(), transform.ServiceCMD{Magnet: inputMagnet})
+	err = s.Handle(context.Background(), transform.CMD{Magnet: inputMagnet})
 	assert.NoError(t, err)
 }
 
@@ -42,7 +42,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 	torrentRepo := new(storagemocks.TorrentRepository)
 
 	s := transform.NewService(resolverRepo, torrentRepo)
-	err = s.Handle(context.Background(), transform.ServiceCMD{Magnet: inputMagnet})
+	err = s.Handle(context.Background(), transform.CMD{Magnet: inputMagnet})
 	assert.Error(t, err)
 }
 
@@ -53,6 +53,6 @@ func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
 	torrentRepo := new(storagemocks.TorrentRepository)
 
 	s := transform.NewService(resolverRepo, torrentRepo)
-	err := s.Handle(context.Background(), transform.ServiceCMD{Magnet: inputMagnet})
+	err := s.Handle(context.Background(), transform.CMD{Magnet: inputMagnet})
 	assert.Error(t, err)
 }

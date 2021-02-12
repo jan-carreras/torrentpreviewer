@@ -45,7 +45,7 @@ func trans(bus command.Bus) error {
 	}
 	magnet := os.Args[2]
 
-	return bus.Dispatch(context.Background(), transform.ServiceCMD{
+	return bus.Dispatch(context.Background(), transform.CMD{
 		Magnet: magnet,
 	})
 }
@@ -78,7 +78,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 	commandBus := inmemory.NewSyncCommandBus()
 
 	commandBus.Register(
-		transform.TransformCommandType,
+		transform.CommandType,
 		transform.NewTransformCommandHandler(
 			transform.NewService(
 				c.torrentIntegration,

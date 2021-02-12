@@ -6,30 +6,26 @@ import (
 	"prevtorrent/kit/command"
 )
 
-const TransformCommandType command.Type = "command.transform.preview"
+const CommandType command.Type = "command.transform.preview"
 
-type ServiceCMD struct {
+type CMD struct {
 	Magnet string
 }
 
-func (c ServiceCMD) Type() command.Type {
-	// TODO: Do we really have to do that? It cannot be abstracted away?
-	// TODO: Maybe "extending" and overwritting from an object that already has this method, maybe? Please!
-	return TransformCommandType
+func (c CMD) Type() command.Type {
+	return CommandType
 }
 
-type TransformCommandHandler struct {
+type CommandHandler struct {
 	service Service
 }
 
-func NewTransformCommandHandler(service Service) TransformCommandHandler {
-	return TransformCommandHandler{service: service}
+func NewTransformCommandHandler(service Service) CommandHandler {
+	return CommandHandler{service: service}
 }
 
-func (c TransformCommandHandler) Handle(ctx context.Context, _cmd command.Command) error {
-	// TODO: This is shite. Cannot be abstracted away, pretty please?
-	// TODO:   do we **really** have to do it in every fucking ApplicationService?
-	cmd, ok := _cmd.(ServiceCMD)
+func (c CommandHandler) Handle(ctx context.Context, _cmd command.Command) error {
+	cmd, ok := _cmd.(CMD)
 	if !ok {
 		return errors.New("unexpected command")
 	}
