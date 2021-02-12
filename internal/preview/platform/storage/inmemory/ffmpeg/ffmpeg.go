@@ -3,11 +3,14 @@ package ffmpeg
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 )
 
 const (
@@ -30,22 +33,22 @@ func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
 	// TODO: Simplify the randomness
 
-	frameExtractionTime := "0:00:05.000"
+	frameExtractionTime := "0:00:03.000"
 
-	f, err := ioutil.TempFile("/tmp", "image.*.jpg")
+	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
-	f.Close()
-	tryDeleteImage(f.Name())       // ffmpeg needs the file to not exist
-	defer tryDeleteImage(f.Name()) // ffmpeg will create the image again. We need it gone
+
+	filename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id))
+	defer tryDeleteImage(filename)
 
 	cmd := exec.Command(command,
 		"-ss", frameExtractionTime,
 		"-i", readStdin,
 		"-vframes", vframes,
 		"-q:v", qv,
-		f.Name(),
+		filename,
 	)
 
 	cmd.Stdin = bytes.NewBuffer(data)
@@ -71,7 +74,7 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 
 		return nil, errors.Wrap(err, "error while waiting for ffmpeg command to finish")
 	}
-	return ioutil.ReadFile(f.Name())
+	return ioutil.ReadFile(filename)
 }
 
 func tryDeleteImage(src string) {
