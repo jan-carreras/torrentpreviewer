@@ -31,7 +31,7 @@ func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
 }
 
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
-	frameExtractionTime := "0:00:03.000"
+	frameExtractionTime := "0:00:05.000"
 
 	id, err := uuid.NewRandom()
 	if err != nil {
