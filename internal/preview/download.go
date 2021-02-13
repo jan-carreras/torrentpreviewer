@@ -46,21 +46,16 @@ func (dp *DownloadPlan) Download(fi FileInfo, length, offset int) error {
 	if !fi.IsSupportedExtension() {
 		return fmt.Errorf("file %s has not a supported extension", fi.name)
 	}
-
 	start := findStartingByteOfFile(dp.torrent, fi)
 
-	dp.pieceRanges = append(dp.pieceRanges, PieceRange{
-		fi:               fi,
-		start:            (start + offset) / dp.torrent.pieceLength,
-		end:              (start + offset + length) / dp.torrent.pieceLength,
-		firstPieceOffset: (start + offset) % dp.torrent.pieceLength,
-		lastPieceOffset:  (start + offset + length) % dp.torrent.pieceLength,
-		pieceLength:      dp.torrent.pieceLength,
-	})
+	dp.addToDownloadPlan(NewPieceRange(dp.torrent, fi, start, offset, length))
 	return nil
 }
 
-// TODO: Refactor this object pretty please
+func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
+	dp.pieceRanges = append(dp.pieceRanges, piece)
+}
+
 type PieceRange struct {
 	fi               FileInfo
 	start            int // piece start
@@ -68,6 +63,17 @@ type PieceRange struct {
 	firstPieceOffset int
 	lastPieceOffset  int
 	pieceLength      int
+}
+
+func NewPieceRange(t Info, fi FileInfo, start, offset, length int) PieceRange {
+	return PieceRange{
+		fi:               fi,
+		start:            (start + offset) / t.pieceLength,
+		end:              (start + offset + length) / t.pieceLength,
+		firstPieceOffset: (start + offset) % t.pieceLength,
+		lastPieceOffset:  (start + offset + length) % t.pieceLength,
+		pieceLength:      t.pieceLength,
+	}
 }
 
 func (p PieceRange) Name() string {
@@ -118,7 +124,6 @@ func NewDownloadedPart(torrentID string, pieceRange PieceRange, data []byte) Dow
 }
 
 func (p DownloadedPart) Name() string {
-
 	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
 		p.torrentID,
 		p.pieceRange.fi.idx,
