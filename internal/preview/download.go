@@ -58,11 +58,11 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 
 type PieceRange struct {
 	fi               FileInfo
-	start            int // piece start
-	end              int // piece end
-	firstPieceOffset int
-	lastPieceOffset  int
-	pieceLength      int
+	start            int // piece start. The file we want to download starts in this Piece
+	end              int // piece end. The file we want to download ends in this Piece
+	firstPieceOffset int // The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
+	lastPieceOffset  int // The file not necessarily ends at the end of the last Piece. This offset indicates when it ends inside the piece
+	pieceLength      int // The length of each piece of this torrent
 }
 
 func NewPieceRange(t Info, fi FileInfo, start, offset, length int) PieceRange {
