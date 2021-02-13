@@ -97,9 +97,9 @@ func (p PieceRange) StartOffset(idx int) int {
 
 func (p PieceRange) EndOffset(idx int) int {
 	if idx == p.end {
-		return p.lastPieceOffset
+		return p.lastPieceOffset - p.StartOffset(idx)
 	}
-	return p.pieceLength
+	return p.pieceLength - p.StartOffset(idx)
 }
 
 func findStartingByteOfFile(t Info, fi FileInfo) int {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
@@ -78,11 +79,10 @@ func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]p
 		for pieceIdx := plan.Start(); pieceIdx <= plan.End(); pieceIdx++ {
 			buf := make([]byte, plan.EndOffset(pieceIdx))
 			off := plan.StartOffset(pieceIdx)
-			_, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
-			// TODO: All those checks fail with Rene torrent.
-			/*if n != len(buf) {
+			n, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
+			if n != len(buf) {
 				return nil, fmt.Errorf("unable to read all the piece block. expected %v, having %v", len(buf), n)
-			}*/
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -122,7 +122,7 @@ func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.Downlo
 func downloadPieces(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 	// Idempotent. All the pieces already downloaded are ignored.
 	for _, plan := range downloadPlan.GetPlan() {
-		t.DownloadPieces(plan.Start(), plan.End()+1)
+		t.DownloadPieces(plan.Start(), plan.End()+1) //  (start, end]
 	}
 }
 
