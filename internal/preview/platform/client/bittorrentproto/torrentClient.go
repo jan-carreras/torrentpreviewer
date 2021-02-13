@@ -102,7 +102,7 @@ func startTorrentDownload(t *torrent.Torrent, downloadPlan preview.DownloadPlan)
 
 func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, outputCh chan preview.Piece, t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 	// TODO: If we don't have any peer for a while we might disconnect as well
-	
+
 	defer close(outputCh)
 	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
 	for waitingFor > 0 {
