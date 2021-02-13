@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strings"
 )
 
-var magnetValidationRegexp = regexp.MustCompile("magnet:\\?xt=urn:btih:[a-zA-Z0-9]*")
+var magnetValidationRegexp = regexp.MustCompile("magnet:\\?xt=urn:btih:([a-zA-Z0-9]*)")
 
 //go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=MagnetClient
 type MagnetClient interface {
@@ -15,6 +16,7 @@ type MagnetClient interface {
 }
 
 type Magnet struct {
+	id    string
 	value string
 }
 
@@ -24,9 +26,14 @@ func NewMagnet(value string) (Magnet, error) {
 	if !magnetValidationRegexp.Match([]byte(value)) {
 		return Magnet{}, ErrInvalidMagnetFormat
 	}
-	return Magnet{value: value}, nil
+	id := strings.ToLower(magnetValidationRegexp.FindStringSubmatch(value)[1])
+	return Magnet{id: id, value: value}, nil
 }
 
 func (m Magnet) Value() string {
 	return m.value
+}
+
+func (m Magnet) ID() string {
+	return m.id
 }

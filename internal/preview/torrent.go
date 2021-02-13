@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -41,7 +42,7 @@ func NewInfo(
 		return Info{}, ErrInfoNameCannotBeEmpty
 	}
 	return Info{
-		id:          id,
+		id:          strings.ToLower(id),
 		name:        name,
 		pieceLength: pieceLength,
 		pieces:      pieces,
