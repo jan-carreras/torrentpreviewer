@@ -26,6 +26,7 @@ func newContainer() (container, error) {
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{}
+	logger.Level = logrus.DebugLevel
 
 	conf := torrent.NewDefaultClientConfig()
 	conf.DefaultStorage = storage.NewBoltDB(viper.GetString("BoltDBDir"))
