@@ -45,6 +45,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 		transform.CommandType,
 		transform.NewTransformCommandHandler(
 			transform.NewService(
+				c.logger,
 				c.torrentIntegration,
 				c.torrentRepo,
 			),

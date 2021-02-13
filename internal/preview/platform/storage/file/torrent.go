@@ -3,6 +3,7 @@ package file
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/anacrolix/torrent/bencode"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
@@ -11,7 +12,7 @@ import (
 	"prevtorrent/internal/preview"
 )
 
-type TorrentRepository struct {
+type FileTorrentRepository struct {
 	torrentDir   string
 	downloadsDir string
 	logger       *logrus.Logger
@@ -21,15 +22,15 @@ func NewTorrentRepository(
 	logger *logrus.Logger,
 	torrentDir string,
 	downloadsDir string,
-) *TorrentRepository {
-	return &TorrentRepository{
+) *FileTorrentRepository {
+	return &FileTorrentRepository{
 		logger:       logger,
 		torrentDir:   torrentDir,
 		downloadsDir: downloadsDir,
 	}
 }
 
-func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
+func (r *FileTorrentRepository) Persist(ctx context.Context, data []byte) error {
 	buf := bytes.NewBuffer(data)
 	d := bencode.NewDecoder(buf)
 
@@ -51,10 +52,10 @@ func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
 	return ioutil.WriteFile(dst, data, 0600)
 }
 
-func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {
+func (r *FileTorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {
 	raw, err := ioutil.ReadFile(id)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Info{}, fmt.Errorf("%w. %v", preview.ErrNotFound, err)
 	}
 
 	torrentID, i, err := r.parseMetaInfoFromRaw(raw)
@@ -77,14 +78,7 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 	)
 }
 
-func (r *TorrentRepository) PersistFile(ctx context.Context, id string, data []byte) error {
-	if err := ensureDirectoryExists(r.downloadsDir); err != nil {
-		return err
-	}
-	return ioutil.WriteFile(path.Join(r.downloadsDir, id+".jpg"), data, 0600)
-}
-
-func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (string, metainfo.Info, error) {
+func (r *FileTorrentRepository) parseMetaInfoFromRaw(raw []byte) (string, metainfo.Info, error) {
 	metaInfo := new(metainfo.MetaInfo)
 	err := bencode.Unmarshal(raw, metaInfo)
 	if err != nil {
@@ -99,7 +93,7 @@ func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (string, metainfo.I
 	return id, i, nil
 }
 
-func (r *TorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, error) {
+func (r *FileTorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, error) {
 	files := make([]preview.FileInfo, 0)
 	for idx, file := range i.UpvertedFiles() {
 		filePath := file.DisplayPath(&i)

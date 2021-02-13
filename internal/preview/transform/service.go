@@ -2,19 +2,25 @@ package transform
 
 import (
 	"context"
+	"errors"
+	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
+	"time"
 )
 
 type Service struct {
+	log               *logrus.Logger
 	magnetResolver    preview.MagnetClient
 	torrentRepository preview.TorrentRepository
 }
 
 func NewService(
+	log *logrus.Logger,
 	magnetResolver preview.MagnetClient,
 	torrentRepository preview.TorrentRepository,
 ) Service {
 	return Service{
+		log:               log,
 		magnetResolver:    magnetResolver,
 		torrentRepository: torrentRepository,
 	}
@@ -26,10 +32,36 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
-	torrent, err := s.magnetResolver.Resolve(ctx, m)
+	_, err = s.torrentRepository.Get(ctx, m.ID())
+	if err == nil {
+		s.log.WithFields(logrus.Fields{
+			"magnet":   m.Value(),
+			"magnetID": m.ID(),
+		}).Debug("already imported in DB. skipping.")
+		return nil
+	}
+
+	if !errors.Is(err, preview.ErrNotFound) {
+		s.log.WithFields(logrus.Fields{
+			"magnet":   m.Value(),
+			"magnetID": m.ID(),
+			"error":    err,
+		}).Debug("error when reading torrent")
+		return err
+	}
+
+	s.log.WithFields(logrus.Fields{
+		"magnet":   m.Value(),
+		"magnetID": m.ID(),
+	}).Debug("not found in db. about to resolve the magnet using network")
+
+	ctxTm, _ := context.WithTimeout(ctx, time.Second*30)
+
+	torrent, err := s.magnetResolver.Resolve(ctxTm, m)
 	if err != nil {
 		return err
 	}
 
 	return s.torrentRepository.Persist(ctx, torrent)
+
 }

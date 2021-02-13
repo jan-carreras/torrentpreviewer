@@ -16,8 +16,9 @@ const (
 type TorrentRepository interface {
 	Persist(ctx context.Context, data []byte) error
 	Get(ctx context.Context, id string) (Info, error)
-	PersistFile(ctx context.Context, id string, data []byte) error
 }
+
+var ErrNotFound = errors.New("record not found in storage")
 
 type Info struct {
 	id          string
