@@ -44,57 +44,20 @@ func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) err
 	}
 }
 
-func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) ([]preview.DownloadedPart, error) {
+func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) (chan preview.Piece, error) {
 	t, err := r.getTorrent(downloadPlan)
 	if err != nil {
 		return nil, err
 	}
 
-	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
-	downloadPieces(t, downloadPlan)
-	r.waitPiecesToDownload(ctx, t, waitingFor)
+	output := make(chan preview.Piece, downloadPlan.CountPieces())
 
-	r.logger.WithFields(logrus.Fields{
-		"torrent":         t.Name(),
-		"partsWaitingFor": waitingFor,
-	}).Info("we have all the pieces, we can start bundling them together as a response")
+	startTorrentDownload(t, downloadPlan)
 
-	downloads, err := bundleResponses(t, downloadPlan)
+	r.publishPartsThatWeAlreadyHave(t, output, downloadPlan)
+	go r.waitPiecesToDownload(ctx, output, t, downloadPlan)
 
-	if err != nil {
-		return nil, err
-	}
-	r.logger.WithFields(logrus.Fields{
-		"torrent":        t.Name(),
-		"downloadsCount": len(downloads),
-	}).Info("number of downloaded files")
-
-	return downloads, nil
-}
-
-func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]preview.DownloadedPart, error) {
-	downloads := make([]preview.DownloadedPart, 0)
-	for _, plan := range downloadPlan.GetPlan() {
-		piece := new(bytes.Buffer)
-		for pieceIdx := plan.Start(); pieceIdx <= plan.End(); pieceIdx++ {
-			buf := make([]byte, plan.EndOffset(pieceIdx))
-			off := plan.StartOffset(pieceIdx)
-			n, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
-			if n != len(buf) {
-				return nil, fmt.Errorf("unable to read all the piece block. expected %v, having %v", len(buf), n)
-			}
-			if err != nil {
-				return nil, err
-			}
-			_, err = piece.Write(buf)
-			if err != nil {
-				return nil, err
-			}
-		}
-		download := preview.NewDownloadedPart(t.InfoHash().HexString(), plan, piece.Bytes())
-		downloads = append(downloads, download)
-	}
-	return downloads, nil
+	return output, nil
 }
 
 func (r *TorrentClient) getTorrent(plan preview.DownloadPlan) (*torrent.Torrent, error) {
@@ -119,14 +82,29 @@ func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.Downlo
 	return len(uniquePartsWaitingFor)
 }
 
-func downloadPieces(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
+func (r *TorrentClient) publishPartsThatWeAlreadyHave(t *torrent.Torrent, outputCh chan preview.Piece, downloadPlan preview.DownloadPlan) {
+	for _, plan := range downloadPlan.GetPlan() {
+		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
+			if t.Piece(pIdx).State().Complete {
+				buf := r.readPiece(t, pIdx)
+				outputCh <- preview.NewPiece(t.InfoHash().HexString(), pIdx, buf)
+			}
+		}
+	}
+}
+
+func startTorrentDownload(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 	// Idempotent. All the pieces already downloaded are ignored.
 	for _, plan := range downloadPlan.GetPlan() {
 		t.DownloadPieces(plan.Start(), plan.End()+1) //  (start, end]
 	}
 }
 
-func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Torrent, waitingFor int) {
+func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, outputCh chan preview.Piece, t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
+	// TODO: If we don't have any peer for a while we might disconnect as well
+	
+	defer close(outputCh)
+	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
 	for waitingFor > 0 {
 		select {
 		case _v := <-t.SubscribePieceStateChanges().Values:
@@ -137,6 +115,12 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Tor
 
 			if v.Complete {
 				waitingFor--
+				buf := r.readPiece(t, v.Index)
+				if buf == nil {
+					continue
+				}
+				outputCh <- preview.NewPiece(t.InfoHash().HexString(), v.Index, buf)
+
 				r.logger.WithFields(
 					logrus.Fields{"pieceIdx": v.Index,
 						"complete":   v.Complete,
@@ -157,4 +141,57 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, t *torrent.Tor
 			break
 		}
 	}
+}
+
+func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
+	buf := make([]byte, t.Info().PieceLength)
+	n, err := t.Piece(idx).Storage().ReadAt(buf, 0)
+	if err != nil {
+		r.logger.WithFields(
+			logrus.Fields{"pieceIdx": idx,
+				"complete": t.Piece(idx).Storage().Completion().Complete,
+				"torrent":  t.Name(),
+				"error":    err,
+			},
+		).Error("unknown error when reading the piece from storage")
+		return nil
+	}
+
+	if n != len(buf) {
+		r.logger.WithFields(
+			logrus.Fields{"pieceIdx": idx,
+				"complete":        t.Piece(idx).Storage().Completion().Complete,
+				"torrent":         t.Name(),
+				"expectingToRead": len(buf),
+				"havingRead":      n,
+			},
+		).Error("unable to read piece from storage. bytes mismatch")
+		return nil
+	}
+	return buf
+}
+
+func bundleResponses(t *torrent.Torrent, downloadPlan preview.DownloadPlan) ([]preview.MediaPart, error) {
+	downloads := make([]preview.MediaPart, 0)
+	for _, plan := range downloadPlan.GetPlan() {
+		piece := new(bytes.Buffer)
+		for pieceIdx := plan.Start(); pieceIdx <= plan.End(); pieceIdx++ {
+			buf := make([]byte, plan.EndOffset(pieceIdx))
+			off := plan.StartOffset(pieceIdx)
+			n, err := t.Piece(pieceIdx).Storage().ReadAt(buf, int64(off))
+			if n != len(buf) {
+				return nil, fmt.Errorf("unable to read all the piece block. expected %v, having %v", len(buf), n)
+			}
+			if err != nil {
+				return nil, err
+			}
+			_, err = piece.Write(buf)
+			if err != nil {
+				return nil, err
+			}
+		}
+		download := preview.NewMediaPart(t.InfoHash().HexString(), plan, piece.Bytes())
+		downloads = append(downloads, download)
+	}
+	return downloads, nil
 }

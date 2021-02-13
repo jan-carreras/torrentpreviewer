@@ -57,7 +57,7 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 		return preview.Info{}, err
 	}
 
-	i, err := r.parseMetaInfoFromRaw(raw)
+	torrentID, i, err := r.parseMetaInfoFromRaw(raw)
 	if err != nil {
 		return preview.Info{}, err
 	}
@@ -68,6 +68,7 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 	}
 
 	return preview.NewInfo(
+		torrentID,
 		i.Name,
 		int(i.PieceLength),
 		i.NumPieces(),
@@ -83,18 +84,19 @@ func (r *TorrentRepository) PersistFile(ctx context.Context, id string, data []b
 	return ioutil.WriteFile(path.Join(r.downloadsDir, id+".jpg"), data, 0600)
 }
 
-func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (metainfo.Info, error) {
+func (r *TorrentRepository) parseMetaInfoFromRaw(raw []byte) (string, metainfo.Info, error) {
 	metaInfo := new(metainfo.MetaInfo)
 	err := bencode.Unmarshal(raw, metaInfo)
 	if err != nil {
-		return metainfo.Info{}, err
+		return "", metainfo.Info{}, err
 	}
 
 	i, err := metaInfo.UnmarshalInfo()
 	if err != nil {
-		return metainfo.Info{}, nil
+		return "", metainfo.Info{}, nil
 	}
-	return i, nil
+	id := metaInfo.HashInfoBytes().HexString()
+	return id, i, nil
 }
 
 func (r *TorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileInfo, error) {

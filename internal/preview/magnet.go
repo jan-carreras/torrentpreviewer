@@ -11,7 +11,7 @@ var magnetValidationRegexp = regexp.MustCompile("magnet:\\?xt=urn:btih:[a-zA-Z0-
 //go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=MagnetClient
 type MagnetClient interface {
 	Resolve(context.Context, Magnet) ([]byte, error)
-	DownloadParts(context.Context, DownloadPlan) ([]DownloadedPart, error)
+	DownloadParts(context.Context, DownloadPlan) (chan Piece, error)
 }
 
 type Magnet struct {

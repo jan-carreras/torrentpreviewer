@@ -24,15 +24,17 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
 }
 
-func (dp *DownloadPlan) CountPars() int {
-	count := 0
+func (dp *DownloadPlan) CountPieces() int {
+	count := map[int]interface{}{}
 	for _, p := range dp.pieceRanges {
-		count += p.end - p.start
+		for i := p.start; i <= p.end; i++ {
+			count[i] = struct{}{}
+		}
 	}
-	return count
+	return len(count)
 }
 
-func (dp *DownloadPlan) Download(fi FileInfo, length, offset int) error {
+func (dp *DownloadPlan) AddDownloadToPlan(fi FileInfo, length, offset int) error {
 	if length+offset > fi.length {
 		return fmt.Errorf("length+offset should be less than the total size of the file. having=%v, expecting <= %v", length+offset, fi.length)
 	}
@@ -97,9 +99,13 @@ func (p PieceRange) StartOffset(idx int) int {
 
 func (p PieceRange) EndOffset(idx int) int {
 	if idx == p.end {
-		return p.lastPieceOffset - p.StartOffset(idx)
+		return p.lastPieceOffset
 	}
-	return p.pieceLength - p.StartOffset(idx)
+	return p.pieceLength
+}
+
+func (p PieceRange) PieceCount() int {
+	return p.end - p.start + 1
 }
 
 func findStartingByteOfFile(t Info, fi FileInfo) int {
@@ -113,30 +119,24 @@ func findStartingByteOfFile(t Info, fi FileInfo) int {
 	return start
 }
 
-type DownloadedPart struct {
-	torrentID  string
-	pieceRange PieceRange
-	data       []byte
+type Piece struct {
+	torrentID string
+	pieceID   int
+	data      []byte
 }
 
-func NewDownloadedPart(torrentID string, pieceRange PieceRange, data []byte) DownloadedPart {
-	return DownloadedPart{torrentID: torrentID, pieceRange: pieceRange, data: data}
+func NewPiece(torrentID string, pieceID int, data []byte) Piece {
+	return Piece{torrentID: torrentID, pieceID: pieceID, data: data}
 }
 
-func (p DownloadedPart) Name() string {
-	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
-		p.torrentID,
-		p.pieceRange.fi.idx,
-		p.pieceRange.Start(),
-		p.pieceRange.End(),
-		p.pieceRange.Name(),
-	)
+func (p Piece) TorrentID() string {
+	return p.torrentID
 }
 
-func (p DownloadedPart) PieceRange() PieceRange {
-	return p.pieceRange
+func (p Piece) ID() int {
+	return p.pieceID
 }
 
-func (p DownloadedPart) Data() []byte {
+func (p Piece) Data() []byte {
 	return p.data
 }

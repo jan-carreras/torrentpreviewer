@@ -53,6 +53,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 		downloadPartials.CommandType,
 		downloadPartials.NewCommandHandler(
 			downloadPartials.NewService(
+				c.logger,
 				c.torrentRepo,
 				c.torrentIntegration,
 				c.imageExtractor,

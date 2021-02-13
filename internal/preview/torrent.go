@@ -19,11 +19,16 @@ type TorrentRepository interface {
 }
 
 type Info struct {
+	id          string
 	name        string
 	pieceLength int
 	pieces      int
 	files       []FileInfo
 	raw         []byte
+}
+
+func (i Info) ID() string {
+	return i.id
 }
 
 func (i Info) Raw() []byte {
@@ -33,6 +38,7 @@ func (i Info) Raw() []byte {
 var ErrInfoNameCannotBeEmpty = errors.New("info.name cannot be empty")
 
 func NewInfo(
+	id string,
 	name string,
 	pieceLength int,
 	pieces int,
@@ -43,6 +49,7 @@ func NewInfo(
 		return Info{}, ErrInfoNameCannotBeEmpty
 	}
 	return Info{
+		id:          id,
 		name:        name,
 		pieceLength: pieceLength,
 		pieces:      pieces,
