@@ -29,6 +29,8 @@ func getConfig() error {
 	viper.SetDefault("BoltDBDir", "./")
 	viper.SetDefault("DownloadsDir", "./tmp/downloads")
 	viper.SetDefault("ImageDir", "./tmp/images")
+	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
+	viper.SetDefault("TorrentDriver", "sqlite")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
