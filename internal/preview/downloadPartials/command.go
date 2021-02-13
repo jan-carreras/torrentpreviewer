@@ -2,7 +2,9 @@ package downloadPartials
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	errors2 "github.com/pkg/errors"
 	"prevtorrent/kit/command"
 )
 
@@ -31,5 +33,6 @@ func (c CommandHandler) Handle(ctx context.Context, _cmd command.Command) error 
 		return errors.New("unexpected command")
 	}
 
-	return c.service.DownloadPartials(ctx, cmd)
+	b, _ := json.Marshal(cmd)
+	return errors2.Wrap(c.service.DownloadPartials(ctx, cmd), string(b))
 }
