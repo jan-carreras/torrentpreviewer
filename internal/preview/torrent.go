@@ -27,14 +27,6 @@ type Info struct {
 	raw         []byte
 }
 
-func (i Info) ID() string {
-	return i.id
-}
-
-func (i Info) Raw() []byte {
-	return i.raw
-}
-
 var ErrInfoNameCannotBeEmpty = errors.New("info.name cannot be empty")
 
 func NewInfo(
@@ -56,6 +48,14 @@ func NewInfo(
 		files:       files,
 		raw:         raw,
 	}, nil
+}
+
+func (i Info) ID() string {
+	return i.id
+}
+
+func (i Info) Raw() []byte {
+	return i.raw
 }
 
 func (i Info) SupportedFiles() []FileInfo {
