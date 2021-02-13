@@ -31,7 +31,7 @@ func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
 }
 
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
-	frameExtractionTime := "0:00:05.000"
+	frameExtractionTime := "0:00:05.000" // TODO: Use time parameter instead
 
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -56,23 +56,23 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 	cmd.Stderr = stdErr
 
 	if err := cmd.Start(); err != nil {
-		i.logger.WithFields(logrus.Fields{
-			"stdout": stdOut.String(),
-			"stderr": stdErr.String(),
-			"err":    err.Error(),
-		}).Warn("command failed")
-		return nil, errors.Wrap(err, "error while executing ffmpeg  the command")
+		err = errors.Wrap(err, "error while executing ffmpeg  the command")
+		return nil, i.logCommandFailed(err, stdOut, stdErr)
 	}
 	if err := cmd.Wait(); err != nil {
-		i.logger.WithFields(logrus.Fields{
-			"stdout": stdOut.String(),
-			"stderr": stdErr.String(),
-			"err":    err.Error(),
-		}).Warn("command failed")
-
-		return nil, errors.Wrap(err, "error while waiting for ffmpeg command to finish")
+		err = errors.Wrap(err, "error while waiting for ffmpeg command to finish")
+		return nil, i.logCommandFailed(err, stdOut, stdErr)
 	}
 	return ioutil.ReadFile(filename)
+}
+
+func (i *InMemoryFfmpeg) logCommandFailed(err error, stdOut, stdErr *bytes.Buffer) error {
+	i.logger.WithFields(logrus.Fields{
+		"stdout": stdOut.String(),
+		"stderr": stdErr.String(),
+		"err":    err.Error(),
+	}).Warn("command failed")
+	return err
 }
 
 func rmImage(src string) {
