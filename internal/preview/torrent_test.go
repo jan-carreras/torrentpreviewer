@@ -48,3 +48,29 @@ func TestInfo_InvalidTorrentID(t *testing.T) {
 	_, err = preview.NewInfo(torrentdID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
 	assert.Equal(t, preview.ErrInvalidTorrentID, err)
 }
+
+func TestFileInfo(t *testing.T) {
+	idx := 0
+	length := 1000
+	name := "movie.mp4"
+
+	fi, err := preview.NewFileInfo(idx, length, name)
+	assert.NoError(t, err)
+
+	assert.Equal(t, idx, fi.ID())
+	assert.Equal(t, length, fi.Length())
+	assert.Equal(t, name, fi.Name())
+	assert.Equal(t, length, fi.DownloadSize())
+	assert.True(t, fi.IsSupportedExtension())
+}
+
+func TestFileInfo_BigFile(t *testing.T) {
+	idx := 0
+	length := preview.DownloadSize * 10
+	name := "movie.mp4"
+
+	fi, err := preview.NewFileInfo(idx, length, name)
+	assert.NoError(t, err)
+
+	assert.Equal(t, preview.DownloadSize, fi.DownloadSize())
+}

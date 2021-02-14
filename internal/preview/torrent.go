@@ -10,7 +10,7 @@ import (
 
 const (
 	mb           = 1 << (10 * 2) // MiB, really
-	downloadSize = 8 * mb
+	DownloadSize = 8 * mb
 )
 
 var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]{40})$")
@@ -123,11 +123,11 @@ func (fi FileInfo) Name() string {
 }
 
 func (fi FileInfo) DownloadSize() int {
-	size := downloadSize
+	size := DownloadSize
 	if size > fi.length {
 		return fi.length
 	}
-	return downloadSize
+	return DownloadSize
 }
 
 func (fi FileInfo) IsSupportedExtension() bool {
