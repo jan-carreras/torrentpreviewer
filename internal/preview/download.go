@@ -24,6 +24,15 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
 }
 
+func (dp *DownloadPlan) AddAll() error {
+	for _, file := range dp.torrent.SupportedFiles() {
+		if err := dp.addDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (dp *DownloadPlan) CountPieces() int {
 	count := map[int]interface{}{}
 	for _, p := range dp.pieceRanges {
@@ -34,7 +43,11 @@ func (dp *DownloadPlan) CountPieces() int {
 	return len(count)
 }
 
-func (dp *DownloadPlan) AddDownloadToPlan(fi FileInfo, length, offset int) error {
+func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, length, offset int) error {
+	if !fi.IsSupportedExtension() {
+		return fmt.Errorf("file %s has not a supported extension", fi.name)
+	}
+
 	if length+offset > fi.length {
 		return fmt.Errorf("length+offset should be less than the total size of the file. having=%v, expecting <= %v", length+offset, fi.length)
 	}
@@ -45,21 +58,9 @@ func (dp *DownloadPlan) AddDownloadToPlan(fi FileInfo, length, offset int) error
 		return fmt.Errorf("only valid positive or zero offsets. having=%v", offset)
 	}
 
-	if !fi.IsSupportedExtension() {
-		return fmt.Errorf("file %s has not a supported extension", fi.name)
-	}
 	start := findStartingByteOfFile(dp.torrent, fi)
 
 	dp.addToDownloadPlan(NewPieceRange(dp.torrent, fi, start, offset, length))
-	return nil
-}
-
-func (dp *DownloadPlan) AddAll() error {
-	for _, file := range dp.torrent.SupportedFiles() {
-		if err := dp.AddDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

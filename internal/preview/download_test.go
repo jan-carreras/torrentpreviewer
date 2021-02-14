@@ -153,7 +153,7 @@ func TestPieceRange(t *testing.T) {
 	}
 }
 
-func TestDownloadPlan(t *testing.T) {
+func TestDownloadPlan_GetTorrent(t *testing.T) {
 	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
@@ -162,5 +162,37 @@ func TestDownloadPlan(t *testing.T) {
 
 	plan := preview.NewDownloadPlan(torrent)
 
-	_ = plan
+	assert.Equal(t, torrent, plan.GetTorrent())
+}
+
+func TestDownloadPlan_GetPlan(t *testing.T) {
+	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentdID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
+
+	plan := preview.NewDownloadPlan(torrent)
+
+	assert.Equal(t, make([]preview.PieceRange, 0), plan.GetPlan())
+}
+
+func TestDownloadPlan_AddAll(t *testing.T) {
+	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(0, 500, "movie2.mp4")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentdID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll()
+	assert.NoError(t, err)
+
+	assert.Equal(t, 15, plan.CountPieces())
+
+	pieceRanges := plan.GetPlan()
+
+	assert.Len(t, pieceRanges, 2)
 }
