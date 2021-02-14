@@ -143,6 +143,7 @@ func TestPieceRange(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := preview.NewPieceRange(tt.args.t, tt.args.fi, tt.args.start, tt.args.offset, tt.args.length)
 
+			assert.Equal(t, torrent, got.Torrent())
 			assert.Equal(t, tt.want.name, got.Name())
 			assert.Equal(t, tt.want.pieceStart, got.Start())
 			assert.Equal(t, tt.want.pieceEnd, got.End())

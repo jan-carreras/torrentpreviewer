@@ -113,24 +113,25 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	part2 := []byte("2222222222222222222222222")
 	part3 := []byte("9876543210987654321098765")
 
-	registry, err := preview.NewPieceRegistry(plan)
-	assert.NoError(t, err)
-	registry.RegisterPiece(preview.NewPiece(torrentID, 0, part0))
-	registry.RegisterPiece(preview.NewPiece(torrentID, 1, part1))
-	registry.RegisterPiece(preview.NewPiece(torrentID, 2, part2))
-	registry.RegisterPiece(preview.NewPiece(torrentID, 3, part3))
-
-	registry.ListenForPieces(context.Background())
-
-	time.Sleep(time.Millisecond * 100) // TODO: Meh
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
+			assert.NoError(t, err)
+			registry.RegisterPiece(preview.NewPiece(torrentID, 0, part0))
+			registry.RegisterPiece(preview.NewPiece(torrentID, 1, part1))
+			registry.RegisterPiece(preview.NewPiece(torrentID, 2, part2))
+			registry.RegisterPiece(preview.NewPiece(torrentID, 3, part3))
+
+			registry.ListenForPieces(context.Background())
+
+			time.Sleep(time.Millisecond * 100) // TODO: Meh
+
 			pieceRange := preview.NewPieceRange(torrent, fi, tt.args.start, tt.args.offset, tt.args.length)
 
 			bundlePlan := preview.NewBundlePlan()
 
-			got, err := bundlePlan.Bundle(registry, torrentID, pieceRange)
+			got, err := bundlePlan.Bundle(registry, pieceRange)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Bundle() error = %v, wantErr %v", err, tt.wantErr)
 				return

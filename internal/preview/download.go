@@ -69,6 +69,7 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 }
 
 type PieceRange struct {
+	torrent          Info
 	fi               FileInfo
 	pieceStart       int // Piece pieceStart
 	pieceEnd         int // Piece pieceEnd
@@ -81,6 +82,7 @@ func NewPieceRange(torrent Info, fi FileInfo, start, offset, length int) PieceRa
 	startPosition := start + offset
 	length = length - 1
 	return PieceRange{
+		torrent:          torrent,
 		fi:               fi,
 		pieceStart:       startPosition / torrent.PieceLength(),
 		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
@@ -118,6 +120,10 @@ func (p PieceRange) EndOffset(idx int) int {
 
 func (p PieceRange) PieceCount() int {
 	return p.pieceEnd - p.pieceStart + 1 // pieceStart is zero index
+}
+
+func (p PieceRange) Torrent() Info {
+	return p.torrent
 }
 
 func findStartingByteOfFile(t Info, fi FileInfo) int {

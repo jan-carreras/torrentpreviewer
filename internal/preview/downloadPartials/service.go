@@ -78,7 +78,7 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 		"pieceCount": part.PieceCount(),
 	}).Debug("download completed")
 	bundle := preview.NewBundlePlan()
-	downloadedPart, err := bundle.Bundle(registry, torrentID, part)
+	downloadedPart, err := bundle.Bundle(registry, part)
 	if err != nil {
 		s.logger.WithFields(logrus.Fields{
 			"torrentID":  torrentID,

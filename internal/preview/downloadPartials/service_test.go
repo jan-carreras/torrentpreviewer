@@ -95,7 +95,7 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 	err = plan.AddAll()
 	assert.NoError(t, err)
 
-	registry, err := preview.NewPieceRegistry(plan)
+	registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.NoMorePieces()
 
@@ -137,7 +137,7 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 
 	plan := preview.NewDownloadPlan(torrent)
 	assert.NoError(t, plan.AddAll())
-	registry, err := preview.NewPieceRegistry(plan)
+	registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
 	registry.RegisterPiece(preview.NewPiece(torrentID, 1, []byte("67890")))
@@ -184,7 +184,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 
 	plan := preview.NewDownloadPlan(torrent)
 	assert.NoError(t, plan.AddAll())
-	registry, err := preview.NewPieceRegistry(plan)
+	registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
 	registry.RegisterPiece(preview.NewPiece(torrentID, 1, []byte("67890")))
@@ -233,7 +233,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 
 	plan := preview.NewDownloadPlan(torrent)
 	assert.NoError(t, plan.AddAll())
-	registry, err := preview.NewPieceRegistry(plan)
+	registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
 	registry.RegisterPiece(preview.NewPiece(torrentID, 1, []byte("67890")))

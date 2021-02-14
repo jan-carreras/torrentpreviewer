@@ -59,7 +59,7 @@ func NewBundlePlan() BundlePlan {
 	return BundlePlan{}
 }
 
-func (b BundlePlan) Bundle(registry *PieceRegistry, torrentID string, pieceRange PieceRange) (MediaPart, error) {
+func (b BundlePlan) Bundle(registry *PieceRegistry, pieceRange PieceRange) (MediaPart, error) {
 	piece := new(bytes.Buffer)
 
 	for pieceIdx := pieceRange.Start(); pieceIdx <= pieceRange.End(); pieceIdx++ {
@@ -86,5 +86,5 @@ func (b BundlePlan) Bundle(registry *PieceRegistry, torrentID string, pieceRange
 		}
 	}
 
-	return NewMediaPart(torrentID, pieceRange, piece.Bytes()), nil
+	return NewMediaPart(pieceRange.Torrent().ID(), pieceRange, piece.Bytes()), nil
 }
