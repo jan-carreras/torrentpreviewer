@@ -17,7 +17,7 @@ func NewMediaPart(torrentID string, pieceRange PieceRange, data []byte) MediaPar
 }
 
 func (p MediaPart) Name() string {
-	return fmt.Sprintf("%v.%v.%v-%v.%v",
+	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
 		p.torrentID,
 		p.pieceRange.fi.idx,
 		p.pieceRange.Start(),
