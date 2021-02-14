@@ -11,13 +11,14 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"prevtorrent/internal/preview"
+	"strings"
 )
 
 const (
-	command   = "ffmpeg"
-	vframes   = "1"
-	qv        = "2"
-	readStdin = "-"
+	command = "ffmpeg"
+	vframes = "1"
+	qv      = "2"
 )
 
 type InMemoryFfmpeg struct {
@@ -38,12 +39,20 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 		return nil, err
 	}
 
-	filename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id))
-	defer rmImage(filename)
+	filename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id.String()))
+	defer rmFile(filename)
+
+	// TODO: For some reason passing the file from STDIN (see below) crashes ffmpeg. Doing it with a file is easier
+	video := filename + ".mp4"
+	err = ioutil.WriteFile(video, data, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer rmFile(video)
 
 	cmd := exec.Command(command,
 		"-ss", frameExtractionTime,
-		"-i", readStdin,
+		"-i", video,
 		"-vframes", vframes,
 		"-q:v", qv,
 		filename,
@@ -72,9 +81,18 @@ func (i *InMemoryFfmpeg) logCommandFailed(err error, stdOut, stdErr *bytes.Buffe
 		"stderr": stdErr.String(),
 		"err":    err.Error(),
 	}).Warn("command failed")
+
+	if i.isAtomNotFound(stdErr.String()) {
+		err = fmt.Errorf("%w. %v", preview.ErrAtomNotFound, err)
+	}
+
 	return err
 }
 
-func rmImage(src string) {
+func (i *InMemoryFfmpeg) isAtomNotFound(stderr string) bool {
+	return strings.Index(stderr, "moov atom not found") >= 0
+}
+
+func rmFile(src string) {
 	_ = os.Remove(src)
 }
