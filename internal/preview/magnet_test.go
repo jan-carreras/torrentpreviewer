@@ -12,6 +12,7 @@ func Test_Magnet_New(t *testing.T) {
 	m, err := preview.NewMagnet(mag)
 	assert.NoError(t, err)
 	assert.Equal(t, mag, m.Value())
+	assert.Equal(t, "zocmzqipffw7ollmic5hub6bpcsdeoqu", m.ID())
 }
 
 func Test_Magnet_Invalid(t *testing.T) {
