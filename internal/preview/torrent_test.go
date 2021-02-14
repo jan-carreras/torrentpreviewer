@@ -1,0 +1,50 @@
+package preview_test
+
+import (
+	"github.com/stretchr/testify/assert"
+	"prevtorrent/internal/preview"
+	"testing"
+)
+
+func TestInfo(t *testing.T) {
+	torrentdID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(0, 2000, "movie2.mp4")
+	assert.NoError(t, err)
+	f3, err := preview.NewFileInfo(0, 10, "subtitles.srt")
+	assert.NoError(t, err)
+
+	files := []preview.FileInfo{fi, f2, f3}
+	supportedFile := []preview.FileInfo{fi, f2}
+
+	torrent, err := preview.NewInfo(torrentdID, "test movie", 100, files, []byte("12345"))
+	assert.NoError(t, err)
+
+	assert.Equal(t, "zocmzqipffw7ollmic5hub6bpcsdeoqu", torrent.ID())
+	assert.Equal(t, "test movie", torrent.Name())
+	assert.Equal(t, []byte("12345"), torrent.Raw())
+	assert.Equal(t, 100, torrent.PieceLength())
+	assert.Equal(t, 3010, torrent.TotalLength())
+	assert.Equal(t, supportedFile, torrent.SupportedFiles())
+	assert.Equal(t, files, torrent.Files())
+}
+
+func TestInfo_EmptyName(t *testing.T) {
+	torrentdID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	_, err = preview.NewInfo(torrentdID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
+	assert.Error(t, err)
+}
+
+func TestInfo_InvalidTorrentID(t *testing.T) {
+	torrentdID := "invalid ID"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	_, err = preview.NewInfo(torrentdID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
+	assert.Equal(t, preview.ErrInvalidTorrentID, err)
+}

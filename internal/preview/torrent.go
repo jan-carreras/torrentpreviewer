@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -12,10 +13,12 @@ const (
 	downloadSize = 8 * mb
 )
 
+var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]{40})$")
+
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
 	Persist(ctx context.Context, torrent Info) error
-	Get(ctx context.Context, id string) (Info, error)
+	Get(ctx context.Context, id string) (Info, error) // TODO: Change ID to TorrentID
 }
 
 var ErrNotFound = errors.New("record not found in storage")
@@ -26,30 +29,37 @@ type Info struct {
 	name        string
 	pieceLength int
 	totalLength int
-	pieces      int
 	files       []FileInfo
 	raw         []byte
 }
 
 var ErrInfoNameCannotBeEmpty = errors.New("info.name cannot be empty")
+var ErrInvalidTorrentID = errors.New("invalid torrent ID")
 
 func NewInfo(
 	id string,
 	name string,
 	pieceLength int,
-	pieces int,
 	files []FileInfo,
 	raw []byte,
 ) (Info, error) {
+	if !torrentIDValidation.MatchString(id) {
+		return Info{}, ErrInvalidTorrentID
+	}
+
 	if name == "" {
 		return Info{}, ErrInfoNameCannotBeEmpty
 	}
+	totalLength := 0
+	for _, f := range files {
+		totalLength += f.Length()
+	}
+
 	return Info{
 		id:          strings.ToLower(id),
 		name:        name,
 		pieceLength: pieceLength,
-		totalLength: 0, // TODO: Fill this
-		pieces:      pieces,
+		totalLength: totalLength,
 		files:       files,
 		raw:         raw,
 	}, nil
