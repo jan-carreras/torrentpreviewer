@@ -1,10 +1,12 @@
 - [x] Given a Magnet link, be able to list all the files there are available
-- [ ] Store the information from a Magnet link somewhere
-- [ ] Use postgres or alike to store torrent information
-    - [ ] Store magnet to torrent info
-    - [ ] Store torrent info
+- [x] Store the information from a Magnet link somewhere
+- [ ] Use sqlite to store torrent information
+    - [x] Store magnet to torrent info
+    - [x] Store torrent info
     - [ ] Store images we have on a torrent
-    - [ ] All of those can have extra metadata like timestamps, who requested everything and shit
+    - [x] All of those can have extra metadata like timestamps, who requested everything and shit
 - [x] Given a file on a magnet link, find the mp4 files on them and extract 1 image from the start
     - [x] Using ffmpeg extract the image
     - [ ] The images need to be stored on a public accessible storage (#v2)
+- [x] Create an HTTP API to serve information about the torrent and its images
+- [ ] Check if attaching the end of a video with the moov atom fixes image extraction problems
