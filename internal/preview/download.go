@@ -10,15 +10,15 @@ type DownloadPlan struct {
 	pieceRanges []PieceRange
 }
 
-func (dp *DownloadPlan) GetTorrent() Info {
-	return dp.torrent
-}
-
 func NewDownloadPlan(torrent Info) *DownloadPlan {
 	return &DownloadPlan{
 		torrent:     torrent,
 		pieceRanges: make([]PieceRange, 0),
 	}
+}
+
+func (dp *DownloadPlan) GetTorrent() Info {
+	return dp.torrent
 }
 func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
@@ -27,7 +27,7 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 func (dp *DownloadPlan) CountPieces() int {
 	count := map[int]interface{}{}
 	for _, p := range dp.pieceRanges {
-		for i := p.start; i <= p.end; i++ {
+		for i := p.pieceStart; i <= p.pieceEnd; i++ {
 			count[i] = struct{}{}
 		}
 	}
@@ -54,27 +54,38 @@ func (dp *DownloadPlan) AddDownloadToPlan(fi FileInfo, length, offset int) error
 	return nil
 }
 
+func (dp *DownloadPlan) AddAll() error {
+	for _, file := range dp.torrent.SupportedFiles() {
+		if err := dp.AddDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 	dp.pieceRanges = append(dp.pieceRanges, piece)
 }
 
 type PieceRange struct {
 	fi               FileInfo
-	start            int // piece start. The file we want to download starts in this Piece
-	end              int // piece end. The file we want to download ends in this Piece
-	firstPieceOffset int // The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
-	lastPieceOffset  int // The file not necessarily ends at the end of the last Piece. This offset indicates when it ends inside the piece
-	pieceLength      int // The length of each piece of this torrent
+	pieceStart       int // Piece pieceStart
+	pieceEnd         int // Piece pieceEnd
+	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
+	lastPieceOffset  int // In Bytes. The file not necessarily ends at the pieceEnd of the last Piece. This offset indicates when it ends inside the piece
+	pieceLength      int // In Bytes. The length of each piece of this torrent
 }
 
 func NewPieceRange(t Info, fi FileInfo, start, offset, length int) PieceRange {
+	startPosition := start + offset
+	length = length - 1
 	return PieceRange{
 		fi:               fi,
-		start:            (start + offset) / t.pieceLength,
-		end:              (start + offset + length) / t.pieceLength,
-		firstPieceOffset: (start + offset) % t.pieceLength,
-		lastPieceOffset:  (start + offset + length) % t.pieceLength,
-		pieceLength:      t.pieceLength,
+		pieceStart:       startPosition / t.PieceLength(),
+		pieceEnd:         (startPosition + length) / t.PieceLength(),
+		firstPieceOffset: startPosition % t.PieceLength(),
+		lastPieceOffset:  (startPosition + length) % t.PieceLength(),
+		pieceLength:      t.PieceLength(),
 	}
 }
 
@@ -83,29 +94,29 @@ func (p PieceRange) Name() string {
 }
 
 func (p PieceRange) Start() int {
-	return p.start
+	return p.pieceStart
 }
 
 func (p PieceRange) End() int {
-	return p.end
+	return p.pieceEnd
 }
 
 func (p PieceRange) StartOffset(idx int) int {
-	if idx == p.start {
+	if idx == p.pieceStart {
 		return p.firstPieceOffset
 	}
 	return 0
 }
 
 func (p PieceRange) EndOffset(idx int) int {
-	if idx == p.end {
+	if idx == p.pieceEnd {
 		return p.lastPieceOffset
 	}
 	return p.pieceLength
 }
 
 func (p PieceRange) PieceCount() int {
-	return p.end - p.start + 1
+	return p.pieceEnd - p.pieceStart + 1 // pieceStart is zero index
 }
 
 func findStartingByteOfFile(t Info, fi FileInfo) int {
