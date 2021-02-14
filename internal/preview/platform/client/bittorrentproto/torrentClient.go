@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const maxDownloadTime = time.Minute * 15
+
 type TorrentClient struct {
 	client *torrent.Client
 	logger *logrus.Logger
@@ -144,6 +146,10 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 			},
 		).Debug("all pieces already downloaded")
 	}
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, maxDownloadTime)
+	defer cancel()
+	
 	for waitingFor > 0 {
 		select {
 		case _v, isOpen := <-t.SubscribePieceStateChanges().Values:
@@ -184,14 +190,16 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 					"piecesLeft": waitingFor,
 				},
 			).Debug("number of connected peers")
-		case <-ctx.Done():
+		case <-ctxTimeout.Done():
 			r.logger.WithFields(
 				logrus.Fields{
 					"peersCount": len(t.PeerConns()),
 					"torrent":    t.Name(),
 					"piecesLeft": waitingFor,
+					"context":    ctxTimeout.Err(),
 				},
-			).Warn("goroutine stopped after context closed")
+			).Error("goroutine stopped because context closed")
+			return
 		}
 	}
 }
