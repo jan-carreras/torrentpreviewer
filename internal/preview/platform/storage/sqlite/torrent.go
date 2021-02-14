@@ -8,7 +8,7 @@ import (
 	"prevtorrent/internal/preview"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3" // Import go-sqlite3 library
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type TorrentRepository struct {
