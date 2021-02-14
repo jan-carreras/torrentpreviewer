@@ -33,34 +33,22 @@ func NewService(
 }
 
 func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
-	info, err := s.torrentRepository.Get(ctx, cmd.ID)
+	torrent, err := s.torrentRepository.Get(ctx, cmd.ID)
 	if err != nil {
 		return err
 	}
 
-	supportedFiles := info.SupportedFiles()
-	if len(supportedFiles) == 0 {
-		s.logger.WithFields(logrus.Fields{
-			"name":       info.Name(),
-			"pieceCount": len(info.SupportedFiles()),
-		}).Info("this torrent has not any supported file, thus skipped")
-		return nil
+	plan := preview.NewDownloadPlan(torrent)
+	if err := plan.AddAll(); err != nil {
+		return err
 	}
 
-	plan := preview.NewDownloadPlan(info)
-	for _, file := range supportedFiles {
-		if err := plan.AddDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
-			return err
-		}
-	}
-	partsCh, err := s.magnetClient.DownloadParts(ctx, *plan)
+	registry, err := s.magnetClient.DownloadParts(ctx, *plan)
 	if err != nil {
 		return err
 	}
 
-	registry := preview.NewPieceRegistry(plan)
-
-	go s.processParts(ctx, partsCh, registry)
+	registry.ListenForPieces(ctx)
 
 	for {
 		select {
@@ -68,7 +56,7 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 			if !isOpen {
 				return nil
 			}
-			err := s.extractAndStoreImage(ctx, registry, part, info.ID())
+			err := s.extractAndStoreImage(ctx, registry, part, torrent.ID())
 			if err != nil {
 				return err
 			}
@@ -76,8 +64,8 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 			return errors.New("context cancelled")
 		case <-time.Tick(time.Second * 3):
 			s.logger.WithFields(logrus.Fields{
-				"torrent":   info.Name(),
-				"torrentID": info.ID(),
+				"torrent":   torrent.Name(),
+				"torrentID": torrent.ID(),
 			}).Debug("waiting for parts downloaded to arrive")
 		}
 	}
@@ -92,11 +80,35 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 	bundle := preview.NewBundlePlan()
 	downloadedPart, err := bundle.Bundle(registry, torrentID, part)
 	if err != nil {
+		s.logger.WithFields(logrus.Fields{
+			"torrentID":  torrentID,
+			"name":       part.Name(),
+			"pieceCount": part.PieceCount(),
+			"error":      err,
+		}).Error("error when bundling the image")
 		return err
 	}
 	// TODO: If we don't need the files in bold.db those can be deleted
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
+	if errors.Is(err, preview.ErrAtomNotFound) {
+		s.logger.WithFields(logrus.Fields{
+			"torrentID":  torrentID,
+			"name":       part.Name(),
+			"pieceCount": part.PieceCount(),
+			"error":      err,
+			"imgBytes":   len(img),
+		}).Warn("atom not found error, ignoring video")
+		return nil
+	}
+
 	if err != nil {
+		s.logger.WithFields(logrus.Fields{
+			"torrentID":  torrentID,
+			"name":       part.Name(),
+			"pieceCount": part.PieceCount(),
+			"error":      err,
+			"imgBytes":   len(img),
+		}).Error("error when extracting image from video")
 		return err
 	}
 	s.logger.WithFields(logrus.Fields{
@@ -115,29 +127,4 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 	}).Debug("image persisted successfully")
 
 	return err
-}
-
-func (s Service) processParts(ctx context.Context, partsCh chan preview.Piece, registry *preview.PieceRegistry) {
-	// TODO: Fucking "part" or fucking "piece"?!
-	for {
-		select {
-		case piece, isOpen := <-partsCh:
-			if !isOpen {
-				return
-			}
-
-			log := s.logger.WithFields(logrus.Fields{
-				"torrentID": piece.TorrentID(),
-				"piece":     piece.ID(),
-			})
-
-			if err := registry.AddPiece(piece); err != nil {
-				log.Error(err)
-				return
-			}
-			log.Debug("part added to registry")
-		case <-ctx.Done():
-			return
-		}
-	}
 }
