@@ -10,3 +10,4 @@
     - [ ] The images need to be stored on a public accessible storage (#v2)
 - [x] Create an HTTP API to serve information about the torrent and its images
 - [ ] Check if attaching the end of a video with the moov atom fixes image extraction problems
+- [ ] Add comments on all the various objects in Domain
