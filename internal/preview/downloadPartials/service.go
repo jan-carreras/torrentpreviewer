@@ -68,7 +68,10 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 			if !isOpen {
 				return nil
 			}
-			s.extractAndStoreImage(ctx, registry, part, info.ID())
+			err := s.extractAndStoreImage(ctx, registry, part, info.ID())
+			if err != nil {
+				return err
+			}
 		case <-ctx.Done():
 			return errors.New("context cancelled")
 		case <-time.Tick(time.Second * 3):
@@ -93,6 +96,9 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 	}
 	// TODO: If we don't need the files in bold.db those can be deleted
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
+	if err != nil {
+		return err
+	}
 	s.logger.WithFields(logrus.Fields{
 		"torrentID": torrentID,
 		"name":      part.Name(),
@@ -100,9 +106,12 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 
 	// TODO: Register persisted image in the DB for reference
 	err = s.imageRepository.PersistFile(ctx, downloadedPart.Name(), img)
+	if err != nil {
+		return err
+	}
 	s.logger.WithFields(logrus.Fields{
 		"torrentID": torrentID,
-		"name":      part.Name(),
+		"name":      downloadedPart.Name(),
 	}).Debug("image persisted successfully")
 
 	return err
