@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
-	"time"
 )
 
 type Service struct {
@@ -55,13 +54,10 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 		"magnetID": m.ID(),
 	}).Debug("not found in db. about to resolve the magnet using network")
 
-	ctxTm, _ := context.WithTimeout(ctx, time.Second*30)
-
-	torrent, err := s.magnetResolver.Resolve(ctxTm, m)
+	torrent, err := s.magnetResolver.Resolve(ctx, m)
 	if err != nil {
 		return err
 	}
-
+	
 	return s.torrentRepository.Persist(ctx, torrent)
-
 }
