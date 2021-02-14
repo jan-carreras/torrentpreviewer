@@ -77,16 +77,16 @@ type PieceRange struct {
 	pieceLength      int // In Bytes. The length of each piece of this torrent
 }
 
-func NewPieceRange(t Info, fi FileInfo, start, offset, length int) PieceRange {
+func NewPieceRange(torrent Info, fi FileInfo, start, offset, length int) PieceRange {
 	startPosition := start + offset
 	length = length - 1
 	return PieceRange{
 		fi:               fi,
-		pieceStart:       startPosition / t.PieceLength(),
-		pieceEnd:         (startPosition + length) / t.PieceLength(),
-		firstPieceOffset: startPosition % t.PieceLength(),
-		lastPieceOffset:  (startPosition + length) % t.PieceLength(),
-		pieceLength:      t.PieceLength(),
+		pieceStart:       startPosition / torrent.PieceLength(),
+		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
+		firstPieceOffset: startPosition % torrent.PieceLength(),
+		lastPieceOffset:  (startPosition + length) % torrent.PieceLength(),
+		pieceLength:      torrent.PieceLength(),
 	}
 }
 
@@ -111,7 +111,7 @@ func (p PieceRange) StartOffset(idx int) int {
 
 func (p PieceRange) EndOffset(idx int) int {
 	if idx == p.pieceEnd {
-		return p.lastPieceOffset
+		return p.lastPieceOffset + 1
 	}
 	return p.pieceLength
 }

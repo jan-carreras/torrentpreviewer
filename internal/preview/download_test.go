@@ -18,14 +18,14 @@ func Test_Piece(t *testing.T) {
 }
 
 func TestPieceRange(t *testing.T) {
-	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
 	pieceLength := 100
 
 	fi, err := preview.NewFileInfo(0, 1000, "test/movie.mp4")
 	assert.NoError(t, err)
 	fi2, err := preview.NewFileInfo(0, 150, "test/movie2.mp4")
 	assert.NoError(t, err)
-	torrent, err := preview.NewInfo(torrentdID, "generic movie", pieceLength, []preview.FileInfo{fi, fi2}, []byte(""))
+	torrent, err := preview.NewInfo(torrentID, "generic movie", pieceLength, []preview.FileInfo{fi, fi2}, []byte(""))
 	assert.NoError(t, err)
 
 	type args struct {
@@ -62,7 +62,7 @@ func TestPieceRange(t *testing.T) {
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
-				endOffsetBytes:   49,
+				endOffsetBytes:   50,
 				pieceCount:       1,
 			},
 		},
@@ -80,7 +80,7 @@ func TestPieceRange(t *testing.T) {
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
-				endOffsetBytes:   99,
+				endOffsetBytes:   100,
 				pieceCount:       1,
 			},
 		},
@@ -98,7 +98,7 @@ func TestPieceRange(t *testing.T) {
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 25,
-				endOffsetBytes:   99,
+				endOffsetBytes:   100,
 				pieceCount:       1,
 			},
 		},
@@ -116,7 +116,7 @@ func TestPieceRange(t *testing.T) {
 				pieceStart:       0,
 				pieceEnd:         1,
 				startOffsetBytes: 25,
-				endOffsetBytes:   99,
+				endOffsetBytes:   100,
 				pieceCount:       2,
 			},
 		},
@@ -134,7 +134,7 @@ func TestPieceRange(t *testing.T) {
 				pieceStart:       10,
 				pieceEnd:         11,
 				startOffsetBytes: 50,
-				endOffsetBytes:   49,
+				endOffsetBytes:   50,
 				pieceCount:       2,
 			},
 		},
@@ -154,11 +154,11 @@ func TestPieceRange(t *testing.T) {
 }
 
 func TestDownloadPlan_GetTorrent(t *testing.T) {
-	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	torrent, err := preview.NewInfo(torrentdID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
 
 	plan := preview.NewDownloadPlan(torrent)
 
@@ -166,11 +166,11 @@ func TestDownloadPlan_GetTorrent(t *testing.T) {
 }
 
 func TestDownloadPlan_GetPlan(t *testing.T) {
-	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	torrent, err := preview.NewInfo(torrentdID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
 
 	plan := preview.NewDownloadPlan(torrent)
 
@@ -178,13 +178,13 @@ func TestDownloadPlan_GetPlan(t *testing.T) {
 }
 
 func TestDownloadPlan_AddAll(t *testing.T) {
-	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
 	f2, err := preview.NewFileInfo(0, 500, "movie2.mp4")
 	assert.NoError(t, err)
-	torrent, err := preview.NewInfo(torrentdID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
 
 	plan := preview.NewDownloadPlan(torrent)
 	err = plan.AddAll()
