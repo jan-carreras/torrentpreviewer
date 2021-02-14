@@ -63,13 +63,13 @@ func newContainer() (container, error) {
 }
 
 func getTorrentRepository(logger *logrus.Logger) (preview.TorrentRepository, error) {
-	fileDriver := func() (preview.TorrentRepository, error) {
+	/*fileDriver := func() (preview.TorrentRepository, error) {
 		return file.NewTorrentRepository(
 			logger,
 			viper.GetString("TorrentDir"),
 			viper.GetString("DownloadsDir"),
 		), nil
-	}
+	}*/
 	sqliteDrier := func() (preview.TorrentRepository, error) {
 		sqliteDatabase, err := sql.Open("sqlite3", viper.GetString("SqlitePath"))
 		if err != nil {
@@ -80,7 +80,7 @@ func getTorrentRepository(logger *logrus.Logger) (preview.TorrentRepository, err
 	}
 
 	drivers := map[string]func() (preview.TorrentRepository, error){
-		"file":   fileDriver,
+		//"file":   fileDriver,
 		"sqlite": sqliteDrier,
 	}
 

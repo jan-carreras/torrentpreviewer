@@ -2,9 +2,10 @@ package downloadPartials
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
+	"time"
 )
 
 type Service struct {
@@ -37,32 +38,73 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
+	supportedFiles := info.SupportedFiles()
+	if len(supportedFiles) == 0 {
+		s.logger.WithFields(logrus.Fields{
+			"name":       info.Name(),
+			"pieceCount": len(info.SupportedFiles()),
+		}).Info("this torrent has not any supported file, thus skipped")
+		return nil
+	}
+
 	plan := preview.NewDownloadPlan(info)
-	for _, file := range info.SupportedFiles() {
+	for _, file := range supportedFiles {
 		if err := plan.AddDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
 			return err
 		}
 	}
 	partsCh, err := s.magnetClient.DownloadParts(ctx, *plan)
+	if err != nil {
+		return err
+	}
 
 	registry := preview.NewPieceRegistry(plan)
 
 	go s.processParts(ctx, partsCh, registry)
 
-	for part := range registry.SubscribeAllPartsDownloaded() {
-		s.logger.WithFields(logrus.Fields{
-			"name":       part.Name(),
-			"pieceCount": part.PieceCount(),
-		}).Debug("download completed. We have all the parts, we only need to merge")
-		bundle := preview.NewBundlePlan()
-		downloadedPart, err := bundle.Bundle(registry, info.ID(), part)
-		if err != nil {
-			return err
+	for {
+		select {
+		case part, isOpen := <-registry.SubscribeAllPartsDownloaded():
+			if !isOpen {
+				return nil
+			}
+			s.extractAndStoreImage(ctx, registry, part, info.ID())
+		case <-ctx.Done():
+			return errors.New("context cancelled")
+		case <-time.Tick(time.Second * 3):
+			s.logger.WithFields(logrus.Fields{
+				"torrent":   info.Name(),
+				"torrentID": info.ID(),
+			}).Debug("waiting for parts downloaded to arrive")
 		}
-		fmt.Println("downloaded:", downloadedPart.Name())
 	}
+}
 
+func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.PieceRegistry, part preview.PieceRange, torrentID string) error {
+	s.logger.WithFields(logrus.Fields{
+		"torrentID":  torrentID,
+		"name":       part.Name(),
+		"pieceCount": part.PieceCount(),
+	}).Debug("download completed")
+	bundle := preview.NewBundlePlan()
+	downloadedPart, err := bundle.Bundle(registry, torrentID, part)
+	if err != nil {
+		return err
+	}
 	// TODO: If we don't need the files in bold.db those can be deleted
+	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
+	s.logger.WithFields(logrus.Fields{
+		"torrentID": torrentID,
+		"name":      part.Name(),
+	}).Debug("image extracted successfully")
+
+	// TODO: Register persisted image in the DB for reference
+	err = s.imageRepository.PersistFile(ctx, downloadedPart.Name(), img)
+	s.logger.WithFields(logrus.Fields{
+		"torrentID": torrentID,
+		"name":      part.Name(),
+	}).Debug("image persisted successfully")
+
 	return err
 }
 

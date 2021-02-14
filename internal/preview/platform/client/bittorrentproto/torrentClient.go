@@ -21,18 +21,39 @@ func NewTorrentClient(client *torrent.Client, logger *logrus.Logger) *TorrentCli
 	return &TorrentClient{client: client, logger: logger}
 }
 
-func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) ([]byte, error) {
+func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) (preview.Info, error) {
 	t, err := r.client.AddMagnet(m.Value())
 	if err != nil {
-		return nil, err
+		return preview.Info{}, err
 	}
 
 	if err := r.waitForInfo(ctx, t); err != nil {
-		return nil, err
+		return preview.Info{}, err
 	}
 	buf := new(bytes.Buffer)
 	err = t.Metainfo().Write(buf)
-	return buf.Bytes(), err
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	files := make([]preview.FileInfo, 0)
+	for idx, f := range t.Info().Files {
+		fi, err := preview.NewFileInfo(idx, int(f.Length), f.DisplayPath(t.Info()))
+		if err != nil {
+			return preview.Info{}, err
+		}
+
+		files = append(files, fi)
+	}
+
+	return preview.NewInfo(
+		t.Metainfo().HashInfoBytes().String(),
+		t.Name(),
+		int(t.Info().PieceLength),
+		t.NumPieces(),
+		files,
+		buf.Bytes(),
+	)
 }
 
 func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) error {
@@ -50,10 +71,13 @@ func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.
 		return nil, err
 	}
 
+	if len(downloadPlan.GetPlan()) == 0 {
+		return nil, errors.New("the plan has 0 parts to download")
+	}
+
 	output := make(chan preview.Piece, downloadPlan.CountPieces())
 
 	startTorrentDownload(t, downloadPlan)
-
 	r.publishPartsThatWeAlreadyHave(t, output, downloadPlan)
 	go r.waitPiecesToDownload(ctx, output, t, downloadPlan)
 
@@ -105,6 +129,14 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, outputCh chan 
 
 	defer close(outputCh)
 	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
+	if waitingFor == 0 {
+		r.logger.WithFields(
+			logrus.Fields{
+				"waitingFor": 0,
+				"torrent":    t.Name(),
+			},
+		).Debug("all pieces already downloaded")
+	}
 	for waitingFor > 0 {
 		select {
 		case _v := <-t.SubscribePieceStateChanges().Values:

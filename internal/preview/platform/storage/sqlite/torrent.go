@@ -1,12 +1,9 @@
 package sqlite
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/anacrolix/torrent/bencode"
-	"github.com/anacrolix/torrent/metainfo"
 	"github.com/huandu/go-sqlbuilder"
 	"prevtorrent/internal/preview"
 	"strings"
@@ -22,38 +19,40 @@ func NewTorrentRepository(db *sql.DB) *TorrentRepository {
 	return &TorrentRepository{db: db}
 }
 
-func (r *TorrentRepository) Persist(ctx context.Context, data []byte) error {
-	// TODO:  We should pass a preview.Info to store, really. Not this raw []byte data crap
-
-	// TODO: This block can be deleted
-	buf := bytes.NewBuffer(data)
-	d := bencode.NewDecoder(buf)
-
-	metaInfo := new(metainfo.MetaInfo)
-	if err := d.Decode(metaInfo); err != nil {
-		return err
-	}
-
-	info, err := metaInfo.UnmarshalInfo()
-	if err != nil {
-		return err
-	}
-	// TODO: Up until here...
-
+func (r *TorrentRepository) Persist(ctx context.Context, t preview.Info) error {
 	torrentSQLStruct := sqlbuilder.NewStruct(new(torrent))
 	query, args := torrentSQLStruct.InsertInto(sqlTorrentTable, torrent{
-		ID:          strings.ToLower(metaInfo.HashInfoBytes().HexString()),
-		Name:        info.Name,
-		Length:      int(info.TotalLength()),
-		PieceLength: int(info.PieceLength),
-		Raw:         data,
+		ID:          t.ID(),
+		Name:        t.Name(),
+		Length:      t.TotalLength(),
+		PieceLength: t.PieceLength(),
+		Raw:         t.Raw(),
 	}).Build()
 
-	_, err = r.db.ExecContext(ctx, query, args...)
+	_, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("error trying to persist torrent on database: %v", err)
 	}
 
+	err = r.storeFiles(ctx, t)
+	return err
+}
+
+func (r *TorrentRepository) storeFiles(ctx context.Context, t preview.Info) error {
+	fileSQLStructure := sqlbuilder.NewStruct(new(file))
+	for _, f := range t.Files() {
+		newF := file{
+			TorrentID: t.ID(),
+			ID:        f.ID(),
+			Name:      f.Name(),
+			Length:    f.Length(),
+		}
+		query, args := fileSQLStructure.InsertInto(sqlFileTable, newF).Build()
+		_, err := r.db.ExecContext(ctx, query, args...)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -65,8 +64,11 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 	query.Where(query.Equal("id", id))
 
 	sqlRaw, args := query.Build()
-	rows, _ := r.db.Query(sqlRaw, args...)
+	rows, err := r.db.Query(sqlRaw, args...)
 	defer rows.Close()
+	if err != nil {
+		return preview.Info{}, err
+	}
 
 	if !rows.Next() {
 		return preview.Info{}, preview.ErrNotFound
@@ -77,6 +79,39 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 		return preview.Info{}, err
 	}
 
-	// TODO: Store Files as well
-	return preview.NewInfo(id, t.Name, t.PieceLength, t.PieceLength, nil, t.Raw)
+	files, err := r.readFiles(ctx, id)
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	// TODO: Store Files and files count as well
+	return preview.NewInfo(id, t.Name, t.PieceLength, 0, files, t.Raw)
+}
+
+func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview.FileInfo, error) {
+	fileSQLStructure := sqlbuilder.NewStruct(new(file))
+	query := fileSQLStructure.SelectFrom(sqlFileTable)
+	query.Where(query.Equal("torrent_id", id))
+	query.OrderBy("id").Asc()
+
+	sqlRaw, args := query.Build()
+	rows, err := r.db.Query(sqlRaw, args...)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var files []preview.FileInfo
+	for rows.Next() {
+		var f file
+		if err := rows.Scan(fileSQLStructure.Addr(&f)...); err != nil {
+			return nil, err
+		}
+		fi, err := preview.NewFileInfo(f.ID, f.Length, f.Name)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, fi)
+	}
+	return files, nil
 }

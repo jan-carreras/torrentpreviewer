@@ -108,7 +108,6 @@ func (r *FileTorrentRepository) parseFileInfo(i metainfo.Info) ([]preview.FileIn
 		fi, err := preview.NewFileInfo(
 			idx,
 			int(file.Length),
-			filePath,
 			file.DisplayPath(&i),
 		)
 		if err != nil {
