@@ -13,7 +13,7 @@ const (
 	DownloadSize = 8 * mb
 )
 
-var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]{40})$")
+var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]+)$")
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
