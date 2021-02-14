@@ -137,8 +137,8 @@ type Piece struct {
 	data      []byte
 }
 
-func NewPiece(torrentID string, pieceID int, data []byte) Piece {
-	return Piece{torrentID: torrentID, pieceID: pieceID, data: data}
+func NewPiece(torrentID string, pieceID int, data []byte) *Piece {
+	return &Piece{torrentID: torrentID, pieceID: pieceID, data: data}
 }
 
 func (p Piece) TorrentID() string {

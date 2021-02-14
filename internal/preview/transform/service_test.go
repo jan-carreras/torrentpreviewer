@@ -20,7 +20,6 @@ func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {
 		"zocmzqipffw7ollmic5hub6bpcsdeoqu",
 		"test torrent",
 		100,
-		10,
 		nil,
 		[]byte("torrent-data"),
 	)
@@ -81,7 +80,6 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 		"zocmzqipffw7ollmic5hub6bpcsdeoqu",
 		"test torrent",
 		100,
-		10,
 		nil,
 		[]byte("torrent-data"),
 	)

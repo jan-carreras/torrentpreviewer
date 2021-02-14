@@ -72,7 +72,6 @@ func (r *FileTorrentRepository) Get(ctx context.Context, id string) (preview.Inf
 		torrentID,
 		i.Name,
 		int(i.PieceLength),
-		i.NumPieces(),
 		files,
 		raw,
 	)

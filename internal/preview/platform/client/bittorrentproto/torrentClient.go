@@ -50,7 +50,6 @@ func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) (preview.
 		t.Metainfo().HashInfoBytes().String(),
 		t.Name(),
 		int(t.Info().PieceLength),
-		t.NumPieces(),
 		files,
 		buf.Bytes(),
 	)
