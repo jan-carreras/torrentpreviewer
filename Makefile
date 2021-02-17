@@ -36,6 +36,11 @@ fmt:    ## format the go source files
 	go fmt ./...
 	goimports -w $(FILES)
 
+.PHONY: check
+check: ## Run linters & gofmt check
+	@test -z $(shell gofmt -l $(FILES) | tee /dev/stderr) || (echo "[ERR] Fix formatting issues with 'make fmt'" && false)
+	@which golangci-lint > /dev/null 2>/dev/null || (echo "ERROR: golangci-lint not found" && false)
+	@golangci-lint run
 
 .PHONY: mvp
 mvp: ## Show pending tasks to be done for MVP
