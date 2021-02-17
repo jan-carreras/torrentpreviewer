@@ -46,7 +46,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 		transform.NewTransformCommandHandler(
 			transform.NewService(
 				c.logger,
-				c.torrentIntegration,
+				c.magnetClient,
 				c.torrentRepo,
 			),
 		),
@@ -58,7 +58,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 			downloadPartials.NewService(
 				c.logger,
 				c.torrentRepo,
-				c.torrentIntegration,
+				c.torrentDownloader,
 				c.imageExtractor,
 				c.imagePersister,
 				c.imageRepository,

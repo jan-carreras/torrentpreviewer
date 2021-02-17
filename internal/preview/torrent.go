@@ -21,6 +21,11 @@ type TorrentRepository interface {
 	Get(ctx context.Context, id string) (Info, error)
 }
 
+//go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=TorrentDownloader
+type TorrentDownloader interface {
+	DownloadParts(context.Context, DownloadPlan) (*PieceRegistry, error)
+}
+
 var ErrNotFound = errors.New("record not found in storage")
 
 // TODO: That's the worst name of the whole universe

@@ -10,7 +10,7 @@ import (
 type Service struct {
 	logger            *logrus.Logger
 	torrentRepository preview.TorrentRepository
-	magnetClient      preview.MagnetClient
+	torrentDownloader preview.TorrentDownloader
 	imageExtractor    preview.ImageExtractor
 	imagePersister    preview.ImagePersister
 	imageRepository   preview.ImageRepository
@@ -19,7 +19,7 @@ type Service struct {
 func NewService(
 	logger *logrus.Logger,
 	torrentRepository preview.TorrentRepository,
-	magnetClient preview.MagnetClient,
+	torrentDownloader preview.TorrentDownloader,
 	imageExtractor preview.ImageExtractor,
 	imagePersister preview.ImagePersister,
 	imageRepository preview.ImageRepository,
@@ -27,7 +27,7 @@ func NewService(
 	return Service{
 		logger:            logger,
 		torrentRepository: torrentRepository,
-		magnetClient:      magnetClient,
+		torrentDownloader: torrentDownloader,
 		imageExtractor:    imageExtractor,
 		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
@@ -59,7 +59,7 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		return nil
 	}
 
-	registry, err := s.magnetClient.DownloadParts(ctx, *plan)
+	registry, err := s.torrentDownloader.DownloadParts(ctx, *plan)
 	if err != nil {
 		return err
 	}

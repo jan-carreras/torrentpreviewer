@@ -17,12 +17,13 @@ import (
 )
 
 type container struct {
-	torrentIntegration preview.MagnetClient
-	torrentRepo        preview.TorrentRepository
-	logger             *logrus.Logger
-	imageExtractor     preview.ImageExtractor
-	imagePersister     preview.ImagePersister
-	imageRepository    preview.ImageRepository
+	magnetClient      preview.MagnetClient
+	torrentDownloader preview.TorrentDownloader
+	torrentRepo       preview.TorrentRepository
+	logger            *logrus.Logger
+	imageExtractor    preview.ImageExtractor
+	imagePersister    preview.ImagePersister
+	imageRepository   preview.ImageRepository
 }
 
 func newContainer() (container, error) {
@@ -62,12 +63,13 @@ func newContainer() (container, error) {
 	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
 
 	return container{
-		torrentIntegration: torrentIntegration,
-		torrentRepo:        torrentRepo,
-		logger:             logger,
-		imageExtractor:     imageExtractor,
-		imagePersister:     imagePersister,
-		imageRepository:    imageRepository,
+		magnetClient:      torrentIntegration,
+		torrentDownloader: torrentIntegration,
+		torrentRepo:       torrentRepo,
+		logger:            logger,
+		imageExtractor:    imageExtractor,
+		imagePersister:    imagePersister,
+		imageRepository:   imageRepository,
 	}, nil
 }
 
