@@ -15,12 +15,20 @@ type PieceStorage interface {
 	Get(id int) (*Piece, bool)
 }
 
+// PieceInMemoryStorage is in charge of registering all the pieces/chunks received via a peer
+// and store it until is read.
+// Various pieces might create a file. Different files might share the same pieces. That's why
+// we inspect the DownloadPlan to know how many complete files depend on a given piece,
+// and when we read from the storage we subtract 1 from the pieceCount.
+// If the pieceCount gets to 0, we free the space. So this storage is mean to be read just once
+// per file. We do this to keep memory footprint low.
 type PieceInMemoryStorage struct {
 	pieceCount map[int]int
 	storage    map[int]*Piece
 	storageMux sync.RWMutex
 }
 
+// NewPieceInMemoryStorage creates a PieceInMemoryStorage
 func NewPieceInMemoryStorage(plan DownloadPlan) *PieceInMemoryStorage {
 	count := make(map[int]int)
 	for _, p := range plan.GetPlan() {
@@ -35,20 +43,28 @@ func NewPieceInMemoryStorage(plan DownloadPlan) *PieceInMemoryStorage {
 	}
 }
 
+// Set saves a piece in the storage
 func (m *PieceInMemoryStorage) Set(p *Piece) {
 	m.storageMux.Lock()
 	defer m.storageMux.Unlock()
 	m.storage[p.pieceID] = p
 }
 
+// Get returns a piece from the storage. Each piece has an associates counter,
+// and each time we read a piece the counter gets down by one. If it gets to
+// 0, we delete the piece
 func (m *PieceInMemoryStorage) Get(id int) (*Piece, bool) {
 	m.storageMux.RLock()
-	defer m.storageMux.RUnlock()
 	p, found := m.storage[id]
+	m.storageMux.RUnlock()
+
 	if !found {
 		return nil, found
 
 	}
+
+	m.storageMux.Lock()
+	defer m.storageMux.Unlock()
 	m.pieceCount[id]--
 	if m.pieceCount[id] == 0 {
 		delete(m.pieceCount, id)
@@ -57,17 +73,25 @@ func (m *PieceInMemoryStorage) Get(id int) (*Piece, bool) {
 	return p, found
 }
 
+// PieceRegistry keeps track of all the pieces downloaded for a DownloadPlan
+// and knows when we have all the pieces to generate a file.
+// It operates reading from pieceIncomingCh channel and outputs to the
+// plansCompletedCh when a PieceRange has all its pieces. Then an outside actor
+// can read the pieces from the storage.
+// TODO: This struct has too many responsabilities, too many channel logic and probably
+//       a lot of hidden bugs.
 type PieceRegistry struct {
 	downloadPlan        *DownloadPlan
 	storage             PieceStorage
 	matcher             map[int][]*pieceRangeCounter
 	pieceIncomingCh     chan *Piece
 	pieceIncomingChMux  sync.Once
-	plansCompletedCh    chan PieceRange // Well, because I would have to call "bundle" from here.
+	plansCompletedCh    chan PieceRange
 	plansCompletedChMux sync.Once
 	notifiedPieces      int
 }
 
+// NewPieceRegistry creates a PieceRegistry
 func NewPieceRegistry(ctx context.Context, plan *DownloadPlan, storage PieceStorage) (*PieceRegistry, error) {
 	if plan.CountPieces() == 0 {
 		return nil, ErrPriceRegistryWithNothingToWaitFor
@@ -95,27 +119,53 @@ func NewPieceRegistry(ctx context.Context, plan *DownloadPlan, storage PieceStor
 	return pr, nil
 }
 
+// GetPiece reads a piece from the storage and returns it
 func (pr *PieceRegistry) GetPiece(idx int) (*Piece, bool) {
 	return pr.storage.Get(idx)
 }
 
-func (pr *PieceRegistry) listenForPieces(ctx context.Context) {
-	go pr.listen(ctx)
-}
-
+// SubscribeAllPartsDownloaded returns the channel where all the PieceRange
+// are going to be published when completed.
 func (pr *PieceRegistry) SubscribeAllPartsDownloaded() chan PieceRange {
-
 	return pr.plansCompletedCh
 }
 
+//  RegisterPiece sends a piece downloaded by the torrent without blocking
 func (pr *PieceRegistry) RegisterPiece(piece *Piece) {
 	pr.pieceIncomingCh <- piece
 }
 
+// NoMorePieces notifies that there is no more incoming data and we can stop
+// listening for more pices. It usually means that the torrent has downloaded
+// all what's in the DownloadPlan
 func (pr *PieceRegistry) NoMorePieces() {
 	pr.pieceIncomingChMux.Do(func() {
 		close(pr.pieceIncomingCh)
 	})
+}
+
+// RunOnPieceReady receives a callback and executes it every time a PieceRange
+// from the DownloadPlan has been completed
+func (pr *PieceRegistry) RunOnPieceReady(ctx context.Context, fnx func(part PieceRange) error) error {
+	for {
+		select {
+		case part, isOpen := <-pr.SubscribeAllPartsDownloaded():
+			if !isOpen {
+				return nil
+			}
+
+			if err := fnx(part); err != nil {
+				return err
+			}
+
+		case <-ctx.Done():
+			return errors.New("context cancelled")
+		}
+	}
+}
+
+func (pr *PieceRegistry) listenForPieces(ctx context.Context) {
+	go pr.listen(ctx)
 }
 
 func (pr *PieceRegistry) closeIncomingChanel() {
@@ -157,11 +207,12 @@ func (pr *PieceRegistry) listen(ctx context.Context) {
 		select {
 		case piece, isOpen := <-pr.pieceIncomingCh:
 			if !isOpen {
-				//pr.logger.Debug("no more input. Seems that those were all the pieces")
+				//pr.logger.Debug("no more input. Seems that those were all the pieces") // TODO: Review
 				pr.closeIncomingChanel()
 				return
 			}
 
+			// TODO: Review
 			/*log := pr.logger.WithFields(logrus.Fields{
 				"torrentID": piece.TorrentID(),
 				"piece":     piece.ID(),
@@ -171,28 +222,10 @@ func (pr *PieceRegistry) listen(ctx context.Context) {
 				///log.Error(err)
 				return
 			}
-			//log.Debug("part added to registry")
+			//log.Debug("part added to registry")  // TODO: Review
 		case <-ctx.Done():
 			pr.closeIncomingChanel()
 			return
-		}
-	}
-}
-
-func (pr *PieceRegistry) RunOnPieceReady(ctx context.Context, fnx func(part PieceRange) error) error {
-	for {
-		select {
-		case part, isOpen := <-pr.SubscribeAllPartsDownloaded():
-			if !isOpen {
-				return nil
-			}
-
-			if err := fnx(part); err != nil {
-				return err
-			}
-
-		case <-ctx.Done():
-			return errors.New("context cancelled")
 		}
 	}
 }
