@@ -3,8 +3,9 @@ package downloadPartials
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (

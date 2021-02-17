@@ -2,10 +2,11 @@ package file
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ImagePersister struct {

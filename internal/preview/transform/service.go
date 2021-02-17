@@ -3,8 +3,9 @@ package transform
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Service struct {
@@ -58,6 +59,6 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return s.torrentRepository.Persist(ctx, torrent)
 }

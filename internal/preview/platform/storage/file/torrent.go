@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/anacrolix/torrent/bencode"
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"path"
 	"prevtorrent/internal/preview"
+
+	"github.com/anacrolix/torrent/bencode"
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/sirupsen/logrus"
 )
 
 type FileTorrentRepository struct {

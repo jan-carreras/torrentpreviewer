@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/anacrolix/torrent"
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
 	"sync"
 	"time"
+
+	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/sirupsen/logrus"
 )
 
 const maxDownloadTime = time.Minute * 15

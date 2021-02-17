@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	errors2 "github.com/pkg/errors"
 	"prevtorrent/kit/command"
+
+	errors2 "github.com/pkg/errors"
 )
 
 const CommandType command.Type = "command.downloadPartials.preview"

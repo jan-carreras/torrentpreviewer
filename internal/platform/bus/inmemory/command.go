@@ -2,8 +2,9 @@ package inmemory
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/kit/command"
+
+	"github.com/sirupsen/logrus"
 )
 
 type SyncCommandBus struct {

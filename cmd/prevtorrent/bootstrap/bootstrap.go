@@ -1,11 +1,12 @@
 package bootstrap
 
 import (
-	"github.com/spf13/viper"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/transform"
+
+	"github.com/spf13/viper"
 )
 
 const projectName = "prevtorrent"

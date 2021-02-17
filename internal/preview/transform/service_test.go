@@ -3,15 +3,16 @@ package transform_test
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/clientmocks"
 	"prevtorrent/internal/preview/platform/storage/storagemocks"
 	"prevtorrent/internal/preview/transform"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {

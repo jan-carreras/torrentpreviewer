@@ -1,9 +1,10 @@
 package preview_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"prevtorrent/internal/preview"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Piece(t *testing.T) {

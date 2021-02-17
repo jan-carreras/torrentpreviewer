@@ -2,10 +2,11 @@ package preview_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"prevtorrent/internal/preview"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMediaPart(t *testing.T) {

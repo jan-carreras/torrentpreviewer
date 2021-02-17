@@ -1,8 +1,9 @@
 package preview
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPieceRangeCounter_TwoPieces(t *testing.T) {

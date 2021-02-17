@@ -3,9 +3,6 @@ package downloadPartials_test
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
@@ -13,6 +10,10 @@ import (
 	"prevtorrent/internal/preview/platform/storage/storagemocks"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestService_DownloadPartials_GetTorrentError(t *testing.T) {

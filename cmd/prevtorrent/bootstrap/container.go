@@ -3,10 +3,6 @@ package bootstrap
 import (
 	"database/sql"
 	"fmt"
-	"github.com/anacrolix/torrent"
-	"github.com/anacrolix/torrent/storage"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/storage/file"
@@ -14,6 +10,11 @@ import (
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"sort"
 	"strings"
+
+	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/storage"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type container struct {
