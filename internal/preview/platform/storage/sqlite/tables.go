@@ -26,5 +26,4 @@ type media struct {
 	FileID    int    `db:"file_id"`
 	Name      string `db:"name"`
 	Length    int    `db:"length"`
-	Source    string `db:"source"`
 }

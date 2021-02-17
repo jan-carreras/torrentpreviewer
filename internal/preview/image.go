@@ -28,11 +28,10 @@ type Image struct {
 	fileID    int
 	name      string
 	length    int
-	source    string // TODO: Do we need a name and a source? Really? What's the difference, really? UUID? Meh.
 }
 
-func NewImage(torrentID string, fileID int, name string, length int, source string) Image {
-	return Image{torrentID: torrentID, fileID: fileID, name: name, length: length, source: source}
+func NewImage(torrentID string, fileID int, name string, length int) Image {
+	return Image{torrentID: torrentID, fileID: fileID, name: name, length: length}
 }
 
 func (i Image) TorrentID() string {
@@ -49,8 +48,4 @@ func (i Image) Name() string {
 
 func (i Image) Length() int {
 	return i.length
-}
-
-func (i Image) Source() string {
-	return i.source
 }

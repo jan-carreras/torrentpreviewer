@@ -83,7 +83,6 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 			part.FileID(),
 			part.Name(),
 			len(imgBytes),
-			part.Name(),
 		)
 		if err := s.imageRepository.Persist(ctx, img); err != nil {
 			return err

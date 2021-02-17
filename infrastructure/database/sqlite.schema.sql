@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS media
     file_id    int         NOT NULL,
     name       TEXT        NOT NULL,
     length     INT         NOT NULL,
-    source     TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (torrent_id) REFERENCES torrents (id),
     FOREIGN KEY (torrent_id, file_id) REFERENCES files (torrent_id, id),

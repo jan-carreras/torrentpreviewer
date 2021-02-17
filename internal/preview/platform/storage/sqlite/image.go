@@ -35,7 +35,7 @@ func (r *ImageRepository) ByTorrent(ctx context.Context, id string) (*preview.To
 		if err := rows.Scan(sqlStructure.Addr(&m)...); err != nil {
 			return nil, err
 		}
-		images = append(images, preview.NewImage(m.TorrentID, m.FileID, m.Name, m.Length, m.Source))
+		images = append(images, preview.NewImage(m.TorrentID, m.FileID, m.Name, m.Length))
 	}
 	return preview.NewTorrentImages(images), nil
 
@@ -48,7 +48,6 @@ func (r *ImageRepository) Persist(ctx context.Context, img preview.Image) error 
 		FileID:    img.FileID(),
 		Name:      img.Name(),
 		Length:    img.Length(),
-		Source:    img.Source(),
 	}).Build()
 
 	_, err := r.db.ExecContext(ctx, query, args...)
