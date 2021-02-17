@@ -1,15 +1,15 @@
 - [x] Given a Magnet link, be able to list all the files there are available
 - [x] Store the information from a Magnet link somewhere
-- [ ] Use sqlite to store torrent information
+- [x] Use sqlite to store torrent information
     - [x] Store magnet to torrent info
     - [x] Store torrent info
-    - [ ] Store images we have on a torrent
+    - [x] Store images we have on a torrent
     - [x] All of those can have extra metadata like timestamps, who requested everything and shit
 - [x] Given a file on a magnet link, find the mp4 files on them and extract 1 image from the start
     - [x] Using ffmpeg extract the image
-    - [ ] The images need to be stored on a public accessible storage (#v2)
+    - [x] The images need to be stored on a public accessible storage (#v2)
 - [x] Create an HTTP API to serve information about the torrent and its images
-- [ ] Check if attaching the end of a video with the moov atom fixes image extraction problems
+- [x] Check if attaching the end of a video with the moov atom fixes image extraction problems
 - [ ] Add comments on all the various objects in Domain
 - [ ] Reduce disk/memory usage
     - [ ] We're never cleaning up boldDB and might get huge
