@@ -3,6 +3,7 @@ package sqlite
 const (
 	sqlTorrentTable = "torrents"
 	sqlFileTable    = "files"
+	sqlMediaTable   = "media"
 )
 
 type torrent struct {
@@ -18,4 +19,12 @@ type file struct {
 	ID        int    `db:"id"`
 	Name      string `db:"name"`
 	Length    int    `db:"length"`
+}
+
+type media struct {
+	TorrentID string `db:"torrent_id"`
+	FileID    int    `db:"file_id"`
+	Name      string `db:"name"`
+	Length    int    `db:"length"`
+	Source    string `db:"source"`
 }

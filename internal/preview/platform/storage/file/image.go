@@ -8,16 +8,16 @@ import (
 	"path"
 )
 
-type ImageRepository struct {
+type ImagePersister struct {
 	logger   *logrus.Logger
 	imageDir string
 }
 
-func NewImageRepository(logger *logrus.Logger, imageDir string) *ImageRepository {
-	return &ImageRepository{logger: logger, imageDir: imageDir}
+func NewImagePersister(logger *logrus.Logger, imageDir string) *ImagePersister {
+	return &ImagePersister{logger: logger, imageDir: imageDir}
 }
 
-func (r *ImageRepository) PersistFile(ctx context.Context, id string, data []byte) error {
+func (r *ImagePersister) PersistFile(ctx context.Context, id string, data []byte) error {
 	if err := ensureDirectoryExists(r.imageDir); err != nil {
 		return err
 	}

@@ -96,6 +96,10 @@ func (p PieceRange) Name() string {
 	return strings.ReplaceAll(p.fi.name, "/", "--")
 }
 
+func (p PieceRange) FileID() int {
+	return p.fi.ID()
+}
+
 func (p PieceRange) Start() int {
 	return p.pieceStart
 }

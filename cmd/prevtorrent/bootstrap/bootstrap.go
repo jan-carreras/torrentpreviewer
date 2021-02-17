@@ -60,6 +60,7 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 				c.torrentRepo,
 				c.torrentIntegration,
 				c.imageExtractor,
+				c.imagePersister,
 				c.imageRepository,
 			),
 		),

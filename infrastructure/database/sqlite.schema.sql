@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS media
     source     TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (torrent_id) REFERENCES torrents (id),
-    FOREIGN KEY (torrent_id, file_id) REFERENCES files (torrent_id, id)
+    FOREIGN KEY (torrent_id, file_id) REFERENCES files (torrent_id, id),
+    UNIQUE (torrent_id, file_id, name)
 );
 CREATE INDEX media_torrent_id_file_id ON media (torrent_id, file_id);

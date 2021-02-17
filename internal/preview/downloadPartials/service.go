@@ -12,6 +12,7 @@ type Service struct {
 	torrentRepository preview.TorrentRepository
 	magnetClient      preview.MagnetClient
 	imageExtractor    preview.ImageExtractor
+	imagePersister    preview.ImagePersister
 	imageRepository   preview.ImageRepository
 }
 
@@ -20,6 +21,7 @@ func NewService(
 	torrentRepository preview.TorrentRepository,
 	magnetClient preview.MagnetClient,
 	imageExtractor preview.ImageExtractor,
+	imagePersister preview.ImagePersister,
 	imageRepository preview.ImageRepository,
 ) Service {
 	return Service{
@@ -27,6 +29,7 @@ func NewService(
 		torrentRepository: torrentRepository,
 		magnetClient:      magnetClient,
 		imageExtractor:    imageExtractor,
+		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
 	}
 }
@@ -54,14 +57,26 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		if err != nil {
 			return err
 		}
-		img, err := s.extractImage(ctx, part, downloaded)
+		imgBytes, err := s.extractImage(ctx, part, downloaded)
 		if err != nil {
 			return err
 		}
 
-		if err := s.storeImage(ctx, img, downloaded.Name(), part); err != nil {
+		if err := s.storeBinaryImage(ctx, imgBytes, downloaded.Name(), part); err != nil {
 			return err
 		}
+
+		img := preview.NewImage(
+			part.Torrent().ID(),
+			part.FileID(),
+			downloaded.Name(),
+			len(imgBytes),
+			downloaded.Name(),
+		)
+		if err := s.imageRepository.Persist(ctx, img); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	return err
@@ -90,6 +105,7 @@ func (s Service) getBundle(registry *preview.PieceRegistry, part preview.PieceRa
 
 func (s Service) extractImage(ctx context.Context, part preview.PieceRange, downloadedPart preview.MediaPart) ([]byte, error) {
 	// TODO: If we don't need the files in bold.db those can be deleted
+	// TODO: if the image is 0 bytes, means probably an MOOV ATOm problem and we don't need it to be saved
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
 	if errors.Is(err, preview.ErrAtomNotFound) {
 		s.logger.WithFields(logrus.Fields{
@@ -120,9 +136,9 @@ func (s Service) extractImage(ctx context.Context, part preview.PieceRange, down
 	return img, nil
 }
 
-func (s Service) storeImage(ctx context.Context, img []byte, name string, part preview.PieceRange) error {
+func (s Service) storeBinaryImage(ctx context.Context, img []byte, name string, part preview.PieceRange) error {
 	// TODO: Register persisted image in the DB for reference
-	err := s.imageRepository.PersistFile(ctx, name, img)
+	err := s.imagePersister.PersistFile(ctx, name, img)
 	if err != nil {
 		return err
 	}

@@ -21,6 +21,7 @@ type container struct {
 	torrentRepo        preview.TorrentRepository
 	logger             *logrus.Logger
 	imageExtractor     preview.ImageExtractor
+	imagePersister     preview.ImagePersister
 	imageRepository    preview.ImageRepository
 }
 
@@ -35,12 +36,19 @@ func newContainer() (container, error) {
 
 	imageExtractor := ffmpeg.NewInMemoryFfmpeg(logger)
 
-	imageRepository := file.NewImageRepository(logger, viper.GetString("ImageDir"))
+	imagePersister := file.NewImagePersister(logger, viper.GetString("ImageDir"))
 
-	torrentRepo, err := getTorrentRepository(logger)
+	sqliteDatabase, err := sql.Open("sqlite3", viper.GetString("SqlitePath"))
 	if err != nil {
 		return container{}, err
 	}
+
+	torrentRepo, err := getTorrentRepository(logger, sqliteDatabase)
+	if err != nil {
+		return container{}, err
+	}
+
+	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
 	conf := torrent.NewDefaultClientConfig()
 	conf.DefaultStorage = storage.NewBoltDB(viper.GetString("BoltDBDir"))
@@ -58,11 +66,12 @@ func newContainer() (container, error) {
 		torrentRepo:        torrentRepo,
 		logger:             logger,
 		imageExtractor:     imageExtractor,
+		imagePersister:     imagePersister,
 		imageRepository:    imageRepository,
 	}, nil
 }
 
-func getTorrentRepository(logger *logrus.Logger) (preview.TorrentRepository, error) {
+func getTorrentRepository(logger *logrus.Logger, sqliteDatabase *sql.DB) (preview.TorrentRepository, error) {
 	/*fileDriver := func() (preview.TorrentRepository, error) {
 		return file.NewTorrentRepository(
 			logger,
@@ -71,10 +80,6 @@ func getTorrentRepository(logger *logrus.Logger) (preview.TorrentRepository, err
 		), nil
 	}*/
 	sqliteDrier := func() (preview.TorrentRepository, error) {
-		sqliteDatabase, err := sql.Open("sqlite3", viper.GetString("SqlitePath"))
-		if err != nil {
-			return nil, err
-		}
 
 		return sqlite.NewTorrentRepository(sqliteDatabase), nil
 	}
