@@ -10,7 +10,7 @@
     - [x] The images need to be stored on a public accessible storage (#v2)
 - [x] Create an HTTP API to serve information about the torrent and its images
 - [x] Check if attaching the end of a video with the moov atom fixes image extraction problems
-- [ ] Add comments on all the various objects in Domain
+- [x] Add comments on all the various objects in Domain
 - [ ] Reduce disk/memory usage
     - [ ] We're never cleaning up boldDB and might get huge
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished. Can be improved.

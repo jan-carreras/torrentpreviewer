@@ -14,13 +14,15 @@ type MagnetClient interface {
 	Resolve(context.Context, Magnet) (Info, error)
 }
 
+// Magnet represents a magnet
 type Magnet struct {
-	id    string
-	value string
+	id    string // the identifier of the magnet
+	value string // the full URI like: magnet:\xt=....
 }
 
 var ErrInvalidMagnetFormat = errors.New("invalid magnet")
 
+// NewMagnet returns a Magnet
 func NewMagnet(value string) (Magnet, error) {
 	if !magnetValidationRegexp.Match([]byte(value)) {
 		return Magnet{}, ErrInvalidMagnetFormat
@@ -29,10 +31,12 @@ func NewMagnet(value string) (Magnet, error) {
 	return Magnet{id: id, value: value}, nil
 }
 
+// Value returns the URI of the magnet
 func (m Magnet) Value() string {
 	return m.value
 }
 
+// ID returns the identified parsed from the URI of the magnet
 func (m Magnet) ID() string {
 	return m.id
 }

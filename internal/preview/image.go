@@ -23,6 +23,7 @@ type ImageRepository interface {
 	Persist(ctx context.Context, img Image) error
 }
 
+// Image describes a single image, probably extracted from a video
 type Image struct {
 	torrentID string
 	fileID    int
@@ -30,22 +31,27 @@ type Image struct {
 	length    int
 }
 
+// NewImage returns an Image
 func NewImage(torrentID string, fileID int, name string, length int) Image {
 	return Image{torrentID: torrentID, fileID: fileID, name: name, length: length}
 }
 
+// TorrentID returns the obvious
 func (i Image) TorrentID() string {
 	return i.torrentID
 }
 
+// FileID returns the obvious
 func (i Image) FileID() int {
 	return i.fileID
 }
 
+// FileID returns the name of the file
 func (i Image) Name() string {
 	return i.name
 }
 
+// Length returns the length of the file in bytes
 func (i Image) Length() int {
 	return i.length
 }
