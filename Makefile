@@ -13,3 +13,8 @@ generate:
 PHONY: test
 test: generate
 	go test -cover ./... | grep -v "mocks"
+
+PHONY: test
+mvp:
+	@grep "\[ \]" TODO | grep mvp
+
