@@ -84,7 +84,6 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 		return preview.Info{}, err
 	}
 
-	// TODO: Store Files and files count as well
 	return preview.NewInfo(id, t.Name, t.PieceLength, files, t.Raw)
 }
 
