@@ -1,11 +1,9 @@
-
-
 ## Database
 
 ### Sqlite
 
 Initialize by running:
 
-````bash
+```bash
 sqlite3 prevtorrent.sqlite < infrastructure/database/sqlite.schema.sql
 ```
