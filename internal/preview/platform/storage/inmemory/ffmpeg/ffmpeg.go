@@ -94,7 +94,7 @@ func (i *InMemoryFfmpeg) logCommandFailed(err error, stdOut, stdErr *bytes.Buffe
 }
 
 func (i *InMemoryFfmpeg) isAtomNotFound(stderr string) bool {
-	return strings.Index(stderr, "moov atom not found") >= 0
+	return strings.Contains(stderr, "moov atom not found")
 }
 
 func rmFile(src string) {

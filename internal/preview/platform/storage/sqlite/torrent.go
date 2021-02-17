@@ -65,10 +65,10 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 
 	sqlRaw, args := query.Build()
 	rows, err := r.db.Query(sqlRaw, args...)
-	defer rows.Close()
 	if err != nil {
 		return preview.Info{}, err
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
 		return preview.Info{}, preview.ErrNotFound
@@ -95,10 +95,10 @@ func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview
 
 	sqlRaw, args := query.Build()
 	rows, err := r.db.Query(sqlRaw, args...)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var files []preview.FileInfo
 	for rows.Next() {

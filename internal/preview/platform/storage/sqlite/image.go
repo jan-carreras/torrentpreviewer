@@ -24,10 +24,10 @@ func (r *ImageRepository) ByTorrent(ctx context.Context, id string) (*preview.To
 
 	sqlRaw, args := query.Build()
 	rows, err := r.db.Query(sqlRaw, args...)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var images []preview.Image
 	for rows.Next() {

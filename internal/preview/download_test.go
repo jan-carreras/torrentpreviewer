@@ -161,6 +161,7 @@ func TestDownloadPlan_GetTorrent(t *testing.T) {
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
+	assert.NoError(t, err)
 
 	torrentImages := preview.NewTorrentImages(nil)
 
@@ -175,6 +176,7 @@ func TestDownloadPlan_GetPlan(t *testing.T) {
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
+	assert.NoError(t, err)
 
 	torrentImages := preview.NewTorrentImages(nil)
 
@@ -191,6 +193,7 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	f2, err := preview.NewFileInfo(0, 500, "movie2.mp4")
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
+	assert.NoError(t, err)
 
 	torrentImages := preview.NewTorrentImages(nil)
 

@@ -21,7 +21,6 @@ func (c CMD) Type() command.Type {
 
 type CommandHandler struct {
 	service Service
-	cmd     CMD
 }
 
 func NewCommandHandler(service Service) CommandHandler {

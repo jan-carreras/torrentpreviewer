@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var magnetValidationRegexp = regexp.MustCompile("magnet:\\?xt=urn:btih:([a-zA-Z0-9]*)")
+var magnetValidationRegexp = regexp.MustCompile(`magnet:\?xt=urn:btih:([a-zA-Z0-9]*)`)
 
 //go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=MagnetClient
 type MagnetClient interface {
