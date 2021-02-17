@@ -118,8 +118,6 @@ func (s Service) getBundle(registry *preview.PieceRegistry, part preview.PieceRa
 }
 
 func (s Service) extractImage(ctx context.Context, part preview.PieceRange, downloadedPart preview.MediaPart) ([]byte, error) {
-	// TODO: If we don't need the files in bold.db those can be deleted
-	// TODO: if the image is 0 bytes, means probably an MOOV ATOm problem and we don't need it to be saved
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
 	if errors.Is(err, preview.ErrAtomNotFound) {
 		s.logger.WithFields(logrus.Fields{
@@ -151,7 +149,6 @@ func (s Service) extractImage(ctx context.Context, part preview.PieceRange, down
 }
 
 func (s Service) storeBinaryImage(ctx context.Context, img []byte, name string, part preview.PieceRange) error {
-	// TODO: Register persisted image in the DB for reference
 	err := s.imagePersister.PersistFile(ctx, name, img)
 	if err != nil {
 		return err
