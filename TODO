@@ -12,12 +12,12 @@
 - [x] Check if attaching the end of a video with the moov atom fixes image extraction problems
 - [x] Add comments on all the various objects in Domain
 - [ ] Reduce disk/memory usage
-    - [ ] We're never cleaning up boldDB and will get huge
+    - [ ] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
 - [ ] Implement the HTTP endpoints
     - [ ] POST /magnet
-    - [ ] POST /torrent
-    - [ ] GET  /torrent/:id
+    - [ ] POST /torrent #mvp
+    - [ ] GET  /torrent/:id #mvp
     - [ ] DELETE /torrent/:id
     - [ ] Redis Cache
         - [ ] This endpoint should make intensive use of Redis for caching for reading
@@ -31,19 +31,20 @@
     - [ ] Test the infrastructure regarding SQLite
     - [ ] Think about integration tests for file/inmemory storages
 - [ ] Project
-    - [ ] Publish it to a private repository
+    - [ ] Publish it to a private repository #mvp
     - [ ] Rethink license
-    - [ ] Add linters & checkers to ensure source code is good
+    - [ ] Add linters & checkers to ensure source code is good #mvp
     - [ ] Add usual automation stuff
 - [ ] Front end.... sigh. Can someone help with that? I don't really fancy doing it...
     - [ ] Make an MVP
         - [ ] Magnet input
-        - [ ] Torrent uploader
-        - [ ] Static torrent view with an polling AJAX that reloads the page on new images, or alike
-- [ ] Prepare for Production
+        - [ ] Torrent uploader #mvp
+        - [ ] Static torrent view with an polling AJAX that reloads the page on new images, or alike #mvp
+- [ ] Prepare for Production #mvp
     - [ ] Create a virtual credit card to pay for all this shite
     - [ ] Image storage: Check in lowendbox.com something with proper storage
         - [ ] Example https://lowendbox.com/blog/servarica-10-month-3gb-vps-with-3-tb-disk-space-in-montreal-canada/
     - [ ] Torrent downloader: Investigate for cheap CPU-Intensive hostings
     - [ ] Create a simple build pipeline and deploy system
     - [ ] Buy domain and add a "Coming Soon webpage"
+    - [ ] Install Krakend as a server
