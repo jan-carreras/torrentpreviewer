@@ -7,6 +7,10 @@ import (
 	"prevtorrent/internal/preview"
 )
 
+const (
+	frameTimeToExtract = 5 // in seconds
+)
+
 type Service struct {
 	logger            *logrus.Logger
 	torrentRepository preview.TorrentRepository
@@ -115,7 +119,7 @@ func (s Service) getBundle(registry *preview.PieceRegistry, part preview.PieceRa
 }
 
 func (s Service) extractImage(ctx context.Context, part preview.PieceRange, downloadedPart preview.MediaPart) ([]byte, error) {
-	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
+	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), frameTimeToExtract)
 	if errors.Is(err, preview.ErrAtomNotFound) {
 		s.logger.WithFields(logrus.Fields{
 			"torrentID":  part.Torrent().ID(),

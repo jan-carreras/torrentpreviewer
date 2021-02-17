@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path"
 	"prevtorrent/internal/preview"
+	"strconv"
 	"strings"
 )
 
@@ -32,7 +33,7 @@ func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
 }
 
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
-	frameExtractionTime := "0:00:05.000" // TODO: Use time parameter instead
+	frameExtractionTime := strconv.Itoa(time)
 
 	id, err := uuid.NewRandom()
 	if err != nil {
