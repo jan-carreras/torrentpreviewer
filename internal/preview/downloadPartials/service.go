@@ -40,9 +40,23 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
-	plan := preview.NewDownloadPlan(torrent)
+	torrentImages, err := s.imageRepository.ByTorrent(ctx, cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	plan := preview.NewDownloadPlan(torrent, torrentImages)
 	if err := plan.AddAll(); err != nil {
 		return err
+	}
+
+	if plan.CountPieces() == 0 {
+		s.logger.WithFields(logrus.Fields{
+			"torrentID":  torrent.ID(),
+			"name":       torrent.Name(),
+			"pieceCount": plan.CountPieces(),
+		}).Debug("the download plan is empty. either downloaded or no supported files")
+		return nil
 	}
 
 	registry, err := s.magnetClient.DownloadParts(ctx, *plan)

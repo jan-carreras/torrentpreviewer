@@ -19,7 +19,7 @@ type ImagePersister interface {
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=ImageRepository
 type ImageRepository interface {
-	ByMedia(ctx context.Context, id string) ([]Image, error)
+	ByTorrent(ctx context.Context, id string) (*TorrentImages, error)
 	Persist(ctx context.Context, img Image) error
 }
 
@@ -28,7 +28,7 @@ type Image struct {
 	fileID    int
 	name      string
 	length    int
-	source    string
+	source    string // TODO: Do we need a name and a source? Really? What's the difference, really? UUID? Meh.
 }
 
 func NewImage(torrentID string, fileID int, name string, length int, source string) Image {

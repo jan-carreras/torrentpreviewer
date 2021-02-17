@@ -6,14 +6,16 @@ import (
 )
 
 type DownloadPlan struct {
-	torrent     Info
-	pieceRanges []PieceRange
+	torrent       Info
+	torrentImages *TorrentImages
+	pieceRanges   []PieceRange
 }
 
-func NewDownloadPlan(torrent Info) *DownloadPlan {
+func NewDownloadPlan(torrent Info, torrentImages *TorrentImages) *DownloadPlan {
 	return &DownloadPlan{
-		torrent:     torrent,
-		pieceRanges: make([]PieceRange, 0),
+		torrent:       torrent,
+		torrentImages: torrentImages,
+		pieceRanges:   make([]PieceRange, 0),
 	}
 }
 
@@ -59,8 +61,14 @@ func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, length, offset int) error
 	}
 
 	start := findStartingByteOfFile(dp.torrent, fi)
+	pr := NewPieceRange(dp.torrent, fi, start, offset, length)
 
-	dp.addToDownloadPlan(NewPieceRange(dp.torrent, fi, start, offset, length))
+	if dp.torrentImages.IsAlreadyDownloaded(pr.Name()) {
+		// TODO: I would like to add a log for that, tbh
+		return nil
+	}
+
+	dp.addToDownloadPlan(pr)
 	return nil
 }
 

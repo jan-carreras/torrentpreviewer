@@ -78,3 +78,21 @@ func (b BundlePlan) Bundle(registry *PieceRegistry, pieceRange PieceRange) (Medi
 
 	return NewMediaPart(pieceRange.Torrent().ID(), pieceRange, piece.Bytes()), nil
 }
+
+type TorrentImages struct {
+	images    []Image
+	imageName map[string]interface{}
+}
+
+func NewTorrentImages(images []Image) *TorrentImages {
+	imageName := make(map[string]interface{})
+	for _, img := range images {
+		imageName[img.name] = struct{}{}
+	}
+	return &TorrentImages{images: images, imageName: imageName}
+}
+
+func (a *TorrentImages) IsAlreadyDownloaded(name string) bool {
+	_, found := a.imageName[name]
+	return found
+}

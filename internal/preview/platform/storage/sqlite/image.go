@@ -16,8 +16,29 @@ func NewImageRepository(db *sql.DB) *ImageRepository {
 	return &ImageRepository{db: db}
 }
 
-func (r *ImageRepository) ByMedia(ctx context.Context, id string) ([]preview.Image, error) {
-	panic("implement me")
+func (r *ImageRepository) ByTorrent(ctx context.Context, id string) (*preview.TorrentImages, error) {
+	sqlStructure := sqlbuilder.NewStruct(new(media))
+	query := sqlStructure.SelectFrom(sqlMediaTable)
+	query.Where(query.Equal("torrent_id", id))
+	query.OrderBy("id").Asc()
+
+	sqlRaw, args := query.Build()
+	rows, err := r.db.Query(sqlRaw, args...)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var images []preview.Image
+	for rows.Next() {
+		var m media
+		if err := rows.Scan(sqlStructure.Addr(&m)...); err != nil {
+			return nil, err
+		}
+		images = append(images, preview.NewImage(m.TorrentID, m.FileID, m.Name, m.Length, m.Source))
+	}
+	return preview.NewTorrentImages(images), nil
+
 }
 
 func (r *ImageRepository) Persist(ctx context.Context, img preview.Image) error {
