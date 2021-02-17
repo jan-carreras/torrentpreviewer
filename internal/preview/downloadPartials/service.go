@@ -64,8 +64,6 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
-	registry.ListenForPieces(ctx)
-
 	err = registry.RunOnPieceReady(ctx, func(part preview.PieceRange) error {
 		downloaded, err := s.getBundle(registry, part)
 		if err != nil {

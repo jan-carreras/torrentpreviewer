@@ -68,7 +68,7 @@ func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) err
 
 func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) (*preview.PieceRegistry, error) {
 	storage := preview.NewPieceInMemoryStorage(downloadPlan)
-	registry, err := preview.NewPieceRegistry(&downloadPlan, storage)
+	registry, err := preview.NewPieceRegistry(ctx, &downloadPlan, storage)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, maxDownloadTime)
 	defer cancel()
-	
+
 	for waitingFor > 0 {
 		select {
 		case _v, isOpen := <-t.SubscribePieceStateChanges().Values:

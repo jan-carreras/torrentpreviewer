@@ -104,7 +104,9 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	torrent, err := preview.NewInfo(torrentID, "test movie", 25, files, []byte(""))
 	assert.NoError(t, err)
 
-	plan := preview.NewDownloadPlan(torrent)
+	ti := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent, ti)
 	assert.NoError(t, plan.AddAll())
 
 	part0 := []byte("0123456789012345678912345")
@@ -115,14 +117,12 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			registry, err := preview.NewPieceRegistry(plan, preview.NewPieceInMemoryStorage(*plan))
+			registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
 			assert.NoError(t, err)
 			registry.RegisterPiece(preview.NewPiece(torrentID, 0, part0))
 			registry.RegisterPiece(preview.NewPiece(torrentID, 1, part1))
 			registry.RegisterPiece(preview.NewPiece(torrentID, 2, part2))
 			registry.RegisterPiece(preview.NewPiece(torrentID, 3, part3))
-
-			registry.ListenForPieces(context.Background())
 
 			time.Sleep(time.Millisecond * 100) // TODO: Meh
 

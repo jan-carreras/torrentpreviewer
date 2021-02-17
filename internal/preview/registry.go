@@ -69,7 +69,7 @@ type PieceRegistry struct {
 	notifiedPieces      int
 }
 
-func NewPieceRegistry(plan *DownloadPlan, storage PieceStorage) (*PieceRegistry, error) {
+func NewPieceRegistry(ctx context.Context, plan *DownloadPlan, storage PieceStorage) (*PieceRegistry, error) {
 	if plan.CountPieces() == 0 {
 		return nil, ErrPriceRegistryWithNothingToWaitFor
 	}
@@ -83,21 +83,24 @@ func NewPieceRegistry(plan *DownloadPlan, storage PieceStorage) (*PieceRegistry,
 		}
 	}
 
-	return &PieceRegistry{
+	pr := &PieceRegistry{
 		downloadPlan:     plan,
 		matcher:          matcher,
 		storage:          storage,
 		pieceIncomingCh:  make(chan *Piece, plan.CountPieces()),
 		plansCompletedCh: make(chan PieceRange, plan.CountPieces()),
-	}, nil
+	}
+
+	pr.listenForPieces(ctx)
+
+	return pr, nil
 }
 
 func (pr *PieceRegistry) GetPiece(idx int) (*Piece, bool) {
 	return pr.storage.Get(idx)
 }
 
-func (pr *PieceRegistry) ListenForPieces(ctx context.Context) {
-	// TODO: Lets do this automatically on constructor. Context can be passed as well.
+func (pr *PieceRegistry) listenForPieces(ctx context.Context) {
 	go pr.listen(ctx)
 }
 
