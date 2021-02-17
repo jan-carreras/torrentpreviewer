@@ -53,7 +53,7 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 	defer rmFile(video)
 
 	cmd := exec.Command(command,
-		"-ss", frameExtractionTime,
+		"-ss", frameExtractionTime, // Always keep before the -i option for performance considerations! https://trac.ffmpeg.org/wiki/Seeking
 		"-i", video,
 		"-vframes", vframes,
 		"-q:v", qv,
