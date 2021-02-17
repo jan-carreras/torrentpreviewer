@@ -1,6 +1,4 @@
-
-
-
+#!/usr/bin/env make
 
 clean:
 	go mod tidy
