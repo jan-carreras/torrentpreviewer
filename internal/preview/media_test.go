@@ -124,7 +124,7 @@ func TestBundlePlan_Bundle(t *testing.T) {
 			registry.RegisterPiece(preview.NewPiece(torrentID, 2, part2))
 			registry.RegisterPiece(preview.NewPiece(torrentID, 3, part3))
 
-			time.Sleep(time.Millisecond * 100) // TODO: Meh
+			time.Sleep(time.Millisecond * 100) // Wait for the goroutines to spawn and queue the pieces
 
 			pieceRange := preview.NewPieceRange(torrent, fi, tt.args.start, tt.args.offset, tt.args.length)
 
