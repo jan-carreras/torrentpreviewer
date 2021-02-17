@@ -58,7 +58,7 @@ func TestPieceRange(t *testing.T) {
 				length: 50,
 			},
 			want: want{
-				name:             "test--movie.mp4",
+				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -76,7 +76,7 @@ func TestPieceRange(t *testing.T) {
 				length: 100,
 			},
 			want: want{
-				name:             "test--movie.mp4",
+				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -94,7 +94,7 @@ func TestPieceRange(t *testing.T) {
 				length: 75,
 			},
 			want: want{
-				name:             "test--movie.mp4",
+				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 25,
@@ -112,7 +112,7 @@ func TestPieceRange(t *testing.T) {
 				length: 175,
 			},
 			want: want{
-				name:             "test--movie.mp4",
+				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-1.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         1,
 				startOffsetBytes: 25,
@@ -130,7 +130,7 @@ func TestPieceRange(t *testing.T) {
 				length: 100,
 			},
 			want: want{
-				name:             "test--movie.mp4",
+				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.10-11.test--movie.mp4.jpg",
 				pieceStart:       10,
 				pieceEnd:         11,
 				startOffsetBytes: 50,
@@ -161,7 +161,9 @@ func TestDownloadPlan_GetTorrent(t *testing.T) {
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
 
-	plan := preview.NewDownloadPlan(torrent)
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent, torrentImages)
 
 	assert.Equal(t, torrent, plan.GetTorrent())
 }
@@ -173,7 +175,9 @@ func TestDownloadPlan_GetPlan(t *testing.T) {
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi}, []byte(""))
 
-	plan := preview.NewDownloadPlan(torrent)
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent, torrentImages)
 
 	assert.Equal(t, make([]preview.PieceRange, 0), plan.GetPlan())
 }
@@ -187,7 +191,9 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
 
-	plan := preview.NewDownloadPlan(torrent)
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent, torrentImages)
 	err = plan.AddAll()
 	assert.NoError(t, err)
 

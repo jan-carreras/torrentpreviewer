@@ -31,15 +31,6 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, files, torrent.Files())
 }
 
-func TestInfo_EmptyName(t *testing.T) {
-	torrentdID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu"
-
-	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
-	assert.NoError(t, err)
-	_, err = preview.NewInfo(torrentdID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
-	assert.Error(t, err)
-}
-
 func TestInfo_InvalidTorrentID(t *testing.T) {
 	torrentdID := "invalid ID"
 

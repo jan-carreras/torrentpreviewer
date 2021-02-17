@@ -118,7 +118,7 @@ func NewPieceRange(torrent Info, fi FileInfo, start, offset, length int) PieceRa
 // Name returns the name of the file. It's supposed to be HTTP friendly
 func (p PieceRange) Name() string {
 	name := strings.ReplaceAll(p.fi.name, "/", "--")
-	name = strings.ReplaceAll(p.fi.name, " ", "-")
+	name = strings.ReplaceAll(name, " ", "-")
 	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
 		p.Torrent().ID(),
 		p.fi.idx,
