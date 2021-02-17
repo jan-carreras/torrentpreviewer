@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 )
 
 var ErrPriceRegistryWithNothingToWaitFor = errors.New("the plan has 0 pieces to wait for, thus using the registry to retrieve responses is useless")
@@ -194,12 +193,6 @@ func (pr *PieceRegistry) RunOnPieceReady(ctx context.Context, fnx func(part Piec
 
 		case <-ctx.Done():
 			return errors.New("context cancelled")
-		case <-time.Tick(time.Second * 3):
-			// TODO: See what we do with this here...
-			/*s.logger.WithFields(logrus.Fields{
-				"torrent":   torrent.Name(),
-				"torrentID": torrent.ID(),
-			}).Debug("waiting for parts downloaded to arrive")*/
 		}
 	}
 }
