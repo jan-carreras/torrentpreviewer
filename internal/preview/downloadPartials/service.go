@@ -62,16 +62,16 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 			return err
 		}
 
-		if err := s.storeBinaryImage(ctx, imgBytes, downloaded.Name(), part); err != nil {
+		if err := s.storeBinaryImage(ctx, imgBytes, part.Name(), part); err != nil {
 			return err
 		}
 
 		img := preview.NewImage(
 			part.Torrent().ID(),
 			part.FileID(),
-			downloaded.Name(),
+			part.Name(),
 			len(imgBytes),
-			downloaded.Name(),
+			part.Name(),
 		)
 		if err := s.imageRepository.Persist(ctx, img); err != nil {
 			return err

@@ -23,7 +23,6 @@ func TestMediaPart(t *testing.T) {
 
 	media := preview.NewMediaPart(torrentID, pr, data)
 
-	assert.Equal(t, "ZOCmzqipffw7ollmic5hub6bpcsdeoqu.0.1-2.movie.mp4.jpg", media.Name())
 	assert.Equal(t, data, media.Data())
 	assert.Equal(t, pr, media.PieceRange())
 }

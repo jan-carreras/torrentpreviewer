@@ -93,7 +93,15 @@ func NewPieceRange(torrent Info, fi FileInfo, start, offset, length int) PieceRa
 }
 
 func (p PieceRange) Name() string {
-	return strings.ReplaceAll(p.fi.name, "/", "--")
+	name := strings.ReplaceAll(p.fi.name, "/", "--")
+	name = strings.ReplaceAll(p.fi.name, " ", "-")
+	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
+		p.Torrent().ID(),
+		p.fi.idx,
+		p.Start(),
+		p.End(),
+		name,
+	)
 }
 
 func (p PieceRange) FileID() int {
