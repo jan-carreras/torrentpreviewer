@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
-	"time"
 )
 
 type Service struct {
@@ -50,30 +49,27 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 
 	registry.ListenForPieces(ctx)
 
-	for {
-		select {
-		case part, isOpen := <-registry.SubscribeAllPartsDownloaded():
-			if !isOpen {
-				return nil
-			}
-			err := s.extractAndStoreImage(ctx, registry, part, torrent.ID())
-			if err != nil {
-				return err
-			}
-		case <-ctx.Done():
-			return errors.New("context cancelled")
-		case <-time.Tick(time.Second * 3):
-			s.logger.WithFields(logrus.Fields{
-				"torrent":   torrent.Name(),
-				"torrentID": torrent.ID(),
-			}).Debug("waiting for parts downloaded to arrive")
+	err = registry.RunOnPieceReady(ctx, func(part preview.PieceRange) error {
+		downloaded, err := s.getBundle(registry, part)
+		if err != nil {
+			return err
 		}
-	}
+		img, err := s.extractImage(ctx, part, downloaded)
+		if err != nil {
+			return err
+		}
+
+		if err := s.storeImage(ctx, img, downloaded.Name(), part); err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
-func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.PieceRegistry, part preview.PieceRange, torrentID string) error {
+func (s Service) getBundle(registry *preview.PieceRegistry, part preview.PieceRange) (preview.MediaPart, error) {
 	s.logger.WithFields(logrus.Fields{
-		"torrentID":  torrentID,
+		"torrentID":  part.Torrent().ID(),
 		"name":       part.Name(),
 		"pieceCount": part.PieceCount(),
 	}).Debug("download completed")
@@ -81,50 +77,59 @@ func (s Service) extractAndStoreImage(ctx context.Context, registry *preview.Pie
 	downloadedPart, err := bundle.Bundle(registry, part)
 	if err != nil {
 		s.logger.WithFields(logrus.Fields{
-			"torrentID":  torrentID,
+			"torrentID":  part.Torrent().ID(),
 			"name":       part.Name(),
 			"pieceCount": part.PieceCount(),
 			"error":      err,
 		}).Error("error when bundling the image")
-		return err
+		return preview.MediaPart{}, err
 	}
+
+	return downloadedPart, nil
+}
+
+func (s Service) extractImage(ctx context.Context, part preview.PieceRange, downloadedPart preview.MediaPart) ([]byte, error) {
 	// TODO: If we don't need the files in bold.db those can be deleted
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), 5)
 	if errors.Is(err, preview.ErrAtomNotFound) {
 		s.logger.WithFields(logrus.Fields{
-			"torrentID":  torrentID,
+			"torrentID":  part.Torrent().ID(),
 			"name":       part.Name(),
 			"pieceCount": part.PieceCount(),
 			"error":      err,
 			"imgBytes":   len(img),
 		}).Warn("atom not found error, ignoring video")
-		return nil
+		return nil, nil
 	}
 
 	if err != nil {
 		s.logger.WithFields(logrus.Fields{
-			"torrentID":  torrentID,
+			"torrentID":  part.Torrent().ID(),
 			"name":       part.Name(),
 			"pieceCount": part.PieceCount(),
 			"error":      err,
 			"imgBytes":   len(img),
 		}).Error("error when extracting image from video")
-		return err
+		return nil, err
 	}
 	s.logger.WithFields(logrus.Fields{
-		"torrentID": torrentID,
+		"torrentID": part.Torrent().ID(),
 		"name":      part.Name(),
 	}).Debug("image extracted successfully")
 
+	return img, nil
+}
+
+func (s Service) storeImage(ctx context.Context, img []byte, name string, part preview.PieceRange) error {
 	// TODO: Register persisted image in the DB for reference
-	err = s.imageRepository.PersistFile(ctx, downloadedPart.Name(), img)
+	err := s.imageRepository.PersistFile(ctx, name, img)
 	if err != nil {
 		return err
 	}
 	s.logger.WithFields(logrus.Fields{
-		"torrentID": torrentID,
-		"name":      downloadedPart.Name(),
+		"torrentID": part.Torrent().ID(),
+		"name":      name,
 	}).Debug("image persisted successfully")
 
-	return err
+	return nil
 }

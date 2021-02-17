@@ -18,7 +18,7 @@ var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]+)$")
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
 	Persist(ctx context.Context, torrent Info) error
-	Get(ctx context.Context, id string) (Info, error) // TODO: Change ID to TorrentID
+	Get(ctx context.Context, id string) (Info, error)
 }
 
 var ErrNotFound = errors.New("record not found in storage")

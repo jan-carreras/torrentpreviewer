@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 )
 
 var ErrPriceRegistryWithNothingToWaitFor = errors.New("the plan has 0 pieces to wait for, thus using the registry to retrieve responses is useless")
@@ -96,11 +97,12 @@ func (pr *PieceRegistry) GetPiece(idx int) (*Piece, bool) {
 }
 
 func (pr *PieceRegistry) ListenForPieces(ctx context.Context) {
+	// TODO: Lets do this automatically on constructor. Context can be passed as well.
 	go pr.listen(ctx)
 }
 
 func (pr *PieceRegistry) SubscribeAllPartsDownloaded() chan PieceRange {
-	// TODO: Error if not ListeningForPieces first
+
 	return pr.plansCompletedCh
 }
 
@@ -121,8 +123,6 @@ func (pr *PieceRegistry) closeIncomingChanel() {
 }
 
 func (pr *PieceRegistry) addPiece(p *Piece) error {
-	// TODO: Add error if writing on closed channel
-
 	if _, found := pr.matcher[p.pieceID]; !found {
 		return fmt.Errorf("part %v not previously registered in matcher", p.pieceID)
 	}
@@ -173,6 +173,30 @@ func (pr *PieceRegistry) listen(ctx context.Context) {
 		case <-ctx.Done():
 			pr.closeIncomingChanel()
 			return
+		}
+	}
+}
+
+func (pr *PieceRegistry) RunOnPieceReady(ctx context.Context, fnx func(part PieceRange) error) error {
+	for {
+		select {
+		case part, isOpen := <-pr.SubscribeAllPartsDownloaded():
+			if !isOpen {
+				return nil
+			}
+
+			if err := fnx(part); err != nil {
+				return err
+			}
+
+		case <-ctx.Done():
+			return errors.New("context cancelled")
+		case <-time.Tick(time.Second * 3):
+			// TODO: See what we do with this here...
+			/*s.logger.WithFields(logrus.Fields{
+				"torrent":   torrent.Name(),
+				"torrentID": torrent.ID(),
+			}).Debug("waiting for parts downloaded to arrive")*/
 		}
 	}
 }
