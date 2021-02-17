@@ -12,5 +12,5 @@
 - [x] Check if attaching the end of a video with the moov atom fixes image extraction problems
 - [x] Add comments on all the various objects in Domain
 - [ ] Reduce disk/memory usage
-    - [ ] We're never cleaning up boldDB and might get huge
+    - [ ] We're never cleaning up boldDB and will get huge
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished. Can be improved.
