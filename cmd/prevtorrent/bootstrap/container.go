@@ -75,32 +75,23 @@ func newContainer() (container, error) {
 }
 
 func getTorrentRepository(logger *logrus.Logger, sqliteDatabase *sql.DB) (preview.TorrentRepository, error) {
-	/*fileDriver := func() (preview.TorrentRepository, error) {
-		return file.NewTorrentRepository(
-			logger,
-			viper.GetString("TorrentDir"),
-			viper.GetString("DownloadsDir"),
-		), nil
-	}*/
 	sqliteDrier := func() (preview.TorrentRepository, error) {
-
 		return sqlite.NewTorrentRepository(sqliteDatabase), nil
 	}
 
 	drivers := map[string]func() (preview.TorrentRepository, error){
-		//"file":   fileDriver,
 		"sqlite": sqliteDrier,
 	}
 
 	driver := viper.GetString("TorrentDriver")
-	if maker, found := drivers[driver]; !found {
-		supported := make([]string, 0, len(drivers))
-		for k := range drivers {
-			supported = append(supported, k)
-		}
-		sort.Strings(supported)
-		return nil, fmt.Errorf("unsopported driver %v. supported: %v", driver, strings.Join(supported, ", "))
-	} else {
+	if maker, found := drivers[driver]; found {
 		return maker()
 	}
+
+	supported := make([]string, 0, len(drivers))
+	for k := range drivers {
+		supported = append(supported, k)
+	}
+	sort.Strings(supported)
+	return nil, fmt.Errorf("unsopported driver %v. supported: %v", driver, strings.Join(supported, ", "))
 }
