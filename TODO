@@ -14,6 +14,7 @@
 - [ ] Reduce disk/memory usage
     - [x] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
+    - [ ] A 1TB torrent with thousands of videos would require a lot of memory. We can make smaller DownloadPlans and queue them
 - [ ] Implement the HTTP endpoints
     - [ ] POST /magnet
     - [ ] POST /torrent #mvp
@@ -26,6 +27,7 @@
         - [ ] Is there a simplified JWT? If not, basic auth will be more than nothing
 - [ ] Refine CLI
     - [ ] Use a proper CLI framework for the commands & stuff
+    - [ ] Implement graceful shutdown #mvp
 - [ ] Improve tests
     - [ ] Improve coverage in Domain
     - [ ] Test the infrastructure regarding SQLite
