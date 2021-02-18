@@ -9,7 +9,6 @@ import (
 
 var ErrPriceRegistryWithNothingToWaitFor = errors.New("the plan has 0 pieces to wait for, thus using the registry to retrieve responses is useless")
 
-//go:generate mockery --case=snake --outpkg=domainmocks --output=domainmocks --name=PieceStorage
 type PieceStorage interface {
 	Set(p *Piece)
 	Get(id int) (*Piece, bool)
