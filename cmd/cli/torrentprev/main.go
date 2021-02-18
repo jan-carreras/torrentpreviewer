@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"prevtorrent/cmd/prevtorrent/bootstrap"
+	"prevtorrent/cmd/cli/torrentprev/bootstrap"
 )
 
 func main() {
