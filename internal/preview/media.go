@@ -108,6 +108,10 @@ func NewTorrentImages(images []Image) *TorrentImages {
 	return &TorrentImages{images: images, imageName: imageName}
 }
 
+func (a *TorrentImages) Images() []Image {
+	return a.images
+}
+
 // IsAlreadyDownloaded stupid name to check if we already have the filename
 // TODO: Rethink name
 func (a *TorrentImages) IsAlreadyDownloaded(name string) bool {
