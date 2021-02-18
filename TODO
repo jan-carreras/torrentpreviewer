@@ -26,7 +26,7 @@
     - [ ] Simple auth
         - [ ] Is there a simplified JWT? If not, basic auth will be more than nothing
 - [ ] Refine CLI
-    - [ ] Use a proper CLI framework for the commands & stuff
+    - [x] Use a proper CLI framework for the commands & stuff
     - [ ] Implement graceful shutdown #mvp
 - [ ] Improve tests
     - [ ] Improve coverage in Domain
