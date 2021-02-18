@@ -136,6 +136,8 @@ func startTorrentDownload(t *torrent.Torrent, downloadPlan preview.DownloadPlan)
 
 func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitGroup, registry *preview.PieceRegistry, t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
 	defer wg.Done()
+	defer t.Drop() // Delete all the chunks we have in the storage
+
 	// TODO: If we don't have any peer for a while we might disconnect as well
 
 	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)

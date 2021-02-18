@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"database/sql"
 	"fmt"
+	"prevtorrent/internal/platform/storage/inmemory"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/storage/file"
@@ -12,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/anacrolix/torrent"
-	"github.com/anacrolix/torrent/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -53,7 +53,7 @@ func newContainer() (container, error) {
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
 	conf := torrent.NewDefaultClientConfig()
-	conf.DefaultStorage = storage.NewBoltDB(viper.GetString("BoltDBDir"))
+	conf.DefaultStorage = inmemory.NewTorrentStorage()
 	conf.DisableIPv6 = true
 
 	torrentClient, err := torrent.NewClient(conf)
