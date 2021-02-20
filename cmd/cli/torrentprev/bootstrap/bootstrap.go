@@ -2,10 +2,13 @@ package bootstrap
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/transform"
+	"runtime"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -18,6 +21,7 @@ func Run() error {
 		return err
 	}
 	bus := makeCommandBus(c)
+	go goroutineLeak(c)
 	return cli.Run(bus)
 }
 
@@ -93,4 +97,18 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 	)
 
 	return commandBus
+}
+
+func goroutineLeak(c container) {
+	// TODO/BUG: It seems that the torrent library, for some reason, leaks goroutines leading to
+	//           out of memory error. I think it has to do with the logic that checks the hash of
+	//           a chunk, but not sure. It's problematic and I need this here keep an eye on it.
+	//           Sigh. FML.
+	for {
+		goroutines := runtime.NumGoroutine()
+		c.logger.WithFields(logrus.Fields{
+			"goroutines": goroutines,
+		}).Warn("stats")
+		time.Sleep(time.Second)
+	}
 }
