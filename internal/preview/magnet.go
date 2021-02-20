@@ -2,7 +2,9 @@ package preview
 
 import (
 	"context"
+	"encoding/base32"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -29,12 +31,30 @@ func NewMagnet(value string) (Magnet, error) {
 	}
 	id := magnetValidationRegexp.FindStringSubmatch(value)[1]
 	value = strings.ReplaceAll(value, id, strings.ToUpper(id))
-	id = strings.ToLower(id)
 
-	if !(len(id) == 32 || len(id) == 40) {
+	id, err := toBase32(id)
+	if err != nil {
+		return Magnet{}, err
+	}
+
+	if len(id) != 40 {
 		return Magnet{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
 	}
-	return Magnet{id: id, value: value}, nil
+
+	return Magnet{id: strings.ToLower(id), value: value}, nil
+}
+
+func toBase32(encoded string) (string, error) {
+	if len(encoded) != 32 {
+		return "", nil
+	}
+
+	b := make([]byte, 20)
+	_, err := base32.StdEncoding.Decode(b, []byte(strings.ToUpper(encoded)))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", b[:]), nil
 }
 
 // Value returns the URI of the magnet
