@@ -85,6 +85,7 @@ func getTorrentConf(config config) *torrent.ClientConfig {
 	c.Debug = config.EnableTorrentDebug
 	c.EstablishedConnsPerTorrent = config.ConnectionsPerTorrent
 	c.ListenPort = config.TorrentListeningPort
+	c.NoDefaultPortForwarding = false
 	c.Seed = true
 	return c
 }
