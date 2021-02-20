@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"fmt"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
@@ -20,22 +21,35 @@ func Run() error {
 	return cli.Run(bus)
 }
 
-func getConfig() error {
+type config struct {
+	ImageDir   string `yaml:"ImageDir"`
+	SqlitePath string `yaml:"SqlitePath"`
+	EnableIPv6 bool   `yaml:"EnableIPv6"`
+	EnableUTP  bool   `yaml:"EnableUTP"`
+}
+
+func getConfig() (config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$HOME/.config/" + projectName)
 	viper.AddConfigPath("$HOME/." + projectName)
 	viper.AddConfigPath(".")
-	viper.SetDefault("TorrentDir", "./tmp/torrents")
-	viper.SetDefault("BoltDBDir", "./")
-	viper.SetDefault("DownloadsDir", "./tmp/downloads")
 	viper.SetDefault("ImageDir", "./tmp/images")
 	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
+	viper.SetDefault("EnableIPv6", false)
+	viper.SetDefault("EnableUTP", true)
 
 	if err := viper.ReadInConfig(); err != nil {
-		return err
+		return config{}, err
 	}
-	return nil
+
+	conf := config{}
+
+	if err := viper.Unmarshal(&conf); err != nil {
+		return config{}, fmt.Errorf("unable to decode into config struct, %v", err)
+	}
+
+	return conf, nil
 }
 
 func makeCommandBus(c container) *inmemory.SyncCommandBus {

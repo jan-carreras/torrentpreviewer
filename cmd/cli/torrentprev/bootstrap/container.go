@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"prevtorrent/internal/platform/storage/inmemory"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -24,7 +23,8 @@ type container struct {
 }
 
 func newContainer() (container, error) {
-	if err := getConfig(); err != nil {
+	config, err := getConfig()
+	if err != nil {
 		return container{}, err
 	}
 
@@ -34,9 +34,9 @@ func newContainer() (container, error) {
 
 	imageExtractor := ffmpeg.NewInMemoryFfmpeg(logger)
 
-	imagePersister := file.NewImagePersister(logger, viper.GetString("ImageDir"))
+	imagePersister := file.NewImagePersister(logger, config.ImageDir)
 
-	sqliteDatabase, err := sql.Open("sqlite3", viper.GetString("SqlitePath"))
+	sqliteDatabase, err := sql.Open("sqlite3", config.SqlitePath)
 	if err != nil {
 		return container{}, err
 	}
@@ -47,7 +47,8 @@ func newContainer() (container, error) {
 
 	conf := torrent.NewDefaultClientConfig()
 	conf.DefaultStorage = inmemory.NewTorrentStorage()
-	conf.DisableIPv6 = true
+	conf.DisableIPv6 = !config.EnableIPv6
+	conf.DisableUTP = !config.EnableUTP
 
 	torrentClient, err := torrent.NewClient(conf)
 	if err != nil {
