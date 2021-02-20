@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"prevtorrent/internal/preview"
 	"sync"
 	"time"
@@ -189,13 +188,12 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 		case <-time.After(time.Second * 3):
 			r.logger.WithFields(
 				logrus.Fields{
+					"seedersCount":     t.Stats().ConnectedSeeders,
+					"piecesLeft":       waitingFor,
 					"activePeers":      t.Stats().ActivePeers,
 					"chunksReadUseful": t.Stats().ChunksReadUseful,
 					"ChunksReadWasted": t.Stats().ChunksReadWasted,
-					"seedersCount":     t.Stats().ConnectedSeeders,
-					"peersCount":       len(t.PeerConns()),
 					"torrent":          t.Name(),
-					"piecesLeft":       waitingFor,
 				},
 			).Debug("number of connected peers")
 		case <-ctxTimeout.Done():
