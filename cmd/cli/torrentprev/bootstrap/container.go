@@ -30,7 +30,12 @@ func newContainer() (container, error) {
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{}
-	logger.Level = logrus.DebugLevel
+
+	logLevel, err := logrus.ParseLevel(config.LogLevel)
+	if err != nil {
+		return container{}, err
+	}
+	logger.Level = logLevel
 
 	imageExtractor := ffmpeg.NewInMemoryFfmpeg(logger)
 

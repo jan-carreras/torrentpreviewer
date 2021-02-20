@@ -27,6 +27,7 @@ type config struct {
 	EnableIPv6         bool   `yaml:"EnableIPv6"`
 	EnableUTP          bool   `yaml:"EnableUTP"`
 	EnableTorrentDebug bool   `yaml:"EnableTorrentDebug"`
+	LogLevel           string `yaml:"LogLevel"`
 }
 
 func getConfig() (config, error) {
@@ -40,6 +41,7 @@ func getConfig() (config, error) {
 	viper.SetDefault("EnableIPv6", false)
 	viper.SetDefault("EnableUTP", true)
 	viper.SetDefault("EnableTorrentDebug", false)
+	viper.SetDefault("LogLevel", "warning")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return config{}, err
