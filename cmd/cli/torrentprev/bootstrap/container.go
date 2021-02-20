@@ -2,19 +2,15 @@ package bootstrap
 
 import (
 	"database/sql"
-	"fmt"
+	"github.com/anacrolix/torrent"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"prevtorrent/internal/platform/storage/inmemory"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/storage/file"
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
-	"sort"
-	"strings"
-
-	"github.com/anacrolix/torrent"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type container struct {
@@ -45,10 +41,7 @@ func newContainer() (container, error) {
 		return container{}, err
 	}
 
-	torrentRepo, err := getTorrentRepository(logger, sqliteDatabase)
-	if err != nil {
-		return container{}, err
-	}
+	torrentRepo := sqlite.NewTorrentRepository(sqliteDatabase)
 
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
@@ -72,26 +65,4 @@ func newContainer() (container, error) {
 		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
 	}, nil
-}
-
-func getTorrentRepository(logger *logrus.Logger, sqliteDatabase *sql.DB) (preview.TorrentRepository, error) {
-	sqliteDrier := func() (preview.TorrentRepository, error) {
-		return sqlite.NewTorrentRepository(sqliteDatabase), nil
-	}
-
-	drivers := map[string]func() (preview.TorrentRepository, error){
-		"sqlite": sqliteDrier,
-	}
-
-	driver := viper.GetString("TorrentDriver")
-	if maker, found := drivers[driver]; found {
-		return maker()
-	}
-
-	supported := make([]string, 0, len(drivers))
-	for k := range drivers {
-		supported = append(supported, k)
-	}
-	sort.Strings(supported)
-	return nil, fmt.Errorf("unsopported driver %v. supported: %v", driver, strings.Join(supported, ", "))
 }
