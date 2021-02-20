@@ -3,9 +3,12 @@ package http
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"prevtorrent/internal/preview"
 	"prevtorrent/kit/command"
+	"time"
 )
 
 /**
@@ -19,7 +22,18 @@ TODO: The backend is SQLite. So... expect 0 performance and don't you dare, Jan 
 func Run(c Container, bus command.Bus) error {
 	server := NewServer(c, bus)
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		MaxAge: 12 * time.Hour,
+	}))
 	router.GET("/torrent/:id", server.getTorrent)
+
+	// TODO: Receive this from configuration
+	router.Use(static.Serve("/image", static.LocalFile("./tmp/images", false)))
+
 	return router.Run()
 }
 
