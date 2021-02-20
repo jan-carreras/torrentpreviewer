@@ -33,9 +33,11 @@ type config struct {
 func getConfig() (config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
+
 	viper.AddConfigPath("$HOME/.config/" + projectName)
 	viper.AddConfigPath("$HOME/." + projectName)
 	viper.AddConfigPath(".")
+
 	viper.SetDefault("ImageDir", "./tmp/images")
 	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
 	viper.SetDefault("EnableIPv6", false)
