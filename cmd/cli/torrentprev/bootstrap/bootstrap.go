@@ -30,6 +30,7 @@ type config struct {
 	LogLevel              string `yaml:"LogLevel"`
 	ConnectionsPerTorrent int    `yaml:"ConnectionsPerTorrent"`
 	TorrentListeningPort  int    `yaml:"TorrentListeningPort"`
+	TorrentStorageDriver  string `yaml:"TorrentStorageDriver"`
 }
 
 func getConfig() (config, error) {
@@ -48,6 +49,7 @@ func getConfig() (config, error) {
 	viper.SetDefault("LogLevel", "warning")
 	viper.SetDefault("ConnectionsPerTorrent", "20")
 	viper.SetDefault("TorrentListeningPort", "12345")
+	viper.SetDefault("TorrentStorageDriver", "inmemory")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return config{}, err

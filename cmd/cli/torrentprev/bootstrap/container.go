@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/platform/storage/inmemory"
@@ -70,7 +71,15 @@ func newContainer() (container, error) {
 
 func getTorrentConf(config config) *torrent.ClientConfig {
 	c := torrent.NewDefaultClientConfig()
-	c.DefaultStorage = inmemory.NewTorrentStorage()
+
+	switch driver := config.TorrentStorageDriver; driver {
+	case "inmemory":
+		c.DefaultStorage = inmemory.NewTorrentStorage()
+	case "file":
+	default:
+		panic(fmt.Errorf("unknown storage driver %v", driver))
+	}
+
 	c.DisableIPv6 = !config.EnableIPv6
 	c.DisableUTP = !config.EnableUTP
 	c.Debug = config.EnableTorrentDebug
