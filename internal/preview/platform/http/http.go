@@ -58,6 +58,9 @@ func (s *Server) getTorrent(c *gin.Context) {
 
 	cache := make(map[int]Image) // TODO: This only supports one image per File
 	for _, img := range images.Images() {
+		if img.Length() == 0 {
+			continue
+		}
 		cache[img.FileID()] = Image{Src: img.Name()}
 	}
 
