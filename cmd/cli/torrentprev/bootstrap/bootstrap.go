@@ -22,12 +22,14 @@ func Run() error {
 }
 
 type config struct {
-	ImageDir           string `yaml:"ImageDir"`
-	SqlitePath         string `yaml:"SqlitePath"`
-	EnableIPv6         bool   `yaml:"EnableIPv6"`
-	EnableUTP          bool   `yaml:"EnableUTP"`
-	EnableTorrentDebug bool   `yaml:"EnableTorrentDebug"`
-	LogLevel           string `yaml:"LogLevel"`
+	ImageDir              string `yaml:"ImageDir"`
+	SqlitePath            string `yaml:"SqlitePath"`
+	EnableIPv6            bool   `yaml:"EnableIPv6"`
+	EnableUTP             bool   `yaml:"EnableUTP"`
+	EnableTorrentDebug    bool   `yaml:"EnableTorrentDebug"`
+	LogLevel              string `yaml:"LogLevel"`
+	ConnectionsPerTorrent int    `yaml:"ConnectionsPerTorrent"`
+	TorrentListeningPort  int    `yaml:"TorrentListeningPort"`
 }
 
 func getConfig() (config, error) {
@@ -44,6 +46,8 @@ func getConfig() (config, error) {
 	viper.SetDefault("EnableUTP", true)
 	viper.SetDefault("EnableTorrentDebug", false)
 	viper.SetDefault("LogLevel", "warning")
+	viper.SetDefault("ConnectionsPerTorrent", "20")
+	viper.SetDefault("TorrentListeningPort", "12345")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return config{}, err

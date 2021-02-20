@@ -50,13 +50,7 @@ func newContainer() (container, error) {
 
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
-	conf := torrent.NewDefaultClientConfig()
-	conf.DefaultStorage = inmemory.NewTorrentStorage()
-	conf.DisableIPv6 = !config.EnableIPv6
-	conf.DisableUTP = !config.EnableUTP
-	conf.Debug = config.EnableTorrentDebug
-
-	torrentClient, err := torrent.NewClient(conf)
+	torrentClient, err := torrent.NewClient(getTorrentConf(config))
 	if err != nil {
 		return container{}, err
 	}
@@ -72,4 +66,15 @@ func newContainer() (container, error) {
 		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
 	}, nil
+}
+
+func getTorrentConf(config config) *torrent.ClientConfig {
+	c := torrent.NewDefaultClientConfig()
+	c.DefaultStorage = inmemory.NewTorrentStorage()
+	c.DisableIPv6 = !config.EnableIPv6
+	c.DisableUTP = !config.EnableUTP
+	c.Debug = config.EnableTorrentDebug
+	c.EstablishedConnsPerTorrent = config.ConnectionsPerTorrent
+	c.ListenPort = config.TorrentListeningPort
+	return c
 }
