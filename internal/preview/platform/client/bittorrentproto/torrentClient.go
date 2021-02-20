@@ -165,26 +165,25 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 				).Info("transmissions subscriber closed")
 			}
 			v, ok := _v.(torrent.PieceStateChange)
-			if !ok {
+			if !ok || !v.Complete {
 				continue
 			}
 
-			if v.Complete {
-				waitingFor--
-				buf := r.readPiece(t, v.Index)
-				if buf == nil {
-					continue
-				}
-				registry.RegisterPiece(preview.NewPiece(t.InfoHash().HexString(), v.Index, buf))
-
-				r.logger.WithFields(
-					logrus.Fields{"pieceIdx": v.Index,
-						"complete":   v.Complete,
-						"waitingFor": waitingFor,
-						"torrent":    t.Name(),
-					},
-				).Info("piece download completed")
+			waitingFor--
+			buf := r.readPiece(t, v.Index)
+			if buf == nil {
+				continue
 			}
+			registry.RegisterPiece(preview.NewPiece(t.InfoHash().HexString(), v.Index, buf))
+
+			r.logger.WithFields(
+				logrus.Fields{"pieceIdx": v.Index,
+					"complete":   v.Complete,
+					"waitingFor": waitingFor,
+					"torrent":    t.Name(),
+				},
+			).Info("piece download completed")
+
 		case <-time.After(time.Second * 3):
 			r.logger.WithFields(
 				logrus.Fields{
