@@ -17,7 +17,7 @@ type MagnetClient interface {
 // Magnet represents a magnet
 type Magnet struct {
 	id    string // the identifier of the magnet
-	value string // the full URI like: magnet:\xt=....
+	value string // the full URI like: magnet:?xt=....
 }
 
 var ErrInvalidMagnetFormat = errors.New("invalid magnet")
