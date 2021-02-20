@@ -32,8 +32,8 @@ func Run(c Container, bus command.Bus) error {
 	}))
 	router.GET("/torrent/:id", server.getTorrent)
 
-	// TODO: Receive this from configuration
-	router.Use(static.Serve("/image", static.LocalFile("./tmp/images", false)))
+	// TODO: Move this logic to nginx
+	router.Use(static.Serve("/image", static.LocalFile(c.Config.ImageDir, false)))
 
 	return router.Run()
 }
