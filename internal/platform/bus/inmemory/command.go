@@ -19,6 +19,10 @@ func NewSyncCommandBus(logger *logrus.Logger) *SyncCommandBus {
 	}
 }
 
+func (b *SyncCommandBus) Register(cmdType command.Type, handler command.Handler) {
+	b.handlers[cmdType] = handler
+}
+
 func (b *SyncCommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
 	handler, ok := b.handlers[cmd.Type()]
 	if !ok {
@@ -36,9 +40,5 @@ func (b *SyncCommandBus) Dispatch(ctx context.Context, cmd command.Command) erro
 		}).Error("error while handling a command")
 	}
 
-	return nil
-}
-
-func (b *SyncCommandBus) Register(cmdType command.Type, handler command.Handler) {
-	b.handlers[cmdType] = handler
+	return err
 }
