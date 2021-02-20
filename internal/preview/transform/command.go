@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"prevtorrent/kit/command"
+	"time"
 )
 
 const CommandType command.Type = "command.transform.preview"
@@ -30,5 +31,8 @@ func (c CommandHandler) Handle(ctx context.Context, _cmd command.Command) error 
 		return errors.New("unexpected command")
 	}
 
-	return c.service.Handle(ctx, cmd)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*20)
+	defer cancel()
+
+	return c.service.Handle(ctxTimeout, cmd)
 }
