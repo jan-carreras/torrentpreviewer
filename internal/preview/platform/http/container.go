@@ -3,11 +3,10 @@ package http
 import (
 	"database/sql"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
-
-	"github.com/sirupsen/logrus"
 )
 
 const projectName = "prevtorrent"
@@ -42,7 +41,6 @@ func getConfig() (config, error) {
 	}
 
 	conf := config{}
-
 	if err := viper.Unmarshal(&conf); err != nil {
 		return config{}, fmt.Errorf("unable to decode into config struct, %v", err)
 	}
@@ -71,6 +69,7 @@ func NewContainer() (Container, error) {
 	}
 
 	return Container{
+		Config:          config,
 		Logger:          logger,
 		TorrentRepo:     sqlite.NewTorrentRepository(sqliteDatabase),
 		ImageRepository: sqlite.NewImageRepository(sqliteDatabase),

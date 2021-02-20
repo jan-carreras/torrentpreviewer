@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/platform/bus/inmemory"
@@ -21,6 +22,14 @@ func Run() error {
 		return err
 	}
 	bus := makeCommandBus(c)
+
+	if conf, err := json.MarshalIndent(c.config, "", "  "); err != nil {
+		return err
+	} else {
+		fmt.Println("Configuration:")
+		fmt.Println(string(conf))
+	}
+
 	go goroutineLeak(c)
 	return cli.Run(bus)
 }

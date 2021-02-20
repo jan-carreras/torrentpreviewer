@@ -14,10 +14,11 @@ import (
 )
 
 type container struct {
+	config            config
+	logger            *logrus.Logger
 	magnetClient      preview.MagnetClient
 	torrentDownloader preview.TorrentDownloader
 	torrentRepo       preview.TorrentRepository
-	logger            *logrus.Logger
 	imageExtractor    preview.ImageExtractor
 	imagePersister    preview.ImagePersister
 	imageRepository   preview.ImageRepository
@@ -59,10 +60,11 @@ func newContainer() (container, error) {
 	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
 
 	return container{
+		config:            config,
+		logger:            logger,
 		magnetClient:      torrentIntegration,
 		torrentDownloader: torrentIntegration,
 		torrentRepo:       torrentRepo,
-		logger:            logger,
 		imageExtractor:    imageExtractor,
 		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
