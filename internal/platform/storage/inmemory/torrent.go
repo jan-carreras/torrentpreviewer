@@ -49,8 +49,9 @@ func (m *TorrentStorage) OpenTorrent(info *metainfo.Info, infoHash metainfo.Hash
 }
 
 type memoryTorrentImpl struct {
-	info   *metainfo.Info
-	pieces map[int]storage.PieceImpl
+	info      *metainfo.Info
+	pieces    map[int]storage.PieceImpl
+	piecesMux sync.RWMutex
 }
 
 func newMemoryTorrentImpl(info *metainfo.Info) *memoryTorrentImpl {
@@ -62,9 +63,15 @@ func newMemoryTorrentImpl(info *metainfo.Info) *memoryTorrentImpl {
 
 // Pieces returns the requested piece
 func (m *memoryTorrentImpl) Piece(p metainfo.Piece) storage.PieceImpl {
+	m.piecesMux.RLock()
 	if piece, found := m.pieces[p.Index()]; found {
+		m.piecesMux.RUnlock()
 		return piece
 	}
+	m.piecesMux.RUnlock()
+
+	m.piecesMux.Lock()
+	defer m.piecesMux.Unlock()
 
 	m.pieces[p.Index()] = NewPiece(m.info.PieceLength)
 	return m.pieces[p.Index()]
@@ -72,6 +79,8 @@ func (m *memoryTorrentImpl) Piece(p metainfo.Piece) storage.PieceImpl {
 
 // Close frees all Pieces information from a torrent
 func (m *memoryTorrentImpl) Close() error {
+	m.piecesMux.Lock()
+	defer m.piecesMux.Unlock()
 	m.pieces = make(map[int]storage.PieceImpl)
 	return nil
 }
@@ -79,24 +88,34 @@ func (m *memoryTorrentImpl) Close() error {
 type Piece struct {
 	io.ReaderAt
 	io.WriterAt
-	data     []byte
-	dataMux  sync.RWMutex
-	complete *bool
+	data        []byte
+	dataMux     sync.RWMutex
+	complete    *bool
+	pieceLength int64
 }
 
 func NewPiece(pieceLength int64) *Piece {
 	return &Piece{
-		data: make([]byte, pieceLength),
+		data:        nil, // Start explicitly empty
+		pieceLength: pieceLength,
 	}
 }
 
 func (p *Piece) WriteAt(b []byte, off int64) (int, error) {
 	p.dataMux.Lock()
 	defer p.dataMux.Unlock()
+	if p.data == nil {
+		p.data = make([]byte, p.pieceLength)
+	}
+
 	return copy(p.data[off:], b), nil
 }
 
 func (p *Piece) ReadAt(b []byte, off int64) (n int, err error) {
+	if p.data == nil {
+		return len(b), nil
+	}
+
 	p.dataMux.RLock()
 	defer p.dataMux.RUnlock()
 	end := int(off) + len(b)
