@@ -3,3 +3,4 @@
 *.db
 tmp/
 *.sqlite
+bin/
