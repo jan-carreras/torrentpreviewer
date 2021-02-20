@@ -138,7 +138,7 @@ func (s Service) getBundle(registry *preview.PieceRegistry, part preview.PieceRa
 
 func (s Service) extractImage(ctx context.Context, part preview.PieceRange, downloadedPart preview.MediaPart) ([]byte, error) {
 	img, err := s.imageExtractor.ExtractImage(ctx, downloadedPart.Data(), frameTimeToExtract)
-	if errors.Is(err, preview.ErrAtomNotFound) {
+	if errors.Is(err, preview.ErrAtomNotFound) || errors.Is(err, preview.ErrNotAbleToGenerateImage) {
 		s.logger.WithFields(logrus.Fields{
 			"torrentID":  part.Torrent().ID(),
 			"name":       part.Name(),

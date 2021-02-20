@@ -6,6 +6,7 @@ import (
 )
 
 var ErrAtomNotFound = errors.New("moov atom not found")
+var ErrNotAbleToGenerateImage = errors.New("unknown error. unable to generate image")
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=ImageExtractor
 type ImageExtractor interface {

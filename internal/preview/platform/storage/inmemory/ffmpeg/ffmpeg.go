@@ -41,25 +41,25 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 		return nil, err
 	}
 
-	filename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id.String()))
-	defer rmFile(filename)
+	outputFilename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id.String()))
+	defer rmFile(outputFilename)
 
 	// TODO: For some reason passing the file from STDIN (see below) crashes ffmpeg.
 	//       Doing it with a file seems to work better but involves IO. Would be nice to get rid of it
 	//       in the future or use tmpfs instead
-	video := filename + ".mp4"
-	err = ioutil.WriteFile(video, data, 0600)
+	inputVideo := outputFilename + ".mp4"
+	err = ioutil.WriteFile(inputVideo, data, 0600)
 	if err != nil {
 		return nil, err
 	}
-	defer rmFile(video)
+	defer rmFile(inputVideo)
 
 	cmd := exec.Command(command,
 		"-ss", frameExtractionTime, // Always keep before the -i option for performance considerations! https://trac.ffmpeg.org/wiki/Seeking
-		"-i", video,
+		"-i", inputVideo,
 		"-vframes", vframes,
 		"-q:v", qv,
-		filename,
+		outputFilename,
 	)
 
 	cmd.Stdin = bytes.NewBuffer(data)
@@ -76,7 +76,13 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 		err = errors.Wrap(err, "error while waiting for ffmpeg command to finish")
 		return nil, i.logCommandFailed(err, stdOut, stdErr)
 	}
-	return ioutil.ReadFile(filename)
+
+	img, err := ioutil.ReadFile(outputFilename)
+	if err != nil {
+		return nil, i.logCommandFailed(err, stdOut, stdErr)
+	}
+
+	return img, err
 }
 
 func (i *InMemoryFfmpeg) logCommandFailed(err error, stdOut, stdErr *bytes.Buffer) error {
@@ -88,6 +94,10 @@ func (i *InMemoryFfmpeg) logCommandFailed(err error, stdOut, stdErr *bytes.Buffe
 
 	if i.isAtomNotFound(stdErr.String()) {
 		err = fmt.Errorf("%w. %v", preview.ErrAtomNotFound, err)
+	}
+
+	if os.IsNotExist(err) {
+		err = fmt.Errorf("%w. %v", preview.ErrNotAbleToGenerateImage, err)
 	}
 
 	return err
