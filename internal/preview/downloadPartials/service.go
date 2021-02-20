@@ -45,10 +45,21 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		return err
 	}
 
+	s.logger.WithFields(logrus.Fields{
+		"torrentID": torrent.ID(),
+		"name":      torrent.Name(),
+	}).Debug("torrent to be processed")
+
 	torrentImages, err := s.imageRepository.ByTorrent(ctx, cmd.ID)
 	if err != nil {
 		return err
 	}
+
+	s.logger.WithFields(logrus.Fields{
+		"torrentID":          torrent.ID(),
+		"name":               torrent.Name(),
+		"imagesTorrentCount": len(torrentImages.Images()),
+	}).Debug("images that we alrady have for the torrent")
 
 	plan := preview.NewDownloadPlan(torrent, torrentImages)
 	if err := plan.AddAll(); err != nil {
@@ -63,6 +74,12 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		}).Debug("the download plan is empty. either downloaded or no supported files")
 		return nil
 	}
+
+	s.logger.WithFields(logrus.Fields{
+		"torrentID":  torrent.ID(),
+		"name":       torrent.Name(),
+		"pieceCount": plan.CountPieces(),
+	}).Debug("pieces to download")
 
 	registry, err := s.torrentDownloader.DownloadParts(ctx, *plan)
 	if err != nil {
