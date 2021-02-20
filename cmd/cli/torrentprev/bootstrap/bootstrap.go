@@ -22,10 +22,11 @@ func Run() error {
 }
 
 type config struct {
-	ImageDir   string `yaml:"ImageDir"`
-	SqlitePath string `yaml:"SqlitePath"`
-	EnableIPv6 bool   `yaml:"EnableIPv6"`
-	EnableUTP  bool   `yaml:"EnableUTP"`
+	ImageDir           string `yaml:"ImageDir"`
+	SqlitePath         string `yaml:"SqlitePath"`
+	EnableIPv6         bool   `yaml:"EnableIPv6"`
+	EnableUTP          bool   `yaml:"EnableUTP"`
+	EnableTorrentDebug bool   `yaml:"EnableTorrentDebug"`
 }
 
 func getConfig() (config, error) {
@@ -38,6 +39,7 @@ func getConfig() (config, error) {
 	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
 	viper.SetDefault("EnableIPv6", false)
 	viper.SetDefault("EnableUTP", true)
+	viper.SetDefault("EnableTorrentDebug", false)
 
 	if err := viper.ReadInConfig(); err != nil {
 		return config{}, err

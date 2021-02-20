@@ -49,6 +49,7 @@ func newContainer() (container, error) {
 	conf.DefaultStorage = inmemory.NewTorrentStorage()
 	conf.DisableIPv6 = !config.EnableIPv6
 	conf.DisableUTP = !config.EnableUTP
+	conf.Debug = config.EnableTorrentDebug
 
 	torrentClient, err := torrent.NewClient(conf)
 	if err != nil {
