@@ -27,7 +27,13 @@ func NewMagnet(value string) (Magnet, error) {
 	if !magnetValidationRegexp.Match([]byte(value)) {
 		return Magnet{}, ErrInvalidMagnetFormat
 	}
-	id := strings.ToLower(magnetValidationRegexp.FindStringSubmatch(value)[1])
+	id := magnetValidationRegexp.FindStringSubmatch(value)[1]
+	value = strings.ReplaceAll(value, id, strings.ToUpper(id))
+	id = strings.ToLower(id)
+
+	if !(len(id) == 32 || len(id) == 40) {
+		return Magnet{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
+	}
 	return Magnet{id: id, value: value}, nil
 }
 

@@ -16,8 +16,21 @@ func Test_Magnet_New(t *testing.T) {
 	assert.Equal(t, "zocmzqipffw7ollmic5hub6bpcsdeoqu", m.ID())
 }
 
+func Test_Magnet_NewFixesCase(t *testing.T) {
+	mag := "magnet:?xt=urn:btih:zOcmZQIPFFW7OLLMIC5HUB6BPCSDEOQU"
+
+	m, err := preview.NewMagnet(mag)
+	assert.NoError(t, err)
+	assert.Equal(t, "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU", m.Value())
+	assert.Equal(t, "zocmzqipffw7ollmic5hub6bpcsdeoqu", m.ID())
+}
+
 func Test_Magnet_Invalid(t *testing.T) {
 	mag := "invalid"
 	_, err := preview.NewMagnet(mag)
+	assert.Error(t, err)
+
+	mag = "magnet:?xt=urn:btih:1234567890"
+	_, err = preview.NewMagnet(mag)
 	assert.Error(t, err)
 }
