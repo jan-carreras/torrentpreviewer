@@ -15,6 +15,10 @@
     - [x] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
     - [ ] A 1TB torrent with thousands of videos would require a lot of memory. We can make smaller DownloadPlans and queue them
+- [ ] Support other media content
+    - [ ] Support .wmv
+    - [ ] Support .avi
+    - [ ] Support .mov
 - [ ] Implement the HTTP endpoints
     - [ ] POST /magnet
     - [ ] POST /torrent #mvp
