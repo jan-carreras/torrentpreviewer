@@ -3,12 +3,13 @@ package http
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
 	"prevtorrent/internal/preview"
 	"prevtorrent/kit/command"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 )
 
 /**
@@ -23,11 +24,11 @@ func Run(c Container, bus command.Bus) error {
 	server := NewServer(c, bus)
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET"},
-		AllowHeaders:     []string{"Origin"},
-		ExposeHeaders:    []string{"Content-Length"},
-		MaxAge: 12 * time.Hour,
+		AllowOrigins:  []string{"*"},
+		AllowMethods:  []string{"GET"},
+		AllowHeaders:  []string{"Origin"},
+		ExposeHeaders: []string{"Content-Length"},
+		MaxAge:        12 * time.Hour,
 	}))
 	router.GET("/torrent/:id", server.getTorrent)
 

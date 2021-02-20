@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/huandu/go-sqlbuilder"
 	"prevtorrent/internal/preview"
 	"strings"
+
+	"github.com/huandu/go-sqlbuilder"
 
 	_ "github.com/mattn/go-sqlite3"
 )

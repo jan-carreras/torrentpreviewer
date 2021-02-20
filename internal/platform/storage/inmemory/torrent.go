@@ -1,10 +1,11 @@
 package inmemory
 
 import (
-	"github.com/anacrolix/torrent/metainfo"
-	"github.com/anacrolix/torrent/storage"
 	"io"
 	"sync"
+
+	"github.com/anacrolix/torrent/metainfo"
+	"github.com/anacrolix/torrent/storage"
 )
 
 type TorrentStorage struct {

@@ -3,11 +3,12 @@ package cli
 import (
 	"context"
 	"errors"
-	"github.com/urfave/cli/v2"
 	"os"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/transform"
 	"prevtorrent/kit/command"
+
+	"github.com/urfave/cli/v2"
 )
 
 type handlers struct {

@@ -2,9 +2,10 @@ package http
 
 import (
 	"database/sql"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
