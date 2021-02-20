@@ -1,7 +1,6 @@
 package inmemory
 
 import (
-	"fmt"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/anacrolix/torrent/storage"
 	"io"
@@ -72,7 +71,6 @@ func (m *memoryTorrentImpl) Piece(p metainfo.Piece) storage.PieceImpl {
 
 // Close frees all Pieces information from a torrent
 func (m *memoryTorrentImpl) Close() error {
-	fmt.Println("Close the torrent and free up all the space") // TODO: Remove
 	m.pieces = make(map[int]storage.PieceImpl)
 	return nil
 }
