@@ -39,7 +39,7 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 func (dp *DownloadPlan) AddAll() error {
 	// TODO: Pass TorrentImages as parameter
 	for _, file := range dp.torrent.SupportedFiles() {
-		if dp.totalDownloadSize > 100*mb { // TODO: Should be a parameter from configuration
+		if dp.totalDownloadSize > 500*mb { // TODO: Should be a parameter from configuration
 			break
 		}
 
