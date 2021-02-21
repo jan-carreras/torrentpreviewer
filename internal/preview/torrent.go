@@ -3,6 +3,7 @@ package preview
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -37,7 +38,8 @@ type Info struct {
 	pieceLength int        // pieceLength for the whole torrent
 	totalLength int        // totalLength is the sum in bytes of all files
 	files       []FileInfo // files is a list of all the files present in the torrent. should never be empty
-	raw         []byte     // raw is the bencoded representation of a .torrent
+	filesByID   map[int]*FileInfo
+	raw         []byte // raw is the bencoded representation of a .torrent
 }
 
 var ErrInvalidTorrentID = errors.New("invalid torrent ID")
@@ -54,18 +56,29 @@ func NewInfo(
 		return Info{}, ErrInvalidTorrentID
 	}
 
-	totalLength := 0
-	for _, f := range files {
-		totalLength += f.Length()
+	totalLength := func(files []FileInfo) (length int) {
+		for _, f := range files {
+			length += f.Length()
+		}
+		return length
+	}
+	filesByID := func(files []FileInfo) map[int]*FileInfo {
+		hash := make(map[int]*FileInfo)
+		for i := 0; i < len(files); i++ {
+			f := files[i]
+			hash[f.ID()] = &f
+		}
+		return hash
 	}
 
 	return Info{
 		id:          strings.ToLower(id),
 		name:        name,
 		pieceLength: pieceLength,
-		totalLength: totalLength,
+		totalLength: totalLength(files),
 		files:       files,
 		raw:         raw,
+		filesByID:   filesByID(files),
 	}, nil
 }
 
@@ -99,6 +112,10 @@ func (i Info) Files() []FileInfo {
 	return i.files
 }
 
+func (i Info) File(idx int) *FileInfo {
+	return i.filesByID[idx]
+}
+
 // SupportedFiles returns from all the files, the ones that have an extension supported by ffmpeg
 func (i Info) SupportedFiles() []FileInfo {
 	fi := make([]FileInfo, 0)
@@ -117,11 +134,13 @@ type FileInfo struct {
 	idx    int
 	length int
 	name   string
+	images []Image
 }
 
 // NewFileInfo creates a FileInfo
 func NewFileInfo(idx int, length int, name string) (FileInfo, error) {
-	return FileInfo{idx: idx, length: length, name: name}, nil
+	return FileInfo{idx: idx, length: length, name: name, images: make([]Image, 0)}, nil
+}
 
 func (fi FileInfo) IsEqual(fi2 FileInfo) bool {
 	return fi.idx == fi2.idx
@@ -161,4 +180,20 @@ func (fi FileInfo) IsSupportedExtension() bool {
 	ext := filepath.Ext(fi.name)
 	_, found := supported[ext]
 	return found
+}
+
+func (fi *FileInfo) AddImage(image Image) error {
+	if image.fileID != fi.ID() {
+		return fmt.Errorf("the image with name '%v' and fileID '%v' does not match fileID %v ",
+			image.Name(),
+			image.fileID,
+			fi.ID(),
+		)
+	}
+	fi.images = append(fi.images, image)
+	return nil
+}
+
+func (fi FileInfo) Images() []Image {
+	return fi.images
 }

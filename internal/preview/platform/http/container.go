@@ -6,16 +6,26 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"prevtorrent/internal/preview"
+	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 )
 
 const projectName = "prevtorrent"
 
+type Services struct {
+	GetTorrent *getTorrent.Service
+}
+
+type Repositories struct {
+	torrent preview.TorrentRepository
+	image   preview.ImageRepository
+}
+
 type Container struct {
-	Config          config
-	Logger          *logrus.Logger
-	TorrentRepo     preview.TorrentRepository
-	ImageRepository preview.ImageRepository
+	Config       config
+	Logger       *logrus.Logger
+	repositories Repositories
+	services     Services
 }
 
 type config struct {
@@ -68,10 +78,20 @@ func NewContainer() (Container, error) {
 		return Container{}, err
 	}
 
+	torrentRepo := sqlite.NewTorrentRepository(sqliteDatabase)
+	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
+
+	getTorrentService := getTorrent.NewService(logger, torrentRepo, imageRepository)
+
 	return Container{
-		Config:          config,
-		Logger:          logger,
-		TorrentRepo:     sqlite.NewTorrentRepository(sqliteDatabase),
-		ImageRepository: sqlite.NewImageRepository(sqliteDatabase),
+		Config: config,
+		Logger: logger,
+		repositories: Repositories{
+			torrent: torrentRepo,
+			image:   imageRepository,
+		},
+		services: Services{
+			GetTorrent: getTorrentService,
+		},
 	}, nil
 }

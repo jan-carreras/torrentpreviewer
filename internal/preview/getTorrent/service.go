@@ -1,0 +1,52 @@
+package getTorrent
+
+import (
+	"context"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"prevtorrent/internal/preview"
+)
+
+type Service struct {
+	logger          *logrus.Logger
+	torrentRepo     preview.TorrentRepository
+	imageRepository preview.ImageRepository
+}
+
+func NewService(
+	logger *logrus.Logger,
+	torrentRepo preview.TorrentRepository,
+	imageRepository preview.ImageRepository,
+) *Service {
+	return &Service{
+		logger:          logger,
+		torrentRepo:     torrentRepo,
+		imageRepository: imageRepository,
+	}
+}
+
+type CMD struct {
+	TorrentID string
+}
+
+func (s *Service) Get(ctx context.Context, cmd CMD) (preview.Info, error) {
+	torrent, err := s.torrentRepo.Get(ctx, cmd.TorrentID)
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	images, err := s.imageRepository.ByTorrent(ctx, torrent.ID())
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	fmt.Println(images.Images())
+	for _, img := range images.Images() {
+		fmt.Println(img.FileID(), torrent.File(img.FileID()).ID())
+		if err := torrent.File(img.FileID()).AddImage(img); err != nil {
+			return preview.Info{}, err
+		}
+	}
+
+	return torrent, nil
+}
