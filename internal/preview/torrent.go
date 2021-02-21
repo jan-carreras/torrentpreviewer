@@ -122,6 +122,9 @@ type FileInfo struct {
 // NewFileInfo creates a FileInfo
 func NewFileInfo(idx int, length int, name string) (FileInfo, error) {
 	return FileInfo{idx: idx, length: length, name: name}, nil
+
+func (fi FileInfo) IsEqual(fi2 FileInfo) bool {
+	return fi.idx == fi2.idx
 }
 
 // ID returns the ID, which is the index on the list of files of the torrent. zero indexed.

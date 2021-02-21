@@ -178,7 +178,7 @@ func (p PieceRange) Torrent() Info {
 func findStartingByteOfFile(t Info, fi FileInfo) int {
 	start := 0
 	for _, f := range t.files {
-		if f == fi {
+		if f.IsEqual(fi) {
 			break
 		}
 		start += f.length
