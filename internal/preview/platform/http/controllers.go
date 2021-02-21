@@ -43,7 +43,11 @@ func makeFiles(torrent preview.Info) []File {
 	for _, f := range torrent.Files() {
 		images := make([]Image, 0)
 		for _, img := range f.Images() {
-			images = append(images, Image{Src: img.Name()})
+			images = append(images, Image{
+				Src:     img.Name(),
+				Length:  img.Length(),
+				Invalid: img.Length() == 0,
+			})
 		}
 
 		files = append(files, File{
