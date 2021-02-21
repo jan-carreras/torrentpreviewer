@@ -1,5 +1,7 @@
 package transform
 
+// TODO: Change the name of the package to unmagnetize
+
 import (
 	"context"
 	"errors"
