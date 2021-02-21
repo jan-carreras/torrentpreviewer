@@ -15,6 +15,7 @@
     - [x] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
     - [ ] A 1TB torrent with thousands of videos would require a lot of memory. We can make smaller DownloadPlans and queue them
+    - [x] Limit the size of the download data in the Download Plan. Provisionally 100MB.
 - [ ] Support other media content
     - [ ] Support .wmv
     - [ ] Support .avi
@@ -45,8 +46,9 @@
     - [ ] Make an MVP
         - [ ] Magnet input
         - [ ] Torrent uploader #mvp
-        - [ ] Static torrent view with an polling AJAX that reloads the page on new images, or alike #mvp
-- [ ] Prepare for Production #mvp
+        - [x] Static torrent view with thumbnails
+        - [ ] Automatic refresh of new images via AJAX
+- Prepare for Production #mvp
     - [ ] Create a virtual credit card to pay for all this shite
     - [ ] Image storage: Check in lowendbox.com something with proper storage
         - [ ] Example https://lowendbox.com/blog/servarica-10-month-3gb-vps-with-3-tb-disk-space-in-montreal-canada/
