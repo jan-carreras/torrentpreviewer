@@ -8,17 +8,15 @@ import (
 // DownloadPlan helps to describe what we want to download from the torrent.
 type DownloadPlan struct {
 	torrent           Info
-	torrentImages     *TorrentImages
 	pieceRanges       []PieceRange
 	totalDownloadSize int
 }
 
 // NewDownloadPlan returns a DownloadPlan
-func NewDownloadPlan(torrent Info, torrentImages *TorrentImages) *DownloadPlan {
+func NewDownloadPlan(torrent Info) *DownloadPlan {
 	return &DownloadPlan{
-		torrent:       torrent,
-		torrentImages: torrentImages,
-		pieceRanges:   make([]PieceRange, 0),
+		torrent:     torrent,
+		pieceRanges: make([]PieceRange, 0),
 	}
 }
 
@@ -36,14 +34,13 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 // AddAll adds all the supported files of the torrent to download with a pre-set settings:
 //       Start at the beginning of the file and download the recommended file.DownloadSize()
 // Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
-func (dp *DownloadPlan) AddAll() error {
-	// TODO: Pass TorrentImages as parameter
+func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
 	for _, file := range dp.torrent.SupportedFiles() {
-		if dp.totalDownloadSize > 500*mb { // TODO: Should be a parameter from configuration
+		if dp.totalDownloadSize > 100*mb { // TODO: Should be a parameter from configuration
 			break
 		}
 
-		if err := dp.addDownloadToPlan(file, file.DownloadSize(), 0); err != nil {
+		if err := dp.addDownloadToPlan(file, torrentImages); err != nil {
 			return err
 		}
 	}
@@ -62,7 +59,10 @@ func (dp *DownloadPlan) CountPieces() int {
 	return len(count)
 }
 
-func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, length, offset int) error {
+func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, torrentImages *TorrentImages) error {
+	length := fi.DownloadSize()
+	offset := 0
+
 	if !fi.IsSupportedExtension() {
 		return fmt.Errorf("file %s has not a supported extension", fi.name)
 	}
@@ -85,12 +85,12 @@ func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, length, offset int) error
 		return nil
 	}
 
-	dp.addToDownloadPlan(pr, fi)
+	dp.addToDownloadPlan(pr, length)
 	return nil
 }
 
-func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, fi FileInfo) {
-	dp.totalDownloadSize += fi.DownloadSize()
+func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
+	dp.totalDownloadSize += downloadSize
 	dp.pieceRanges = append(dp.pieceRanges, piece)
 }
 

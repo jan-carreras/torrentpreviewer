@@ -61,8 +61,8 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 		"imagesTorrentCount": len(torrentImages.Images()),
 	}).Debug("images that we already have for the torrent")
 
-	plan := preview.NewDownloadPlan(torrent, torrentImages)
-	if err := plan.AddAll(); err != nil {
+	plan := preview.NewDownloadPlan(torrent)
+	if err := plan.AddAll(torrentImages); err != nil {
 		return err
 	}
 
