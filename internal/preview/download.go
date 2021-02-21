@@ -80,7 +80,7 @@ func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, length, offset int) error
 	start := findStartingByteOfFile(dp.torrent, fi)
 	pr := NewPieceRange(dp.torrent, fi, start, offset, length)
 
-	if dp.torrentImages.IsAlreadyDownloaded(pr.Name()) {
+	if torrentImages.HaveImage(pr.Name()) {
 		// TODO: I would like to add a log for that, tbh
 		return nil
 	}

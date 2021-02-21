@@ -112,9 +112,8 @@ func (a *TorrentImages) Images() []Image {
 	return a.images
 }
 
-// IsAlreadyDownloaded stupid name to check if we already have the filename
-// TODO: Rethink name
-func (a *TorrentImages) IsAlreadyDownloaded(name string) bool {
+// HaveImage stupid name to check if we already have the filename
+func (a *TorrentImages) HaveImage(name string) bool {
 	_, found := a.imageName[name]
 	return found
 }
