@@ -3,7 +3,7 @@ package http
 type Image struct {
 	Src     string `json:"source"`
 	Length  int    `json:"length"`
-	Invalid bool   `json:"invalid"`
+	IsValid bool   `json:"is_valid"`
 }
 
 type File struct {

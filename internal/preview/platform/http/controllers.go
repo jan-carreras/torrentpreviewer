@@ -46,7 +46,7 @@ func makeFiles(torrent preview.Info) []File {
 			images = append(images, Image{
 				Src:     img.Name(),
 				Length:  img.Length(),
-				Invalid: img.Length() == 0,
+				IsValid: img.Length() != 0,
 			})
 		}
 
