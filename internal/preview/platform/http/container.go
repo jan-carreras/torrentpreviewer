@@ -3,15 +3,16 @@ package http
 import (
 	"database/sql"
 	"fmt"
-	"github.com/anacrolix/torrent"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/internal/preview/unmagnetize"
+
+	"github.com/anacrolix/torrent"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const projectName = "prevtorrent"

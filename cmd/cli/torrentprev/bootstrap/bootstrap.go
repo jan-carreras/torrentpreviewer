@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
@@ -9,6 +8,8 @@ import (
 	"prevtorrent/internal/preview/unmagnetize"
 	"runtime"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func Run() error {
@@ -19,7 +20,7 @@ func Run() error {
 	bus := makeCommandBus(c)
 
 	c.config.Print(os.Stdout)
-	
+
 	go goroutineLeak(c)
 	return cli.Run(bus)
 }

@@ -3,10 +3,11 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/anacrolix/torrent"
-	"github.com/spf13/viper"
 	"io"
 	"prevtorrent/internal/platform/storage/inmemory"
+
+	"github.com/anacrolix/torrent"
+	"github.com/spf13/viper"
 )
 
 const projectName = "prevtorrent"

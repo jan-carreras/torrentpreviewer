@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {

@@ -3,12 +3,13 @@ package inmemory_test
 import (
 	context "context"
 	"errors"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/kit/command"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCommandBus(t *testing.T) {

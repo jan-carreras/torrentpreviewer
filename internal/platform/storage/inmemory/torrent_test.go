@@ -1,9 +1,10 @@
 package inmemory
 
 import (
+	"testing"
+
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 const (
