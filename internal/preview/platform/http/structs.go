@@ -7,10 +7,11 @@ type Image struct {
 }
 
 type File struct {
-	ID     int     `json:"id"`
-	Length int     `json:"length"`
-	Name   string  `json:"name"`
-	Images []Image `json:"images"`
+	ID          int     `json:"id"`
+	Length      int     `json:"length"`
+	IsSupported bool    `json:"is_supported"`
+	Name        string  `json:"name"`
+	Images      []Image `json:"images"`
 }
 
 type Torrent struct {

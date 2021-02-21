@@ -51,10 +51,11 @@ func makeFiles(torrent preview.Info) []File {
 		}
 
 		files = append(files, File{
-			ID:     f.ID(),
-			Length: f.Length(),
-			Name:   f.Name(),
-			Images: images,
+			ID:          f.ID(),
+			Length:      f.Length(),
+			Name:        f.Name(),
+			Images:      images,
+			IsSupported: f.IsSupportedExtension(),
 		})
 	}
 	return files
