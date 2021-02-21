@@ -14,7 +14,7 @@
 - [ ] Reduce disk/memory usage
     - [x] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
-    - [ ] A 1TB torrent with thousands of videos would require a lot of memory. We can make smaller DownloadPlans and queue them
+    - [ ] We have OOMKiller around. Use queues to process smaller DownloadPlans
     - [x] Limit the size of the download data in the Download Plan. Provisionally 100MB.
 - [ ] Support other media content
     - [ ] Support .wmv
