@@ -23,7 +23,7 @@
 - [ ] Implement the HTTP endpoints
     - [ ] POST /magnet
     - [ ] POST /torrent #mvp
-    - [x] GET  /torrent/:id #mvp
+    - [x] GET /torrent/:id #mvp
     - [ ] DELETE /torrent/:id
     - [ ] Redis Cache
         - [ ] This endpoint should make intensive use of Redis for caching for reading
