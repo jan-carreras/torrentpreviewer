@@ -42,8 +42,8 @@ func (s *Service) Get(ctx context.Context, cmd CMD) (preview.Info, error) {
 
 	fmt.Println(images.Images())
 	for _, img := range images.Images() {
-		fmt.Println(img.FileID(), torrent.File(img.FileID()).ID())
-		if err := torrent.File(img.FileID()).AddImage(img); err != nil {
+		file := torrent.File(img.FileID())
+		if err := file.AddImage(img); err != nil {
 			return preview.Info{}, err
 		}
 	}

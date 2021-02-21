@@ -65,8 +65,7 @@ func NewInfo(
 	filesByID := func(files []FileInfo) map[int]*FileInfo {
 		hash := make(map[int]*FileInfo)
 		for i := 0; i < len(files); i++ {
-			f := files[i]
-			hash[f.ID()] = &f
+			hash[files[i].ID()] = &files[i]
 		}
 		return hash
 	}
