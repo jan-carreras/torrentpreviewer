@@ -13,7 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const maxDownloadTime = time.Minute * 15
+const (
+	maxDownloadTime = time.Minute * 15
+	seederWaitTime  = time.Second * 30
+)
 
 type TorrentClient struct {
 	client *torrent.Client
@@ -116,6 +119,7 @@ func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.Downlo
 }
 
 func (r *TorrentClient) publishPartsThatWeAlreadyHave(wg *sync.WaitGroup, t *torrent.Torrent, registry *preview.PieceRegistry, downloadPlan preview.DownloadPlan) {
+	// TODO: This is checking all the pieces at the start. Might it be the cause of my problems? SIMPLIFY!
 	defer wg.Done()
 	for _, plan := range downloadPlan.GetPlan() {
 		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
@@ -138,8 +142,6 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 	defer wg.Done()
 	defer t.Drop() // Delete all the chunks we have in the storage
 
-	// TODO: If we don't have any peer for a while we might disconnect as well
-
 	waitingFor := countNumberPiecesWaitingFor(t, downloadPlan)
 	if waitingFor == 0 {
 		r.logger.WithFields(
@@ -148,6 +150,10 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 				"torrent":    t.Name(),
 			},
 		).Debug("all pieces already downloaded")
+	}
+
+	if !r.hasSeeders(ctx, t, seederWaitTime) {
+		return
 	}
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, maxDownloadTime)
@@ -209,6 +215,26 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 			return
 		}
 	}
+}
+
+func (r *TorrentClient) hasSeeders(ctx context.Context, t *torrent.Torrent, duration time.Duration) bool {
+	ctxSeederTimeout, cancel := context.WithTimeout(ctx, duration)
+	defer cancel()
+	for t.Stats().ConnectedSeeders == 0 {
+		select {
+		case <-ctxSeederTimeout.Done():
+			r.logger.WithFields(
+				logrus.Fields{
+					"torrent":     t.InfoHash().String(),
+					"torrentName": t.Name(),
+					"context":     ctxSeederTimeout.Err(),
+				},
+			).Error("torrent without seeders")
+			return false
+		case <-time.After(time.Second):
+		}
+	}
+	return true
 }
 
 func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
