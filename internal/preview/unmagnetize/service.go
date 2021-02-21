@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"prevtorrent/internal/preview"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -26,19 +27,19 @@ func NewService(
 	}
 }
 
-func (s Service) Handle(ctx context.Context, cmd CMD) error {
-	m, err := preview.NewMagnet(cmd.Magnet)
+func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
+	m, err := preview.NewMagnet(strings.TrimSpace(cmd.Magnet)) // TODO: Add test
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, err = s.torrentRepository.Get(ctx, m.ID())
+	t, err := s.torrentRepository.Get(ctx, m.ID())
 	if err == nil {
 		s.log.WithFields(logrus.Fields{
 			"magnet":   m.Value(),
 			"magnetID": m.ID(),
 		}).Debug("already imported in DB. skipping.")
-		return nil
+		return t.ID(), nil
 	}
 
 	if !errors.Is(err, preview.ErrNotFound) {
@@ -47,7 +48,7 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 			"magnetID": m.ID(),
 			"error":    err,
 		}).Debug("error when reading torrent")
-		return err
+		return "", err
 	}
 
 	s.log.WithFields(logrus.Fields{
@@ -57,8 +58,8 @@ func (s Service) Handle(ctx context.Context, cmd CMD) error {
 
 	torrent, err := s.magnetResolver.Resolve(ctx, m)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return s.torrentRepository.Persist(ctx, torrent)
+	return torrent.ID(), s.torrentRepository.Persist(ctx, torrent)
 }

@@ -1,12 +1,16 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
+	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
+	"time"
 )
 
 type Server struct {
@@ -28,7 +32,7 @@ func (s *Server) getTorrentController(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(200, getTorrentResponse{
+	c.IndentedJSON(http.StatusOK, getTorrentResponse{
 		Torrent: Torrent{
 			Id:     torrent.ID(),
 			Name:   torrent.Name(),
@@ -63,13 +67,33 @@ func makeFiles(torrent preview.Info) []File {
 
 func (s *Server) handleError(c *gin.Context, err error) {
 	if errors.Is(err, preview.ErrNotFound) {
-		c.JSON(404, httpError{
+		c.JSON(http.StatusNotFound, httpError{
 			Message: err.Error(),
 		})
 		return
 	}
 
-	c.JSON(500, httpError{
+	c.JSON(http.StatusInternalServerError, httpError{
 		Message: fmt.Sprintf("Unexpected error: %v", err.Error()),
+	})
+}
+
+func (s *Server) unmagnetizeController(c *gin.Context) {
+	magnet := c.PostForm("magnet")
+	if len(magnet) == 0 {
+		c.JSON(http.StatusBadRequest, httpError{
+			Message: fmt.Sprintf("magnet link cannot be empty"),
+		})
+		return
+	}
+	ctxWithCancellation, cancel := context.WithTimeout(c, time.Second*15)
+	defer cancel()
+	torrentID, err := s.services.Unmagnetize.Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
+	if err != nil {
+		s.handleError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{
+		"id": torrentID,
 	})
 }

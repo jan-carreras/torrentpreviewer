@@ -34,5 +34,6 @@ func (c CommandHandler) Handle(ctx context.Context, _cmd command.Command) error 
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
-	return c.service.Handle(ctxTimeout, cmd)
+	_, err := c.service.Handle(ctxTimeout, cmd)
+	return err
 }

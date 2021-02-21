@@ -3,17 +3,22 @@ package http
 import (
 	"database/sql"
 	"fmt"
+	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
+	"prevtorrent/internal/preview/platform/client/bittorrentproto"
+	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
+	"prevtorrent/internal/preview/unmagnetize"
 )
 
 const projectName = "prevtorrent"
 
 type Services struct {
-	GetTorrent *getTorrent.Service
+	GetTorrent  *getTorrent.Service // TODO: Remove pointer
+	Unmagnetize unmagnetize.Service
 }
 
 type Repositories struct {
@@ -22,7 +27,7 @@ type Repositories struct {
 }
 
 type Container struct {
-	Config       config
+	Config       configuration.Config
 	Logger       *logrus.Logger
 	repositories Repositories
 	services     Services
@@ -59,7 +64,7 @@ func getConfig() (config, error) {
 }
 
 func NewContainer() (Container, error) {
-	config, err := getConfig()
+	config, err := configuration.NewConfig()
 	if err != nil {
 		return Container{}, err
 	}
@@ -83,6 +88,15 @@ func NewContainer() (Container, error) {
 
 	getTorrentService := getTorrent.NewService(logger, torrentRepo, imageRepository)
 
+	torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(config))
+	if err != nil {
+		return Container{}, err
+	}
+
+	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
+
+	unmagnetizeService := unmagnetize.NewService(logger, torrentIntegration, torrentRepo)
+
 	return Container{
 		Config: config,
 		Logger: logger,
@@ -91,7 +105,8 @@ func NewContainer() (Container, error) {
 			image:   imageRepository,
 		},
 		services: Services{
-			GetTorrent: getTorrentService,
+			GetTorrent:  getTorrentService,
+			Unmagnetize: unmagnetizeService,
 		},
 	}, nil
 }

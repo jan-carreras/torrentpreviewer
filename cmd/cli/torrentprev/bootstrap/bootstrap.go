@@ -1,20 +1,15 @@
 package bootstrap
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/sirupsen/logrus"
+	"os"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/unmagnetize"
 	"runtime"
 	"time"
-
-	"github.com/spf13/viper"
 )
-
-const projectName = "prevtorrent"
 
 func Run() error {
 	c, err := newContainer()
@@ -23,58 +18,10 @@ func Run() error {
 	}
 	bus := makeCommandBus(c)
 
-	if conf, err := json.MarshalIndent(c.config, "", "  "); err != nil {
-		return err
-	} else {
-		fmt.Println("Configuration:")
-		fmt.Println(string(conf))
-	}
-
+	c.config.Print(os.Stdout)
+	
 	go goroutineLeak(c)
 	return cli.Run(bus)
-}
-
-type config struct {
-	ImageDir              string `yaml:"ImageDir"`
-	SqlitePath            string `yaml:"SqlitePath"`
-	EnableIPv6            bool   `yaml:"EnableIPv6"`
-	EnableUTP             bool   `yaml:"EnableUTP"`
-	EnableTorrentDebug    bool   `yaml:"EnableTorrentDebug"`
-	LogLevel              string `yaml:"LogLevel"`
-	ConnectionsPerTorrent int    `yaml:"ConnectionsPerTorrent"`
-	TorrentListeningPort  int    `yaml:"TorrentListeningPort"`
-	TorrentStorageDriver  string `yaml:"TorrentStorageDriver"`
-}
-
-func getConfig() (config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath("$HOME/.config/" + projectName)
-	viper.AddConfigPath("$HOME/." + projectName)
-	viper.AddConfigPath(".")
-
-	viper.SetDefault("ImageDir", "./tmp/images")
-	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
-	viper.SetDefault("EnableIPv6", false)
-	viper.SetDefault("EnableUTP", true)
-	viper.SetDefault("EnableTorrentDebug", false)
-	viper.SetDefault("LogLevel", "warning")
-	viper.SetDefault("ConnectionsPerTorrent", "20")
-	viper.SetDefault("TorrentListeningPort", "12345")
-	viper.SetDefault("TorrentStorageDriver", "inmemory")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return config{}, err
-	}
-
-	conf := config{}
-
-	if err := viper.Unmarshal(&conf); err != nil {
-		return config{}, fmt.Errorf("unable to decode into config struct, %v", err)
-	}
-
-	return conf, nil
 }
 
 func makeCommandBus(c container) *inmemory.SyncCommandBus {

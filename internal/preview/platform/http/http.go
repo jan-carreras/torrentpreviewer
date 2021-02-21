@@ -20,6 +20,7 @@ func Run(c Container, bus command.Bus) error {
 		MaxAge:        12 * time.Hour,
 	}))
 	router.GET("/torrent/:id", server.getTorrentController)
+	router.POST("/unmagnetize", server.unmagnetizeController)
 
 	// TODO: Move this logic to nginx
 	router.Use(static.Serve("/image", static.LocalFile(c.Config.ImageDir, false)))

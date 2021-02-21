@@ -2,19 +2,18 @@ package bootstrap
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
-	"prevtorrent/internal/platform/storage/inmemory"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
+	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/file"
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 )
 
 type container struct {
-	config            config
+	config            configuration.Config
 	logger            *logrus.Logger
 	magnetClient      preview.MagnetClient
 	torrentDownloader preview.TorrentDownloader
@@ -25,7 +24,7 @@ type container struct {
 }
 
 func newContainer() (container, error) {
-	config, err := getConfig()
+	config, err := configuration.NewConfig()
 	if err != nil {
 		return container{}, err
 	}
@@ -52,7 +51,7 @@ func newContainer() (container, error) {
 
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
-	torrentClient, err := torrent.NewClient(getTorrentConf(config))
+	torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(config))
 	if err != nil {
 		return container{}, err
 	}
@@ -69,25 +68,4 @@ func newContainer() (container, error) {
 		imagePersister:    imagePersister,
 		imageRepository:   imageRepository,
 	}, nil
-}
-
-func getTorrentConf(config config) *torrent.ClientConfig {
-	c := torrent.NewDefaultClientConfig()
-
-	switch driver := config.TorrentStorageDriver; driver {
-	case "inmemory":
-		c.DefaultStorage = inmemory.NewTorrentStorage()
-	case "file":
-	default:
-		panic(fmt.Errorf("unknown storage driver %v", driver))
-	}
-
-	c.DisableIPv6 = !config.EnableIPv6
-	c.DisableUTP = !config.EnableUTP
-	c.Debug = config.EnableTorrentDebug
-	c.EstablishedConnsPerTorrent = config.ConnectionsPerTorrent
-	c.ListenPort = config.TorrentListeningPort
-	c.NoDefaultPortForwarding = false
-	c.Seed = true
-	return c
 }
