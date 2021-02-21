@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 	"prevtorrent/internal/preview/downloadPartials"
-	"prevtorrent/internal/preview/transform"
+	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
 
 	"github.com/urfave/cli/v2"
@@ -52,7 +52,7 @@ func (h *handlers) transform(c *cli.Context) error {
 	}
 	magnet := c.Args().Get(0)
 
-	return h.bus.Dispatch(context.Background(), transform.CMD{
+	return h.bus.Dispatch(context.Background(), unmagnetize.CMD{
 		Magnet: magnet,
 	})
 }

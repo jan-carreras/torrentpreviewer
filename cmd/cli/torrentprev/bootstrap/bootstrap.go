@@ -7,7 +7,7 @@ import (
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
-	"prevtorrent/internal/preview/transform"
+	"prevtorrent/internal/preview/unmagnetize"
 	"runtime"
 	"time"
 
@@ -81,9 +81,9 @@ func makeCommandBus(c container) *inmemory.SyncCommandBus {
 	commandBus := inmemory.NewSyncCommandBus(c.logger)
 
 	commandBus.Register(
-		transform.CommandType,
-		transform.NewTransformCommandHandler(
-			transform.NewService(
+		unmagnetize.CommandType,
+		unmagnetize.NewTransformCommandHandler(
+			unmagnetize.NewService(
 				c.logger,
 				c.magnetClient,
 				c.torrentRepo,

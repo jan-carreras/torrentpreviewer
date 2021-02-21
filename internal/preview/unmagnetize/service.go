@@ -1,6 +1,4 @@
-package transform
-
-// TODO: Change the name of the package to unmagnetize
+package unmagnetize
 
 import (
 	"context"
