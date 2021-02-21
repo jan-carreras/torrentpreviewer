@@ -153,9 +153,11 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 	ctxTimeout, cancel := context.WithTimeout(ctx, maxDownloadTime)
 	defer cancel()
 
+	subscription := t.SubscribePieceStateChanges()
+	defer subscription.Close()
 	for waitingFor > 0 {
 		select {
-		case _v, isOpen := <-t.SubscribePieceStateChanges().Values:
+		case _v, isOpen := <-subscription.Values:
 			if !isOpen {
 				r.logger.WithFields(
 					logrus.Fields{
