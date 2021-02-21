@@ -59,6 +59,10 @@ func (dp *DownloadPlan) CountPieces() int {
 	return len(count)
 }
 
+func (dp *DownloadPlan) DownloadSize() int {
+	return dp.CountPieces() * dp.torrent.pieceLength
+}
+
 func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, torrentImages *TorrentImages) error {
 	length := fi.DownloadSize()
 	offset := 0

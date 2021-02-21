@@ -76,9 +76,10 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 	}
 
 	s.logger.WithFields(logrus.Fields{
-		"torrentID":  torrent.ID(),
-		"name":       torrent.Name(),
-		"pieceCount": plan.CountPieces(),
+		"torrentID":        torrent.ID(),
+		"name":             torrent.Name(),
+		"pieceCount":       plan.CountPieces(),
+		"downloadPlanSize": plan.DownloadSize(),
 	}).Debug("pieces to download")
 
 	registry, err := s.torrentDownloader.DownloadParts(ctx, *plan)
