@@ -46,7 +46,7 @@ func NewMagnet(value string) (Magnet, error) {
 
 func toBase32(encoded string) (string, error) {
 	if len(encoded) != 32 {
-		return "", nil
+		return encoded, nil
 	}
 
 	b := make([]byte, 20)
