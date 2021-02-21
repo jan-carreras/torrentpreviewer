@@ -59,6 +59,7 @@
 - Bugs
     - [x] In production we have a bug that "go-libutp@v1.0.4/conn.go:73" seems to deathlock or whatever. Be able to
       disable uTP should fix it.
+    - [ ] Add more seeders per torrent. Right now everything is going crazy slow
 - GIF
     - [ ] Support for GIF creation of all images of the torrent
     - [ ] ... or webm
