@@ -31,7 +31,6 @@ func (c Config) Print(w io.Writer) {
 		_, _ = fmt.Fprint(w, "Configuration:")
 		_, _ = fmt.Fprint(w, string(conf))
 	}
-
 }
 
 func NewConfig() (Config, error) {
@@ -41,6 +40,7 @@ func NewConfig() (Config, error) {
 	viper.AddConfigPath("$HOME/.config/" + projectName)
 	viper.AddConfigPath("$HOME/." + projectName)
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("./testdata")
 
 	viper.SetDefault("ImageDir", "./tmp/images")
 	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")

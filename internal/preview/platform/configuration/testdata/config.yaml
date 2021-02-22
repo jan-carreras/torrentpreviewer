@@ -1,0 +1,11 @@
+ImageDir: "ImageDir"
+SqlitePath: "SqlitePath"
+EnableIPv6: true
+EnableUTP: true
+EnableTorrentDebug: true
+LogLevel: "debug"
+ConnectionsPerTorrent: 100
+TorrentListeningPort: 1234
+TorrentStorageDriver: "TorrentStorageDriver"
+
+
