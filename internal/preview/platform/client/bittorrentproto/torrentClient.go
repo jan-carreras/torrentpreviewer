@@ -76,7 +76,7 @@ func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) err
 
 func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.DownloadPlan) (*preview.PieceRegistry, error) {
 	storage := preview.NewPieceInMemoryStorage(downloadPlan)
-	registry, err := preview.NewPieceRegistry(ctx, &downloadPlan, storage)
+	registry, err := preview.NewPieceRegistry(ctx, r.logger, &downloadPlan, storage)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,8 @@ package preview_test
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"testing"
 	"time"
@@ -118,7 +120,7 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
+			registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
 			assert.NoError(t, err)
 			registry.RegisterPiece(preview.NewPiece(torrentID, 0, part0))
 			registry.RegisterPiece(preview.NewPiece(torrentID, 1, part1))
@@ -151,4 +153,10 @@ func Test_TorrentImages(t *testing.T) {
 	assert.Equal(t, imgs, images.Images())
 	assert.True(t, images.HaveImage("img1"))
 	assert.False(t, images.HaveImage("img99"))
+}
+
+func fakeLogger() *logrus.Logger {
+	l := logrus.New()
+	l.Out = ioutil.Discard
+	return l
 }

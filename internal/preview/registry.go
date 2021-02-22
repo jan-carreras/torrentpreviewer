@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -80,6 +81,7 @@ func (m *PieceInMemoryStorage) Get(id int) (*Piece, bool) {
 // TODO: This struct has too many responsabilities, too many channel logic and probably
 //       a lot of hidden bugs.
 type PieceRegistry struct {
+	logger              *logrus.Logger
 	downloadPlan        *DownloadPlan
 	storage             PieceStorage
 	matcher             map[int][]*pieceRangeCounter
@@ -91,7 +93,7 @@ type PieceRegistry struct {
 }
 
 // NewPieceRegistry creates a PieceRegistry
-func NewPieceRegistry(ctx context.Context, plan *DownloadPlan, storage PieceStorage) (*PieceRegistry, error) {
+func NewPieceRegistry(ctx context.Context, logger *logrus.Logger, plan *DownloadPlan, storage PieceStorage) (*PieceRegistry, error) {
 	if plan.CountPieces() == 0 {
 		return nil, ErrPriceRegistryWithNothingToWaitFor
 	}
@@ -106,6 +108,7 @@ func NewPieceRegistry(ctx context.Context, plan *DownloadPlan, storage PieceStor
 	}
 
 	pr := &PieceRegistry{
+		logger:           logger,
 		downloadPlan:     plan,
 		matcher:          matcher,
 		storage:          storage,
@@ -206,22 +209,21 @@ func (pr *PieceRegistry) listen(ctx context.Context) {
 		select {
 		case piece, isOpen := <-pr.pieceIncomingCh:
 			if !isOpen {
-				//pr.logger.Debug("no more input. Seems that those were all the pieces") // TODO: Review
+				pr.logger.Debug("no more input. Seems that those were all the pieces")
 				pr.closeIncomingChanel()
 				return
 			}
 
-			// TODO: Review
-			/*log := pr.logger.WithFields(logrus.Fields{
+			log := pr.logger.WithFields(logrus.Fields{
 				"torrentID": piece.TorrentID(),
 				"piece":     piece.ID(),
-			})*/
+			})
 
 			if err := pr.addPiece(piece); err != nil {
-				///log.Error(err)
+				log.Error(err)
 				return
 			}
-			//log.Debug("part added to registry")  // TODO: Review
+			log.Debug("part added to registry")
 		case <-ctx.Done():
 			pr.closeIncomingChanel()
 			return
