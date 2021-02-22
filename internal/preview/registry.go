@@ -157,8 +157,8 @@ func (pr *PieceRegistry) RunOnPieceReady(ctx context.Context, fnx func(part Piec
 				return err
 			}
 
-		case <-ctx.Done(): // TODO: Read the reason for cancellation
-			return errors.New("context cancelled")
+		case <-ctx.Done():
+			return fmt.Errorf("context cancelled: %v", ctx.Err())
 		}
 	}
 }
