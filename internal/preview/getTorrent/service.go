@@ -18,8 +18,8 @@ func NewService(
 	logger *logrus.Logger,
 	torrentRepo preview.TorrentRepository,
 	imageRepository preview.ImageRepository,
-) *Service {
-	return &Service{
+) Service {
+	return Service{
 		logger:          logger,
 		torrentRepo:     torrentRepo,
 		imageRepository: imageRepository,

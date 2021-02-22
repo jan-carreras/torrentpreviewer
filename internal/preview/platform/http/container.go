@@ -14,7 +14,7 @@ import (
 )
 
 type Services struct {
-	GetTorrent    *getTorrent.Service // TODO: Remove pointer
+	GetTorrent    getTorrent.Service
 	Unmagnetize   unmagnetize.Service
 	ImportTorrent importTorrent.Service
 }
