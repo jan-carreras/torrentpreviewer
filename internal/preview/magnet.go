@@ -26,6 +26,7 @@ var ErrInvalidMagnetFormat = errors.New("invalid magnet")
 
 // NewMagnet returns a Magnet
 func NewMagnet(value string) (Magnet, error) {
+	value = strings.TrimSpace(value)
 	if !magnetValidationRegexp.Match([]byte(value)) {
 		return Magnet{}, ErrInvalidMagnetFormat
 	}

@@ -16,6 +16,24 @@ func Test_Magnet_New(t *testing.T) {
 	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", m.ID())
 }
 
+func Test_Magnet_NewWithTrailingSpaces(t *testing.T) {
+	mag := "    magnet:?xt=urn:btih:zOcmZQIPFFW7OLLMIC5HUB6BPCSDEOQU     "
+
+	m, err := preview.NewMagnet(mag)
+	assert.NoError(t, err)
+	assert.Equal(t, "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU", m.Value())
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", m.ID())
+}
+
+func Test_Magnet_NewWithTrailingReturn(t *testing.T) {
+	mag := "\t\t\tmagnet:?xt=urn:btih:zOcmZQIPFFW7OLLMIC5HUB6BPCSDEOQU\n\n\n\n"
+
+	m, err := preview.NewMagnet(mag)
+	assert.NoError(t, err)
+	assert.Equal(t, "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU", m.Value())
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", m.ID())
+}
+
 func Test_Magnet_NewFixesCase(t *testing.T) {
 	mag := "magnet:?xt=urn:btih:zOcmZQIPFFW7OLLMIC5HUB6BPCSDEOQU"
 
@@ -24,6 +42,7 @@ func Test_Magnet_NewFixesCase(t *testing.T) {
 	assert.Equal(t, "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU", m.Value())
 	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", m.ID())
 }
+
 func Test_Magnet_ConvertToHexEncoding(t *testing.T) {
 	mag := "magnet:?xt=urn:btih:3htucd42zxr3iigmr2dq6hibmlmlzhex"
 

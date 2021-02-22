@@ -3,10 +3,8 @@ package unmagnetize
 import (
 	"context"
 	"errors"
-	"prevtorrent/internal/preview"
-	"strings"
-
 	"github.com/sirupsen/logrus"
+	"prevtorrent/internal/preview"
 )
 
 type Service struct {
@@ -28,7 +26,7 @@ func NewService(
 }
 
 func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
-	m, err := preview.NewMagnet(strings.TrimSpace(cmd.Magnet)) // TODO: Add test
+	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
 		return "", err
 	}
