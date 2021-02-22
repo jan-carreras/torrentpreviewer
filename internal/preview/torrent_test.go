@@ -32,6 +32,28 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, files, torrent.Files())
 }
 
+func TestInfo_From32BitIDTo40(t *testing.T) {
+	torrentID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu"
+
+	torrent, err := preview.NewInfo(torrentID, "test movie", 100, nil, []byte("12345"))
+	assert.NoError(t, err)
+
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrent.ID())
+}
+
+func TestInfo_InvalidBase32(t *testing.T) {
+	torrentID := "11111111111111111111111111111111"
+	_, err := preview.NewInfo(torrentID, "test movie", 100, nil, []byte("12345"))
+	assert.Error(t, err)
+}
+
+func TestInfo_InvalidLength(t *testing.T) {
+	torrentID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu00"
+
+	_, err := preview.NewInfo(torrentID, "test movie", 100, nil, []byte("12345"))
+	assert.Error(t, err)
+}
+
 func TestInfo_InvalidTorrentID(t *testing.T) {
 	torrentID := "invalid ID"
 
