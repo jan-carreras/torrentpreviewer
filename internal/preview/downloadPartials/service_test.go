@@ -102,8 +102,8 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 
 	torrentImages := preview.NewTorrentImages(nil)
 
-	plan := preview.NewDownloadPlan(torrent, torrentImages)
-	err = plan.AddAll()
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages)
 	assert.NoError(t, err)
 
 	registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
@@ -153,8 +153,8 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 
 	torrentImages := preview.NewTorrentImages(nil)
 
-	plan := preview.NewDownloadPlan(torrent, torrentImages)
-	assert.NoError(t, plan.AddAll())
+	plan := preview.NewDownloadPlan(torrent)
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
@@ -206,8 +206,8 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
 
 	torrentImages := preview.NewTorrentImages(nil)
-	plan := preview.NewDownloadPlan(torrent, torrentImages)
-	assert.NoError(t, plan.AddAll())
+	plan := preview.NewDownloadPlan(torrent)
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
@@ -262,8 +262,8 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
 
 	torrentImages := preview.NewTorrentImages(nil)
-	plan := preview.NewDownloadPlan(torrent, torrentImages)
-	assert.NoError(t, plan.AddAll())
+	plan := preview.NewDownloadPlan(torrent)
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
