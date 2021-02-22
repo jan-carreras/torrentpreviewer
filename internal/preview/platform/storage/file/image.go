@@ -22,12 +22,12 @@ func (r *ImagePersister) PersistFile(ctx context.Context, id string, data []byte
 	if err := ensureDirectoryExists(r.imageDir); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path.Join(r.imageDir, id), data, 0600)
+	return ioutil.WriteFile(path.Join(r.imageDir, id), data, 0644)
 }
 
 func ensureDirectoryExists(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0700); err != nil {
+		if err := os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
 	}
