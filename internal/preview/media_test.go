@@ -140,3 +140,15 @@ func TestBundlePlan_Bundle(t *testing.T) {
 		})
 	}
 }
+
+func Test_TorrentImages(t *testing.T) {
+	imgs := []preview.Image{
+		preview.NewImage("torrentID", 0, "img1", 10),
+		preview.NewImage("torrentID", 0, "img2", 12),
+		preview.NewImage("torrentID", 1, "img1", 12),
+	}
+	images := preview.NewTorrentImages(imgs)
+	assert.Equal(t, imgs, images.Images())
+	assert.True(t, images.HaveImage("img1"))
+	assert.False(t, images.HaveImage("img99"))
+}

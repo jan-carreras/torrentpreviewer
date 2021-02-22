@@ -86,6 +86,35 @@ func TestInfo_ValidateFilesHaveDuplicatedIDs(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestInfo_GetFileByID(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 2000, "movie2.mp4")
+	assert.NoError(t, err)
+	f3, err := preview.NewFileInfo(2, 10, "subtitles.srt")
+	assert.NoError(t, err)
+
+	files := []preview.FileInfo{fi, f2, f3}
+
+	torrent, err := preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
+	assert.NoError(t, err)
+
+	assert.Equal(t, &fi, torrent.File(0))
+	assert.Equal(t, &f2, torrent.File(1))
+	assert.Equal(t, &f3, torrent.File(2))
+}
+
+func TestInfo_GetUnknownFileID(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	torrent, err := preview.NewInfo(torrentID, "test movie", 100, nil, []byte("12345"))
+	assert.NoError(t, err)
+
+	assert.Nil(t, torrent.File(10))
+}
+
 func TestInfo_InvalidTorrentID(t *testing.T) {
 	torrentID := "invalid ID"
 
@@ -119,4 +148,34 @@ func TestFileInfo_BigFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, preview.DownloadSize, fi.DownloadSize())
+}
+
+func TestFileInfo_AddImages(t *testing.T) {
+	idx := 33
+	length := preview.DownloadSize * 10
+	name := "movie.mp4"
+
+	fi, err := preview.NewFileInfo(idx, length, name)
+	assert.NoError(t, err)
+
+	img := preview.NewImage("1234", idx, "test name", 10)
+	assert.Len(t, fi.Images(), 0)
+	
+	err = fi.AddImage(img)
+	assert.NoError(t, err)
+
+	assert.Len(t, fi.Images(), 1)
+	assert.Equal(t, img, fi.Images()[0])
+}
+
+func TestFileInfo_AddImagesWithNonMatchingID(t *testing.T) {
+	idx := 33
+	length := preview.DownloadSize * 10
+	name := "movie.mp4"
+
+	fi, err := preview.NewFileInfo(idx, length, name)
+	assert.NoError(t, err)
+
+	err = fi.AddImage(preview.NewImage("1234", idx+1, "test name", 10))
+	assert.Error(t, err)
 }

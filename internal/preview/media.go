@@ -108,6 +108,7 @@ func NewTorrentImages(images []Image) *TorrentImages {
 	return &TorrentImages{images: images, imageName: imageName}
 }
 
+// Images return all the images
 func (a *TorrentImages) Images() []Image {
 	return a.images
 }
