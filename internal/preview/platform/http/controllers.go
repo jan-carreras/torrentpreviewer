@@ -85,7 +85,7 @@ func (s *Server) unmagnetizeController(ctx *gin.Context) {
 	magnet := ctx.PostForm("magnet")
 	if len(magnet) == 0 {
 		ctx.JSON(http.StatusBadRequest, httpError{
-			Message: fmt.Sprintf("magnet link cannot be empty"),
+			Message: "magnet link cannot be empty",
 		})
 		return
 	}
