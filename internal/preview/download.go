@@ -7,9 +7,8 @@ import (
 
 // DownloadPlan helps to describe what we want to download from the torrent.
 type DownloadPlan struct {
-	torrent           Info
-	pieceRanges       []PieceRange
-	totalDownloadSize int
+	torrent     Info
+	pieceRanges []PieceRange
 }
 
 // NewDownloadPlan returns a DownloadPlan
@@ -36,7 +35,7 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 // Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
 func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
 	for _, file := range dp.torrent.SupportedFiles() {
-		if dp.totalDownloadSize > 100*mb { // TODO: Should be a parameter from configuration
+		if dp.DownloadSize() > 100*mb { // TODO: Should be a parameter from configuration
 			break
 		}
 
@@ -93,7 +92,6 @@ func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, torrentImages *TorrentIma
 }
 
 func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
-	dp.totalDownloadSize += downloadSize
 	dp.pieceRanges = append(dp.pieceRanges, piece)
 }
 
