@@ -24,7 +24,7 @@ func TestPieceRange(t *testing.T) {
 
 	fi, err := preview.NewFileInfo(0, 1000, "test/movie.mp4")
 	assert.NoError(t, err)
-	fi2, err := preview.NewFileInfo(0, 150, "test/movie2.mp4")
+	fi2, err := preview.NewFileInfo(1, 150, "test/movie2.mp4")
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", pieceLength, []preview.FileInfo{fi, fi2}, []byte(""))
 	assert.NoError(t, err)

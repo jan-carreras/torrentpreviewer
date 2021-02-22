@@ -70,6 +70,14 @@ func NewInfo(
 		}
 		return hash
 	}
+	validateFiles := func(files []FileInfo) error {
+		for i := 0; i < len(files); i++ {
+			if files[i].ID() != i {
+				return errors.New("non correlative fileID. all ids should be sequential")
+			}
+		}
+		return nil
+	}
 
 	id, err := toBase32(id)
 	if err != nil {
@@ -77,6 +85,10 @@ func NewInfo(
 	}
 	if len(id) != 40 {
 		return Info{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
+	}
+
+	if err := validateFiles(files); err != nil {
+		return Info{}, err
 	}
 
 	return Info{

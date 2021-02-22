@@ -12,9 +12,9 @@ func TestInfo(t *testing.T) {
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	f2, err := preview.NewFileInfo(0, 2000, "movie2.mp4")
+	f2, err := preview.NewFileInfo(1, 2000, "movie2.mp4")
 	assert.NoError(t, err)
-	f3, err := preview.NewFileInfo(0, 10, "subtitles.srt")
+	f3, err := preview.NewFileInfo(2, 10, "subtitles.srt")
 	assert.NoError(t, err)
 
 	files := []preview.FileInfo{fi, f2, f3}
@@ -51,6 +51,38 @@ func TestInfo_InvalidLength(t *testing.T) {
 	torrentID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu00"
 
 	_, err := preview.NewInfo(torrentID, "test movie", 100, nil, []byte("12345"))
+	assert.Error(t, err)
+}
+
+func TestInfo_ValidateFilesHaveNonCorrelativeIndexes(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 2000, "movie2.mp4")
+	assert.NoError(t, err)
+	f3, err := preview.NewFileInfo(4, 10, "subtitles.srt")
+	assert.NoError(t, err)
+
+	files := []preview.FileInfo{fi, f2, f3}
+
+	_, err = preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
+	assert.Error(t, err)
+}
+
+func TestInfo_ValidateFilesHaveDuplicatedIDs(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(0, 2000, "movie2.mp4")
+	assert.NoError(t, err)
+	f3, err := preview.NewFileInfo(0, 10, "subtitles.srt")
+	assert.NoError(t, err)
+
+	files := []preview.FileInfo{fi, f2, f3}
+
+	_, err = preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
 	assert.Error(t, err)
 }
 
