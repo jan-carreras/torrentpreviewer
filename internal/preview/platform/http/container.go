@@ -2,9 +2,9 @@ package http
 
 import (
 	"database/sql"
-	"fmt"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
+	"prevtorrent/internal/preview/importTorrent"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
@@ -12,14 +12,14 @@ import (
 
 	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 const projectName = "prevtorrent"
 
 type Services struct {
-	GetTorrent  *getTorrent.Service // TODO: Remove pointer
-	Unmagnetize unmagnetize.Service
+	GetTorrent    *getTorrent.Service // TODO: Remove pointer
+	Unmagnetize   unmagnetize.Service
+	ImportTorrent importTorrent.Service
 }
 
 type Repositories struct {
@@ -68,16 +68,19 @@ func NewContainer() (Container, error) {
 
 	unmagnetizeService := unmagnetize.NewService(logger, torrentIntegration, torrentRepo)
 
+	importTorrentService := importTorrent.NewService(logger, torrentIntegration, torrentRepo)
+
 	return Container{
 		Config: config,
 		Logger: logger,
-		repositories: Repositories{
+		repositories: Repositories{ // TODO: This can be deleted, it serves no purpose
 			torrent: torrentRepo,
 			image:   imageRepository,
 		},
 		services: Services{
-			GetTorrent:  getTorrentService,
-			Unmagnetize: unmagnetizeService,
+			GetTorrent:    getTorrentService,
+			Unmagnetize:   unmagnetizeService,
+			ImportTorrent: importTorrentService,
 		},
 	}, nil
 }

@@ -13,14 +13,15 @@ func Run(c Container, bus command.Bus) error {
 	server := NewServer(c.services, bus)
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"*"},
-		AllowMethods:  []string{"GET"},
-		AllowHeaders:  []string{"Origin"},
+		AllowOrigins:  []string{"*", "localhost"},
+		AllowMethods:  []string{"GET", "POST"},
+		AllowHeaders:  []string{"Origin", "Cache-Control", "X-Requested-With"},
 		ExposeHeaders: []string{"Content-Length"},
 		MaxAge:        12 * time.Hour,
 	}))
 	router.GET("/torrent/:id", server.getTorrentController)
 	router.POST("/unmagnetize", server.unmagnetizeController)
+	router.POST("/torrent", server.newTorrentController)
 
 	// TODO: Move this logic to nginx
 	router.Use(static.Serve("/image", static.LocalFile(c.Config.ImageDir, false)))

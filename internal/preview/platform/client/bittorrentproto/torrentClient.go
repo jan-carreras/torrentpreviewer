@@ -36,8 +36,12 @@ func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) (preview.
 	if err := r.waitForInfo(ctx, t); err != nil {
 		return preview.Info{}, err
 	}
+	return parseTorrent(t)
+}
+
+func parseTorrent(t *torrent.Torrent) (preview.Info, error) {
 	buf := new(bytes.Buffer)
-	err = t.Metainfo().Write(buf)
+	err := t.Metainfo().Write(buf)
 	if err != nil {
 		return preview.Info{}, err
 	}
@@ -263,4 +267,18 @@ func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
 		return nil
 	}
 	return buf
+}
+
+func (r *TorrentClient) Import(ctx context.Context, raw []byte) (preview.Info, error) {
+	data := bytes.NewBuffer(raw)
+	metaInfo, err := metainfo.Load(data)
+	if err != nil {
+		return preview.Info{}, err
+	}
+	t, err := r.client.AddTorrent(metaInfo)
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	return parseTorrent(t)
 }

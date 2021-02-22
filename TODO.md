@@ -23,6 +23,8 @@
 - [ ] Implement the HTTP endpoints
     - [ ] POST /magnet
     - [ ] POST /torrent #mvp
+    - [x] POST /unmagnetize
+    - [x] POST /torrent #mvp
     - [x] GET /torrent/:id #mvp
     - [ ] DELETE /torrent/:id
     - [ ] Redis Cache
@@ -44,7 +46,7 @@
     - [ ] Add usual automation stuff
 - [ ] Front end.... sigh. Can someone help with that? I don't really fancy doing it...
     - [ ] Make an MVP
-        - [ ] Magnet input
+        - [x] Magnet input
         - [ ] Torrent uploader #mvp
         - [x] Static torrent view with thumbnails
         - [ ] Automatic refresh of new images via AJAX

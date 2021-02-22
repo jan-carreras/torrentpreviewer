@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
+	"prevtorrent/internal/preview/importTorrent"
 	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
 	"time"
@@ -79,22 +81,56 @@ func (s *Server) handleError(c *gin.Context, err error) {
 	})
 }
 
-func (s *Server) unmagnetizeController(c *gin.Context) {
-	magnet := c.PostForm("magnet")
+func (s *Server) unmagnetizeController(ctx *gin.Context) {
+	magnet := ctx.PostForm("magnet")
 	if len(magnet) == 0 {
-		c.JSON(http.StatusBadRequest, httpError{
+		ctx.JSON(http.StatusBadRequest, httpError{
 			Message: fmt.Sprintf("magnet link cannot be empty"),
 		})
 		return
 	}
-	ctxWithCancellation, cancel := context.WithTimeout(c, time.Second*15)
+	ctxWithCancellation, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 	torrentID, err := s.services.Unmagnetize.Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
 	if err != nil {
-		s.handleError(c, err)
+		s.handleError(ctx, err)
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusCreated, gin.H{
 		"id": torrentID,
+	})
+}
+
+func (s *Server) newTorrentController(ctx *gin.Context) {
+	readFile := func() ([]byte, error) {
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			return nil, err
+		}
+		f, err := file.Open()
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		return ioutil.ReadAll(f)
+	}
+
+	file, err := readFile()
+	if err != nil {
+		s.handleError(ctx, err)
+		return
+	}
+
+	torrent, err := s.services.ImportTorrent.Import(ctx, importTorrent.CMD{
+		TorrentRaw: file,
+	})
+	if err != nil {
+		s.handleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"id": torrent.ID(),
 	})
 }
