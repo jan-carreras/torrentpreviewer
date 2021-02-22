@@ -35,7 +35,7 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 // Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
 func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
 	for _, file := range dp.torrent.SupportedFiles() {
-		if dp.DownloadSize() > 100*mb { // TODO: Should be a parameter from configuration
+		if dp.DownloadSize() > 128*mb { // TODO: Should be a parameter from configuration
 			break
 		}
 
