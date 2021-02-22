@@ -20,9 +20,8 @@
     - [ ] Support .wmv
     - [ ] Support .avi
     - [ ] Support .mov
+    - [ ] Support jpg/jpeg
 - [ ] Implement the HTTP endpoints
-    - [ ] POST /magnet
-    - [ ] POST /torrent #mvp
     - [x] POST /unmagnetize
     - [x] POST /torrent #mvp
     - [x] GET /torrent/:id #mvp
@@ -49,7 +48,7 @@
         - [x] Magnet input
         - [ ] Torrent uploader #mvp
         - [x] Static torrent view with thumbnails
-        - [ ] Automatic refresh of new images via AJAX
+        - [ ] Automatically refresh new images using AJAX
 - Prepare for Production #mvp
     - [ ] Create a virtual credit card to pay for all this shite
     - [ ] Image storage: Check in lowendbox.com something with proper storage
@@ -62,9 +61,10 @@
     - [x] In production we have a bug that "go-libutp@v1.0.4/conn.go:73" seems to deathlock or whatever. Be able to
       disable uTP should fix it.
     - [ ] Add more seeders per torrent. Right now everything is going crazy slow
-- GIF
+- Improvements
     - [ ] Support for GIF creation of all images of the torrent
     - [ ] ... or webm
     - [ ] Links to GIF/webm in torrent file
+    - [ ] Download images from torrent to show as videos
 - Other search capabilities
     - [ ] Full text search on files inside torrent
