@@ -28,6 +28,7 @@ func TestNewTorrentRepository_StoreTorrentAndImages(t *testing.T) {
 	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
+	sqlMock.ExpectBegin()
 	sqlMock.ExpectExec(
 		"INSERT INTO torrents (id, name, length, pieceLength, raw) VALUES (?, ?, ?, ?, ?)").
 		WithArgs(torrentID, name, length, pieceLength, raw).
@@ -42,6 +43,7 @@ func TestNewTorrentRepository_StoreTorrentAndImages(t *testing.T) {
 		"INSERT INTO files (torrent_id, id, name, length) VALUES (?, ?, ?, ?)").
 		WithArgs(torrentID, f2.ID(), f2.Name(), f2.Length()).
 		WillReturnResult(driver.RowsAffected(1))
+	sqlMock.ExpectCommit()
 
 	repository := sqlite.NewTorrentRepository(db)
 	torrent, err := preview.NewInfo(torrentID, name, pieceLength, files, raw)
@@ -70,10 +72,12 @@ func TestNewTorrentRepository_ErrorOnPersist(t *testing.T) {
 	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
+	sqlMock.ExpectBegin()
 	sqlMock.ExpectExec(
 		"INSERT INTO torrents (id, name, length, pieceLength, raw) VALUES (?, ?, ?, ?, ?)").
 		WithArgs(torrentID, name, length, pieceLength, raw).
 		WillReturnError(errors.New("fake error at insert"))
+	sqlMock.ExpectRollback()
 
 	repository := sqlite.NewTorrentRepository(db)
 	torrent, err := preview.NewInfo(torrentID, name, pieceLength, files, raw)

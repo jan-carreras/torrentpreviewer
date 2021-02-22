@@ -30,16 +30,24 @@ func (r *TorrentRepository) Persist(ctx context.Context, t preview.Info) error {
 		Raw:         t.Raw(),
 	}).Build()
 
-	_, err := r.db.ExecContext(ctx, query, args...)
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("error trying to persist torrent on database: %v", err)
+		return err
 	}
 
-	err = r.storeFiles(ctx, t)
-	return err
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("error trying to persist torrent on database: %v", err)
+	}
+	if err := r.storeFiles(tx, t); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }
 
-func (r *TorrentRepository) storeFiles(ctx context.Context, t preview.Info) error {
+func (r *TorrentRepository) storeFiles(tx *sql.Tx, t preview.Info) error {
 	fileSQLStructure := sqlbuilder.NewStruct(new(file))
 	for _, f := range t.Files() {
 		newF := file{
@@ -49,7 +57,7 @@ func (r *TorrentRepository) storeFiles(ctx context.Context, t preview.Info) erro
 			Length:    f.Length(),
 		}
 		query, args := fileSQLStructure.InsertInto(sqlFileTable, newF).Build()
-		_, err := r.db.ExecContext(ctx, query, args...)
+		_, err := tx.Exec(query, args...)
 		if err != nil {
 			return err
 		}
