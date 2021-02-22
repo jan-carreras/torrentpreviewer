@@ -3,6 +3,7 @@ package downloadPartials_test
 import (
 	"context"
 	"errors"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
@@ -41,7 +42,7 @@ func TestService_DownloadPartials_GetTorrentError(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err := service.DownloadPartials(context.Background(), cmd)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
@@ -82,20 +83,20 @@ func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err = service.DownloadPartials(context.Background(), cmd)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 100, "video.mp4")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var files []preview.FileInfo
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 100, files, []byte("torrent-data"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
@@ -104,7 +105,7 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 
 	plan := preview.NewDownloadPlan(torrent)
 	err = plan.AddAll(torrentImages)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
@@ -133,20 +134,20 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err = service.DownloadPartials(context.Background(), cmd)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var files []preview.FileInfo
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
@@ -187,20 +188,20 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err = service.DownloadPartials(context.Background(), cmd)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var files []preview.FileInfo
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
@@ -209,7 +210,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 	plan := preview.NewDownloadPlan(torrent)
 	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
 	registry.RegisterPiece(preview.NewPiece(torrentID, 1, []byte("67890")))
 	registry.NoMorePieces()
@@ -243,20 +244,20 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err = service.DownloadPartials(context.Background(), cmd)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestService_DownloadPartials_BaseCase(t *testing.T) {
 	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var files []preview.FileInfo
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(torrent, nil)
@@ -265,7 +266,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 	plan := preview.NewDownloadPlan(torrent)
 	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
 	registry.RegisterPiece(preview.NewPiece(torrentID, 1, []byte("67890")))
 	registry.NoMorePieces()
@@ -308,7 +309,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 	err = service.DownloadPartials(context.Background(), cmd)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func fakeLogger() *logrus.Logger {

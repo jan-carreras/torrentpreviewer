@@ -3,6 +3,7 @@ package unmagnetize_test
 import (
 	"context"
 	"errors"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/clientmocks"
@@ -24,10 +25,10 @@ func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {
 		nil,
 		[]byte("torrent-data"),
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mag, err := preview.NewMagnet(inputMagnet)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resolverRepo := new(clientmocks.MagnetClient)
 	resolverRepo.On("Resolve", mock.Anything, mag).Return(torrent, nil)
@@ -38,7 +39,7 @@ func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
 	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrentID)
 
 }
@@ -56,7 +57,7 @@ func Test_MagnetService_Transform_AlreadyDownloaded(t *testing.T) {
 		nil,
 		nil,
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrentData).Return(nil)
@@ -64,7 +65,7 @@ func Test_MagnetService_Transform_AlreadyDownloaded(t *testing.T) {
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
 	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrentID)
 }
 
@@ -80,7 +81,7 @@ func Test_MagnetService_Transform_RepositoryErrorGetTorrent(t *testing.T) {
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
 	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "", torrentID)
 }
 
@@ -88,7 +89,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 	inputMagnet := "magnet:?xt=urn:btih:ZOCMZQIPFFW7OLLMIC5HUB6BPCSDEOQU"
 
 	mag, err := preview.NewMagnet(inputMagnet)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	torrent, err := preview.NewInfo(
 		"zocmzqipffw7ollmic5hub6bpcsdeoqu",
@@ -97,7 +98,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 		nil,
 		[]byte("torrent-data"),
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resolverRepo := new(clientmocks.MagnetClient)
 	resolverRepo.On("Resolve", mock.Anything, mag).
@@ -109,7 +110,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
 	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "", torrentID)
 }
 
@@ -121,7 +122,7 @@ func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
 	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "", torrentID)
 }
 
