@@ -39,7 +39,10 @@ func newContainer() (container, error) {
 	}
 	logger.Level = logLevel
 
-	imageExtractor := ffmpeg.NewInMemoryFfmpeg(logger)
+	imageExtractor, err := ffmpeg.NewInMemoryFfmpeg(logger)
+	if err != nil {
+		return container{}, err
+	}
 
 	imagePersister := file.NewImagePersister(logger, config.ImageDir)
 

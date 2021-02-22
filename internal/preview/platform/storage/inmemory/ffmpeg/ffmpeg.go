@@ -27,10 +27,24 @@ type InMemoryFfmpeg struct {
 	logger *logrus.Logger
 }
 
-func NewInMemoryFfmpeg(logger *logrus.Logger) *InMemoryFfmpeg {
+func NewInMemoryFfmpeg(logger *logrus.Logger) (*InMemoryFfmpeg, error) {
+	if err := checkFFMPGExecutableIsInPath(); err != nil {
+		return nil, err
+	}
 	return &InMemoryFfmpeg{
 		logger: logger,
+	}, nil
+}
+
+func checkFFMPGExecutableIsInPath() error {
+	cmd := exec.Command(command, "-version")
+	if err := cmd.Start(); err != nil {
+		return err
 	}
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int) ([]byte, error) {
