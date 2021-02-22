@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Piece(t *testing.T) {
-	torrentdID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentdID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 	pieceID := 55
 	data := []byte("1234")
 	p := preview.NewPiece(torrentdID, pieceID, data)
@@ -19,7 +19,7 @@ func Test_Piece(t *testing.T) {
 }
 
 func TestPieceRange(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 	pieceLength := 100
 
 	fi, err := preview.NewFileInfo(0, 1000, "test/movie.mp4")
@@ -59,7 +59,7 @@ func TestPieceRange(t *testing.T) {
 				length: 50,
 			},
 			want: want{
-				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
+				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -77,7 +77,7 @@ func TestPieceRange(t *testing.T) {
 				length: 100,
 			},
 			want: want{
-				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
+				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -95,7 +95,7 @@ func TestPieceRange(t *testing.T) {
 				length: 75,
 			},
 			want: want{
-				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-0.test--movie.mp4.jpg",
+				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 25,
@@ -113,7 +113,7 @@ func TestPieceRange(t *testing.T) {
 				length: 175,
 			},
 			want: want{
-				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-1.test--movie.mp4.jpg",
+				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.test--movie.mp4.jpg",
 				pieceStart:       0,
 				pieceEnd:         1,
 				startOffsetBytes: 25,
@@ -131,7 +131,7 @@ func TestPieceRange(t *testing.T) {
 				length: 100,
 			},
 			want: want{
-				name:             "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.10-11.test--movie.mp4.jpg",
+				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.10-11.test--movie.mp4.jpg",
 				pieceStart:       10,
 				pieceEnd:         11,
 				startOffsetBytes: 50,
@@ -156,7 +156,7 @@ func TestPieceRange(t *testing.T) {
 }
 
 func TestDownloadPlan_GetTorrent(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
@@ -169,7 +169,7 @@ func TestDownloadPlan_GetTorrent(t *testing.T) {
 }
 
 func TestDownloadPlan_GetPlan(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
@@ -182,7 +182,7 @@ func TestDownloadPlan_GetPlan(t *testing.T) {
 }
 
 func TestDownloadPlan_AddAll(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)

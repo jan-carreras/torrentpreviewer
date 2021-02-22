@@ -7,7 +7,7 @@ import (
 )
 
 func TestPieceRangeCounter_TwoPieces(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 	pieceLength := 100
 
 	fi, err := NewFileInfo(0, 1000, "test/movie.mp4")

@@ -8,7 +8,7 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	torrentdID := "ZOCmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentdID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
@@ -23,7 +23,7 @@ func TestInfo(t *testing.T) {
 	torrent, err := preview.NewInfo(torrentdID, "test movie", 100, files, []byte("12345"))
 	assert.NoError(t, err)
 
-	assert.Equal(t, "zocmzqipffw7ollmic5hub6bpcsdeoqu", torrent.ID())
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrent.ID())
 	assert.Equal(t, "test movie", torrent.Name())
 	assert.Equal(t, []byte("12345"), torrent.Raw())
 	assert.Equal(t, 100, torrent.PieceLength())

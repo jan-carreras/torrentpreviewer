@@ -17,7 +17,7 @@ import (
 )
 
 func TestService_DownloadPartials_GetTorrentError(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, torrentID).Return(preview.Info{}, errors.New("fake error"))
@@ -45,7 +45,7 @@ func TestService_DownloadPartials_GetTorrentError(t *testing.T) {
 }
 
 func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 100, "video.mp4")
 	assert.NoError(t, err)
@@ -86,7 +86,7 @@ func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
 }
 
 func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 100, "video.mp4")
 	assert.NoError(t, err)
@@ -137,7 +137,7 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 }
 
 func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	assert.NoError(t, err)
@@ -191,7 +191,7 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 }
 
 func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	assert.NoError(t, err)
@@ -229,7 +229,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 		Return(preview.NewTorrentImages(nil), nil)
 
 	imagePersister := new(storagemocks.ImagePersister)
-	imagePersister.On("PersistFile", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-1.video.mp4.jpg", imgBytes).
+	imagePersister.On("PersistFile", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.video.mp4.jpg", imgBytes).
 		Return(errors.New("fake storing error"))
 
 	service := downloadPartials.NewService(
@@ -247,7 +247,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 }
 
 func TestService_DownloadPartials_BaseCase(t *testing.T) {
-	torrentID := "zocmzqipffw7ollmic5hub6bpcsdeoqu"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	assert.NoError(t, err)
@@ -283,7 +283,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 	img := preview.NewImage(
 		torrentID,
 		0,
-		"zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-1.video.mp4.jpg",
+		"cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.video.mp4.jpg",
 		len(imgBytes),
 	)
 
@@ -294,7 +294,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 		Return(nil)
 
 	imagePersister := new(storagemocks.ImagePersister)
-	imagePersister.On("PersistFile", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu.0.0-1.video.mp4.jpg", imgBytes).
+	imagePersister.On("PersistFile", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.video.mp4.jpg", imgBytes).
 		Return(nil)
 
 	service := downloadPartials.NewService(

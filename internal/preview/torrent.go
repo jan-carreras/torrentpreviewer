@@ -71,6 +71,14 @@ func NewInfo(
 		return hash
 	}
 
+	id, err := toBase32(id)
+	if err != nil {
+		return Info{}, err
+	}
+	if len(id) != 40 {
+		return Info{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
+	}
+
 	return Info{
 		id:          strings.ToLower(id),
 		name:        name,
