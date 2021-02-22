@@ -3,8 +3,9 @@ package importTorrent
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Service struct {
