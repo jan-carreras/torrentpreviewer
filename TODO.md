@@ -26,6 +26,7 @@
     - [x] POST /torrent #mvp
     - [x] GET /torrent/:id #mvp
     - [ ] DELETE /torrent/:id
+    - [ ] Document API using OpenAPI specification
     - [ ] Redis Cache
         - [ ] This endpoint should make intensive use of Redis for caching for reading
         - [ ] Think a way to reflect all changes from sqlite to the cache with minimal performance impact
@@ -37,7 +38,8 @@
 - [ ] Improve tests
     - [ ] Improve coverage in Domain
     - [x] Test the infrastructure regarding SQLite
-    - [ ] Think about integration tests for file/inmemory storages
+    - [x] Test for file storage
+    - [ ] Test for inmemory storages
 - [ ] Project
     - [x] Publish it to a public repository #mvp
     - [x] Rethink license
