@@ -160,7 +160,7 @@ func TestFileInfo_AddImages(t *testing.T) {
 
 	img := preview.NewImage("1234", idx, "test name", 10)
 	assert.Len(t, fi.Images(), 0)
-	
+
 	err = fi.AddImage(img)
 	assert.NoError(t, err)
 
