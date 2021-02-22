@@ -2,7 +2,6 @@ package http
 
 import (
 	"database/sql"
-	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/importTorrent"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -20,16 +19,10 @@ type Services struct {
 	ImportTorrent importTorrent.Service
 }
 
-type Repositories struct {
-	torrent preview.TorrentRepository
-	image   preview.ImageRepository
-}
-
 type Container struct {
-	Config       configuration.Config
-	Logger       *logrus.Logger
-	repositories Repositories
-	services     Services
+	Config   configuration.Config
+	Logger   *logrus.Logger
+	services Services
 }
 
 func NewContainer() (Container, error) {
@@ -71,10 +64,6 @@ func NewContainer() (Container, error) {
 	return Container{
 		Config: config,
 		Logger: logger,
-		repositories: Repositories{ // TODO: This can be deleted, it serves no purpose
-			torrent: torrentRepo,
-			image:   imageRepository,
-		},
 		services: Services{
 			GetTorrent:    getTorrentService,
 			Unmagnetize:   unmagnetizeService,
