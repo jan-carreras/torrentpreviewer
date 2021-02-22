@@ -85,7 +85,6 @@ func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, torrentImages *TorrentIma
 	pr := NewPieceRange(dp.torrent, fi, start, offset, length)
 
 	if torrentImages.HaveImage(pr.Name()) {
-		// TODO: I would like to add a log for that, tbh
 		return nil
 	}
 
