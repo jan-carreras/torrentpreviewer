@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,9 +21,6 @@ func Run(c Container, bus command.Bus) error {
 	router.GET("/torrent/:id", server.getTorrentController)
 	router.POST("/unmagnetize", server.unmagnetizeController)
 	router.POST("/torrent", server.newTorrentController)
-
-	// TODO: Move this logic to nginx
-	router.Use(static.Serve("/image", static.LocalFile(c.Config.ImageDir, false)))
 
 	return router.Run()
 }
