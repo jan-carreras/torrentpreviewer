@@ -34,11 +34,13 @@ func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {
 
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrent).Return(nil)
-	torrentRepo.On("Get", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu").Return(preview.Info{}, preview.ErrNotFound)
+	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").Return(preview.Info{}, preview.ErrNotFound)
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
-	err = s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
+	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
 	assert.NoError(t, err)
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrentID)
+
 }
 
 func Test_MagnetService_Transform_AlreadyDownloaded(t *testing.T) {
@@ -47,13 +49,23 @@ func Test_MagnetService_Transform_AlreadyDownloaded(t *testing.T) {
 
 	resolverRepo := new(clientmocks.MagnetClient)
 
+	fakeInfo, err := preview.NewInfo(
+		"cb84ccc10f296df72d6c40ba7a07c178a4323a14",
+		"test name",
+		10,
+		nil,
+		nil,
+	)
+	assert.NoError(t, err)
+
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrentData).Return(nil)
-	torrentRepo.On("Get", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu").Return(preview.Info{}, nil)
+	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").Return(fakeInfo, nil)
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
-	err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
+	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
 	assert.NoError(t, err)
+	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrentID)
 }
 
 func Test_MagnetService_Transform_RepositoryErrorGetTorrent(t *testing.T) {
@@ -64,11 +76,12 @@ func Test_MagnetService_Transform_RepositoryErrorGetTorrent(t *testing.T) {
 
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrentData).Return(nil)
-	torrentRepo.On("Get", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu").Return(preview.Info{}, errors.New("fake error"))
+	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").Return(preview.Info{}, errors.New("fake error"))
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
-	err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
+	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
 	assert.Error(t, err)
+	assert.Equal(t, "", torrentID)
 }
 
 func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
@@ -91,12 +104,13 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 		Return(torrent, errors.New("fake repo error"))
 
 	torrentRepo := new(storagemocks.TorrentRepository)
-	torrentRepo.On("Get", mock.Anything, "zocmzqipffw7ollmic5hub6bpcsdeoqu").
+	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
 		Return(preview.Info{}, preview.ErrNotFound)
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
-	err = s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
+	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
 	assert.Error(t, err)
+	assert.Equal(t, "", torrentID)
 }
 
 func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
@@ -106,8 +120,9 @@ func Test_MagnetService_Inspect_InvalidMagnetError(t *testing.T) {
 	torrentRepo := new(storagemocks.TorrentRepository)
 
 	s := unmagnetize.NewService(fakeLogger(), resolverRepo, torrentRepo)
-	err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
+	torrentID, err := s.Handle(context.Background(), unmagnetize.CMD{Magnet: inputMagnet})
 	assert.Error(t, err)
+	assert.Equal(t, "", torrentID)
 }
 
 func fakeLogger() *logrus.Logger {
