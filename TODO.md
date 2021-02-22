@@ -36,7 +36,7 @@
     - [ ] Implement graceful shutdown #mvp
 - [ ] Improve tests
     - [ ] Improve coverage in Domain
-    - [ ] Test the infrastructure regarding SQLite
+    - [x] Test the infrastructure regarding SQLite
     - [ ] Think about integration tests for file/inmemory storages
 - [ ] Project
     - [x] Publish it to a public repository #mvp
