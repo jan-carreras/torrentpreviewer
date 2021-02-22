@@ -8,7 +8,7 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	torrentdID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
@@ -20,7 +20,7 @@ func TestInfo(t *testing.T) {
 	files := []preview.FileInfo{fi, f2, f3}
 	supportedFile := []preview.FileInfo{fi, f2}
 
-	torrent, err := preview.NewInfo(torrentdID, "test movie", 100, files, []byte("12345"))
+	torrent, err := preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
 	assert.NoError(t, err)
 
 	assert.Equal(t, "cb84ccc10f296df72d6c40ba7a07c178a4323a14", torrent.ID())
@@ -33,11 +33,11 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInfo_InvalidTorrentID(t *testing.T) {
-	torrentdID := "invalid ID"
+	torrentID := "invalid ID"
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	_, err = preview.NewInfo(torrentdID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
+	_, err = preview.NewInfo(torrentID, "", 100, []preview.FileInfo{fi}, []byte("12345"))
 	assert.Equal(t, preview.ErrInvalidTorrentID, err)
 }
 
