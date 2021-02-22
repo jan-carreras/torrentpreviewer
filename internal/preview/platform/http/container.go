@@ -14,8 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const projectName = "prevtorrent"
-
 type Services struct {
 	GetTorrent    *getTorrent.Service // TODO: Remove pointer
 	Unmagnetize   unmagnetize.Service
