@@ -34,36 +34,6 @@ type Container struct {
 	services     Services
 }
 
-type config struct {
-	ImageDir   string `yaml:"ImageDir"`
-	SqlitePath string `yaml:"SqlitePath"`
-	LogLevel   string `yaml:"LogLevel"`
-}
-
-func getConfig() (config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath("$HOME/.config/" + projectName)
-	viper.AddConfigPath("$HOME/." + projectName)
-	viper.AddConfigPath(".")
-
-	viper.SetDefault("ImageDir", "./tmp/images")
-	viper.SetDefault("SqlitePath", "./prevtorrent.sqlite")
-	viper.SetDefault("LogLevel", "warning")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return config{}, err
-	}
-
-	conf := config{}
-	if err := viper.Unmarshal(&conf); err != nil {
-		return config{}, fmt.Errorf("unable to decode into config struct, %v", err)
-	}
-
-	return conf, nil
-}
-
 func NewContainer() (Container, error) {
 	config, err := configuration.NewConfig()
 	if err != nil {
