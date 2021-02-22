@@ -186,7 +186,7 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	f2, err := preview.NewFileInfo(0, 500, "movie2.mp4")
+	f2, err := preview.NewFileInfo(1, 500, "movie2.mp4")
 	assert.NoError(t, err)
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
 	assert.NoError(t, err)
