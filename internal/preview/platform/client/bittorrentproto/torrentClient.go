@@ -123,7 +123,6 @@ func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.Downlo
 }
 
 func (r *TorrentClient) publishPartsThatWeAlreadyHave(wg *sync.WaitGroup, t *torrent.Torrent, registry *preview.PieceRegistry, downloadPlan preview.DownloadPlan) {
-	// TODO: This is checking all the pieces at the start. Might it be the cause of my problems? SIMPLIFY!
 	defer wg.Done()
 	for _, plan := range downloadPlan.GetPlan() {
 		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
