@@ -9,7 +9,7 @@ import (
 	errors2 "github.com/pkg/errors"
 )
 
-const CommandType command.Type = "command.downloadPartials.preview"
+const CommandType command.Type = "command.downloadPartials"
 
 type CMD struct {
 	ID string

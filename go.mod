@@ -4,6 +4,8 @@ go 1.15
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/ThreeDotsLabs/watermill v1.2.0-rc.3
+	github.com/ThreeDotsLabs/watermill-googlecloud v1.0.6
 	github.com/anacrolix/torrent v1.24.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
@@ -12,6 +14,7 @@ require (
 	github.com/huandu/go-sqlbuilder v1.11.0
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/lithammer/shortuuid/v3 v3.0.5 // indirect
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
