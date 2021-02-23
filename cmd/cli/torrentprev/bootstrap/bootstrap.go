@@ -6,6 +6,7 @@ import (
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/unmagnetize"
+	"prevtorrent/kit/command"
 )
 
 func Run() error {
@@ -20,7 +21,7 @@ func Run() error {
 	return cli.Run(bus)
 }
 
-func makeCommandBus(c container) *inmemory.SyncCommandBus {
+func makeCommandBus(c container) command.Bus {
 	commandBus := inmemory.NewSyncCommandBus(c.logger)
 
 	commandBus.Register(

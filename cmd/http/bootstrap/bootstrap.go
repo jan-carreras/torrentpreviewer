@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/preview/platform/http"
+	"prevtorrent/kit/command"
 )
 
 func Run() error {
@@ -23,6 +24,6 @@ func Run() error {
 	return http.Run(c, makeCommandBus(c))
 }
 
-func makeCommandBus(c http.Container) *inmemory.SyncCommandBus {
+func makeCommandBus(c http.Container) command.Bus {
 	return inmemory.NewSyncCommandBus(c.Logger)
 }
