@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
-	"github.com/ThreeDotsLabs/watermill/message"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview/downloadPartials"
 	"time"
+
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 func main() {

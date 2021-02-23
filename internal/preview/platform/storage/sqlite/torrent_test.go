@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/require"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewTorrentRepository_StoreTorrentAndImages(t *testing.T) {

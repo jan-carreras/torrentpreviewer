@@ -2,15 +2,16 @@ package container
 
 import (
 	"database/sql"
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
-	"github.com/anacrolix/torrent"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/file"
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
+
+	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
+	"github.com/anacrolix/torrent"
+	"github.com/sirupsen/logrus"
 )
 
 type Container struct {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"prevtorrent/kit/command"
+
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-	"prevtorrent/kit/command"
 
 	"github.com/sirupsen/logrus"
 )

@@ -3,7 +3,6 @@ package downloadPartials_test
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
@@ -11,6 +10,8 @@ import (
 	"prevtorrent/internal/preview/platform/storage/storagemocks"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

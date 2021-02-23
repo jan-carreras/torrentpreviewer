@@ -2,9 +2,10 @@ package configuration_test
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"prevtorrent/internal/preview/platform/configuration"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfiguration(t *testing.T) {

@@ -2,14 +2,15 @@ package file_test
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path"
 	"prevtorrent/internal/preview/platform/storage/file"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestImagePersister_PersistFile(t *testing.T) {

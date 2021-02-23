@@ -3,13 +3,14 @@ package unmagnetize_test
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/clientmocks"
 	"prevtorrent/internal/preview/platform/storage/storagemocks"
 	"prevtorrent/internal/preview/unmagnetize"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

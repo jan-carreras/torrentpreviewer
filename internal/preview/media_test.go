@@ -2,11 +2,12 @@ package preview_test
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"
 )
