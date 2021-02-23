@@ -3,20 +3,26 @@ package bootstrap
 import (
 	"context"
 	"encoding/json"
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
+	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/platform/bus/inmemory"
+	container2 "prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/downloadPartials"
-	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
+
+	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 )
 
 func Run(ctx context.Context) error {
-	container, err := newContainer()
+	container, err := container2.NewDefaultContainer()
 	if err != nil {
 		return err
 	}
-	commandBus := makeCommandBus(container)
-	sub := newSubscriber(ctx, commandBus, container.subscriber)
+
+	commandBus := inmemory.NewSyncCommandBus(container.Logger)
+
+	bus.MakeBindings(commandBus, container)
+
+	sub := newSubscriber(ctx, commandBus, container.Subscriber)
 
 	err = sub.Listen(ctx)
 	if err != nil {
@@ -65,35 +71,4 @@ func (s subscriber) Listen(ctx context.Context) error {
 			msg.Ack()
 		}
 	}
-}
-
-func makeCommandBus(c container) command.Bus {
-	commandBus := inmemory.NewSyncCommandBus(c.logger)
-
-	commandBus.Register(
-		unmagnetize.CommandType,
-		unmagnetize.NewTransformCommandHandler(
-			unmagnetize.NewService(
-				c.logger,
-				c.magnetClient,
-				c.torrentRepo,
-			),
-		),
-	)
-
-	commandBus.Register(
-		downloadPartials.CommandType,
-		downloadPartials.NewCommandHandler(
-			downloadPartials.NewService(
-				c.logger,
-				c.torrentRepo,
-				c.torrentDownloader,
-				c.imageExtractor,
-				c.imagePersister,
-				c.imageRepository,
-			),
-		),
-	)
-
-	return commandBus
 }

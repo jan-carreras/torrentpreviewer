@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"prevtorrent/internal/platform/services"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/importTorrent"
@@ -17,11 +18,11 @@ import (
 )
 
 type Server struct {
-	services Services
+	services services.Services
 	bus      command.Bus
 }
 
-func NewServer(services Services, bus command.Bus) *Server {
+func NewServer(services services.Services, bus command.Bus) *Server {
 	return &Server{services: services, bus: bus}
 }
 
