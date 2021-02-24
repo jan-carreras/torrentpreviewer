@@ -1,6 +1,8 @@
 package command
 
-import "context"
+import (
+	"context"
+)
 
 //go:generate mockery --case=snake --outpkg=commandmocks --output=commandmocks --name=Bus
 // Bus defines the expected behaviour from a command bus.

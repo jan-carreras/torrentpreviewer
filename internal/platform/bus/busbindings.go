@@ -7,6 +7,7 @@ import (
 	"prevtorrent/kit/command"
 )
 
+// TODO: Meh. I don't like neither the interface, nor the usage
 func MakeBindings(commandBus command.Bus, c container.Container) {
 	commandBus.Register(
 		unmagnetize.CommandType,

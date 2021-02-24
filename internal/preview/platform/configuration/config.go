@@ -47,7 +47,7 @@ func NewConfig() (Config, error) {
 	viper.SetDefault("EnableIPv6", false)
 	viper.SetDefault("EnableUTP", true)
 	viper.SetDefault("EnableTorrentDebug", false)
-	viper.SetDefault("LogLevel", "warning")
+	viper.SetDefault("LogLevel", "debug")
 	viper.SetDefault("ConnectionsPerTorrent", "20")
 	viper.SetDefault("TorrentListeningPort", "12345")
 	viper.SetDefault("TorrentStorageDriver", "inmemory")

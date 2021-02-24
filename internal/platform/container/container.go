@@ -2,12 +2,15 @@ package container
 
 import (
 	"database/sql"
+	"github.com/ThreeDotsLabs/watermill"
+	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/file"
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
+	"prevtorrent/kit/command"
 
 	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 	"github.com/anacrolix/torrent"
@@ -23,7 +26,7 @@ type Container struct {
 	ImageExtractor    preview.ImageExtractor
 	ImagePersister    preview.ImagePersister
 	ImageRepository   preview.ImageRepository
-	Subscriber        *googlecloud.Subscriber
+	Subscriber        command.Subscriber
 }
 
 func NewDefaultContainer() (Container, error) {
@@ -64,6 +67,23 @@ func NewDefaultContainer() (Container, error) {
 
 	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
 
+	loggerWindMill := watermill.NewStdLogger(false, false)
+	googleSubscriber, err := googlecloud.NewSubscriber(
+		googlecloud.SubscriberConfig{
+			GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
+			ProjectID:                "torrentpreview", // TODO: From configuration!!
+		},
+		loggerWindMill,
+	)
+	if err != nil {
+		return Container{}, err
+	}
+
+	subscriber, err := pubsub.NewSubscriber(googleSubscriber)
+	if err != nil {
+		return Container{}, err
+	}
+
 	return Container{
 		Config:            config,
 		Logger:            logger,
@@ -73,5 +93,6 @@ func NewDefaultContainer() (Container, error) {
 		ImageExtractor:    imageExtractor,
 		ImagePersister:    imagePersister,
 		ImageRepository:   imageRepository,
+		Subscriber:        subscriber,
 	}, nil
 }
