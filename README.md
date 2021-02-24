@@ -1,35 +1,89 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jan-carreras/torrentpreviewer)](https://goreportcard.com/report/github.com/jan-carreras/torrentpreviewer)
 [![torrentPreview](https://circleci.com/gh/jan-carreras/torrentpreviewer.svg?style=shield)](https://app.circleci.com/pipelines/github/jan-carreras/torrentpreviewer)
 
-## Message for hiring companies engineers
+# Torrent Preview
 
-The project is going to be a Torrent Previewer. Definition of the problem:
+Is a simple BitTorrent client that generates thumbnails from the videos in Torrent files.
 
-- Given Torrent (or Magnet link),
-- Download the meta info of the torrent and files that contains,
-- download the first 8MB from all the .mp4 files,
-- and using ffmpeg, extract an image from the file so that we can see a preview,
-- serve in a webpage the list of files found in the torrent with their respective previews.
+## The problem
 
-Before starting writing this application I had 0 knowledge about how Torrent protocol works, DHT, torrents parts,
-magnets, etc. And how to use ffmpeg, either. Now I have a pretty solid understanding on how those pieces fit together
-and this version of the code can generate thumbnail already.
+To know the content of a torrent there are usually two approaches:
 
-I've tested with torrents of more than 100GB of data containing more than 400 videos, and it works pretty smoothly, with
-minimal memory footprint.
+1. To include JPG images of the videos in the torrent inside the Torrent. You could download the images alone to check
+   if the content is what you're looking for.
+1. To include links in the description of the torrent as free text to an external service where the images are stored
+1. When sending/posting the torrent to your favourite forum, share a screenshot of your screen of _some_ of the videos
 
-There are a lot of pending tasks and TODOs in the code since (a) it's not yet ready, and (b) it was not meant to be
-shared.
+The problem with images inside the torrent is that you cannot download the images if there are no seeders at the moment.
+And the images do not necessary need to match with the video content or quality. The problem with links to images of
+screenshots is that those links can be broken and thus unsuable. We can do better.
 
-I'm willing to discuss any implementation details if interested :) All my contact details and CV can be found
-here: https://jcarreras.es
+## Solution
 
-## Database
+> Generate the screenshot from the videos inside the Torrent using TorrentPreview. - Jan Carreras, bored, one random Tuesday
 
-### Sqlite
+So that's that. Torrent preview recieves a Magnet link, _unmagnetizes_ it converting it to a Torrent file, and downloads
+the first 8MB of each video of the torrent to extract a Screenshot at the frame corresponding to the second 5 of the
+video. It stores the screenshot and removes the video.
 
-Initialize by running:
+Then it exposes via an HTTP API all the information about the torrent itself, the files and it's corresponding images.
+
+# Usage
+
+This software is not meant to be used locally, but as a service. Simple example:
+
+- Go to [torrentPreview.com](http://torrentpreview.com/)
+-
+Add `magnet:?xt=urn:btih:3F8F219568B8B229581DDDD7BC5A5E889E906A9B&dn=Pulp%20Fiction%20%281994%29%201080p%20BrRip%20x264%20-%201.4GB%20-%20YIFY`
+in the "Magnet / TorrentID" and hit Preview
+- It will load [this](http://torrentpreview.com/?id=3f8f219568b8b229581dddd7bc5a5e889e906a9b) showing all the files of
+  the torrent, and a blackish image extracted from the film. Right now it only extracts images from mp4 files (on a good
+  day).
+
+## Developers
+
+You wanna start the project locally? You'll need to:
+
+- Install some system dependencies.
+- Install some tooling and the Go programming language
+- Compile the program
+- Configure and run the various components
+- Consume the API or query the DB for results
+
+System dependencies: make, ffmpeg, sqlite3
+
+### Build
+
+We must generate 2 binaries:
+
+- torrentprev: CLI client to register Magnet links and download torrents
+- http: API to query torrent and image information
+
+#### OSX Build
+
+```bash
+make build
+```    
+
+#### Linux Build
+
+````bash
+make build-linux
+````
+
+You'll find the binaries in `./bin` prefixed with your architecture like: `darwin-http` or `linux-torrentprev`
+
+#### Database
+
+Create an empty sqlite3 database on the root of the project:
+
+```bash
+touch prevtorrent.sqlite
+```
+
+Then create the schema by issuing:
 
 ```bash
 sqlite3 prevtorrent.sqlite < infrastructure/database/sqlite.schema.sql
+
 ```
