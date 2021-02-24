@@ -33,16 +33,18 @@ Then it exposes via an HTTP API all the information about the torrent itself, th
 This software is not meant to be used locally, but as a service. Simple example:
 
 - Go to [torrentPreview.com](http://torrentpreview.com/)
--
-Add `magnet:?xt=urn:btih:3F8F219568B8B229581DDDD7BC5A5E889E906A9B&dn=Pulp%20Fiction%20%281994%29%201080p%20BrRip%20x264%20-%201.4GB%20-%20YIFY`
+-Add `magnet:?xt=urn:btih:3F8F219568B8B229581DDDD7BC5A5E889E906A9B&dn=Pulp%20Fiction%20%281994%29%201080p%20BrRip%20x264%20-%201.4GB%20-%20YIFY`
 in the "Magnet / TorrentID" and hit Preview
 - It will load [this](http://torrentpreview.com/?id=3f8f219568b8b229581dddd7bc5a5e889e906a9b) showing all the files of
   the torrent, and a blackish image extracted from the film. Right now it only extracts images from mp4 files (on a good
   day).
+  
+This website is in (at best) beta phase. Demo purposes only. Do not try to feed read magnets. It should identify them,
+but the images are not going to be extracted.
 
 ## Developers
 
-You wanna start the project locally? You'll need to:
+You want to start the project locally? You'll need to:
 
 - Install some system dependencies.
 - Install some tooling and the Go programming language
