@@ -23,4 +23,5 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
-      - run: go test -v ./...
+      - run: go get github.com/vektra/mockery/v2/.../
+      - run: make test
