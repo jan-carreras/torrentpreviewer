@@ -34,20 +34,24 @@ func run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			c.Logger.Error(ctx.Err())
 			return ctx.Err()
 		case msg, isOpen := <-downloadPartialsChannel:
 			if !isOpen {
+				c.Logger.Debug("downloadPartialsChannel has been closed")
 				return nil
 			}
 
 			cmd := downloadPartials.CMD{}
 			err := json.Unmarshal(msg.Payload(), &cmd)
 			if err != nil {
-				return err
+				c.Logger.Error("unable to unmarshal payload", string(msg.Payload()))
+				continue
 			}
 			err = commandBus.Dispatch(ctx, cmd)
 			if err != nil {
-				return err
+				c.Logger.Error("error when processing Command", cmd)
+				continue
 			}
 			msg.ACK()
 		}
