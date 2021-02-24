@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"prevtorrent/internal/platform/bus/pubsub"
@@ -15,7 +14,6 @@ import (
 
 func main() {
 	args := os.Args
-	fmt.Println(args)
 	torrentID := "c92f656155d0d8e87d21471d7ea43e3ad0d42723"
 	if len(args) >= 2 {
 		torrentID = args[1]
