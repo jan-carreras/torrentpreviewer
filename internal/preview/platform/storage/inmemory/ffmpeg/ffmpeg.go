@@ -58,7 +58,7 @@ func (i *InMemoryFfmpeg) ExtractImage(ctx context.Context, data []byte, time int
 	outputFilename := path.Join(os.TempDir(), fmt.Sprintf("prevtorrent.ffmpgout.%v.jpg", id.String()))
 	defer rmFile(outputFilename)
 
-	// TODO: For some reason passing the file from STDIN (see below) crashes ffmpeg.
+	// IMPROVEMENT: For some reason passing the file from STDIN (see below) crashes ffmpeg.
 	//       Doing it with a file seems to work better but involves IO. Would be nice to get rid of it
 	//       in the future or use tmpfs instead
 	inputVideo := outputFilename + ".mp4"
