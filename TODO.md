@@ -61,9 +61,9 @@
     - [ ] Torrent downloader: Investigate for cheap CPU-Intensive hostings
     - [ ] Create a simple build pipeline and deploy system #mvp
     - [x] Buy domain and add a "Coming Soon webpage" #mvp
-    - [ ] Install Krakend as a server
+    - [ ] Install KrakenD as a server
 - Bugs
-    - [x] In production we have a bug that "go-libutp@v1.0.4/conn.go:73" seems to deathlock or whatever. Be able to
+    - [x] In production, we have a bug that "go-libutp@v1.0.4/conn.go:73" seems to deathlock or whatever. Be able to
       disable uTP should fix it.
     - [ ] Add more seeders per torrent. Right now everything is going crazy slow
 - Improvements
