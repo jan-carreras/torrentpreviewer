@@ -40,6 +40,8 @@
     - [x] Test the infrastructure regarding SQLite
     - [x] Test for file storage
     - [ ] Test for inmemory storages
+    - [ ] All Repositories and Services must return an error
+    - [ ] Ensure that all the queries are executed within a Context
 - [ ] Project
     - [x] Publish it to a public repository #mvp
     - [x] Rethink license
