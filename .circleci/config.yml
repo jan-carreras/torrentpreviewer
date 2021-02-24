@@ -21,20 +21,18 @@ jobs:
     steps:
       - checkout
 
-      # specify any bash command here prefixed with `run: `
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run: go get -v -t -d ./...
       - run: go get github.com/vektra/mockery/v2/.../
-      - run: make test
-
-  check:
-    docker:
-      - image: circleci/golang:1.15
-
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
-    steps:
-      - checkout
-
       - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+      - run: make test
       - run: make check
 
 workflows:
@@ -42,4 +40,3 @@ workflows:
   build-workflow:
     jobs:
       - test
-      - check
