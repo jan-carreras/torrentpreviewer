@@ -33,9 +33,9 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 // AddAll adds all the supported files of the torrent to download with a pre-set settings:
 //       Start at the beginning of the file and download the recommended file.DownloadSize()
 // Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
-func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
+func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages, maxSizeDownloaded int) error {
 	for _, file := range dp.torrent.SupportedFiles() {
-		if dp.DownloadSize() > 128*mb { // TODO: Should be a parameter from configuration
+		if maxSizeDownloaded != 0 && dp.DownloadSize() > maxSizeDownloaded {
 			break
 		}
 

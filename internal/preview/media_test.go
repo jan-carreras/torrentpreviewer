@@ -111,7 +111,7 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	ti := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	assert.NoError(t, plan.AddAll(ti))
+	assert.NoError(t, plan.AddAll(ti, 0))
 
 	part0 := []byte("0123456789012345678912345")
 	part1 := []byte("1111111111111111111111111")

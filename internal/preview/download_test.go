@@ -194,7 +194,7 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages)
+	err = plan.AddAll(torrentImages, 0)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 15, plan.CountPieces())
