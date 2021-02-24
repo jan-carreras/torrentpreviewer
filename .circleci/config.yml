@@ -19,6 +19,7 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - run: go get github.com/vektra/mockery/v2/.../
 
       - run: make test
       - run: make check
