@@ -74,7 +74,7 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 	query.Where(query.Equal("id", id))
 
 	sqlRaw, args := query.Build()
-	rows, err := r.db.Query(sqlRaw, args...)
+	rows, err := r.db.QueryContext(ctx, sqlRaw, args...)
 	if err != nil {
 		return preview.Info{}, err
 	}
@@ -104,7 +104,7 @@ func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview
 	query.OrderBy("id").Asc()
 
 	sqlRaw, args := query.Build()
-	rows, err := r.db.Query(sqlRaw, args...)
+	rows, err := r.db.QueryContext(ctx, sqlRaw, args...)
 	if err != nil {
 		return nil, err
 	}
