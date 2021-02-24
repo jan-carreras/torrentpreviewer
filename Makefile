@@ -17,9 +17,9 @@ clean:
 	go mod tidy
 	go clean
 
+.PHONY: tools
 tools:  ## fetch and install all required tools
 	go get -u golang.org/x/tools/cmd/goimports
-
 
 .PHONY: generate
 generate: ## generate mocks
@@ -44,16 +44,20 @@ fmt:    ## format the go source files
 	goimports -w $(FILES)
 
 .PHONY: check
-check: ## Run linters & gofmt check
+check: check-fmt check-no-todos  ## Run linters & gofmt check
+
+.PHONY: check-no-todos
+check-no-todos:
 	@test -z $(shell echo $(FILES) | xargs grep --color=always TODO | tee /dev/stderr ) || (echo "[ERR] Some Go file includes a TODO comment" && false)
-check: check-fmt ## Run linters & gofmt check
-	@which golangci-lint > /dev/null 2>/dev/null || (echo "ERROR: golangci-lint not found" && false)
-	@golangci-lint run
 
-
+.PHONY: check-fmt
 check-fmt:
 	@test -z $(shell gofmt -l $(FILES) | tee /dev/stderr) || (echo "[ERR] Fix formatting issues with 'make fmt'" && false)
 
+.PHONY: lint
+lint:
+	@which golangci-lint > /dev/null 2>/dev/null || (echo "ERROR: golangci-lint not found" && false)
+	@golangci-lint run
 
 .PHONY: mvp
 mvp: ## Show pending tasks to be done for MVP
