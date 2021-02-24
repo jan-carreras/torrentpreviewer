@@ -74,16 +74,18 @@ build-clean:
 build-linux: bin/linux-torrentprev bin/linux-http-api
 
 bin/linux-torrentprev:
-	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-torrentprev ./cmd/cli/torrentprev/main.go
+	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-torrentprev ./cmd/cli/torrentprev/torrentprev.go
 
 bin/linux-http-api:
-	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-http-api ./cmd/http/http.go
+	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-http ./cmd/http/http.go
 
-build-osx: bin/darwin-http-api bin/darwin-torrentprev
-
-bin/darwin-http-api:
-	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-http-api ./cmd/http/http.go
+build-osx: bin/darwin-torrentprev bin/darwin-http-api
 
 bin/darwin-torrentprev:
-	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-torrentprev ./cmd/cli/torrentprev/main.go
+	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-torrentprev ./cmd/cli/torrentprev/torrentprev.go
+
+bin/darwin-http-api:
+	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-http ./cmd/http/http.go
+
+
 
