@@ -65,7 +65,6 @@ func (r *TorrentRepository) storeFiles(tx *sql.Tx, t preview.Info) error {
 	return nil
 }
 
-// TODO: Test
 func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {
 	id = strings.ToLower(id)
 

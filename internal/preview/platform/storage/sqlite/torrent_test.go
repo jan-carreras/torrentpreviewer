@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"github.com/stretchr/testify/assert"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"testing"
@@ -88,4 +89,94 @@ func TestNewTorrentRepository_ErrorOnPersist(t *testing.T) {
 	require.Error(t, err)
 
 	require.NoError(t, sqlMock.ExpectationsWereMet())
+}
+
+func TestTorrentRepository_Get_ErrorOnRead(t *testing.T) {
+	torrentID := "1234"
+
+	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	require.NoError(t, err)
+
+	sqlMock.ExpectQuery("SELECT torrents.id, torrents.name, torrents.length, torrents.pieceLength, torrents.raw FROM torrents WHERE id = ?").
+		WithArgs(torrentID).
+		WillReturnError(errors.New("fake error"))
+
+	repository := sqlite.NewTorrentRepository(db)
+
+	_, err = repository.Get(context.Background(), torrentID)
+	require.Error(t, err)
+	require.NoError(t, sqlMock.ExpectationsWereMet())
+}
+
+func TestTorrentRepository_Get(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+	torrentName := "torrent name"
+	torrentLength := 100
+	torrentPieceLength := 10
+	torrentRaw := []byte("raw data")
+
+	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	require.NoError(t, err)
+
+	rows := sqlmock.NewRows([]string{"id", "name", "length", "pieceLength", "raw"}).
+		AddRow(torrentID, torrentName, torrentLength, torrentPieceLength, torrentRaw)
+
+	sqlMock.ExpectQuery("SELECT torrents.id, torrents.name, torrents.length, torrents.pieceLength, torrents.raw FROM torrents WHERE id = ?").
+		WithArgs(torrentID).
+		WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"torrent_id", "id", "name", "length"}).
+		AddRow(torrentID, 0, "img1.jpg", 40).
+		AddRow(torrentID, 1, "img2.jpg", 60)
+
+	sqlMock.ExpectQuery("SELECT files.torrent_id, files.id, files.name, files.length FROM files WHERE torrent_id = ? ORDER BY id ASC").
+		WithArgs(torrentID).
+		WillReturnRows(rows)
+
+	repository := sqlite.NewTorrentRepository(db)
+
+	torrent, err := repository.Get(context.Background(), torrentID)
+	require.NoError(t, err)
+
+	assert.Equal(t, torrentID, torrent.ID())
+	assert.Equal(t, torrentName, torrent.Name())
+	assert.Equal(t, torrentLength, torrent.TotalLength())
+	assert.Equal(t, torrentPieceLength, torrent.PieceLength())
+	assert.Equal(t, torrentRaw, torrent.Raw())
+
+	require.Len(t, torrent.Files(), 2)
+
+	img := torrent.File(0)
+	require.Equal(t, 0, img.ID())
+	require.Equal(t, "img1.jpg", img.Name())
+	require.Equal(t, 40, img.Length())
+
+	require.NoError(t, sqlMock.ExpectationsWereMet())
+}
+
+func TestTorrentRepository_Get_ErrorReadingFiles(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+	torrentName := "torrent name"
+	torrentLength := 100
+	torrentPieceLength := 10
+	torrentRaw := []byte("raw data")
+
+	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	require.NoError(t, err)
+
+	rows := sqlmock.NewRows([]string{"id", "name", "length", "pieceLength", "raw"}).
+		AddRow(torrentID, torrentName, torrentLength, torrentPieceLength, torrentRaw)
+
+	sqlMock.ExpectQuery("SELECT torrents.id, torrents.name, torrents.length, torrents.pieceLength, torrents.raw FROM torrents WHERE id = ?").
+		WithArgs(torrentID).
+		WillReturnRows(rows)
+
+	sqlMock.ExpectQuery("SELECT files.torrent_id, files.id, files.name, files.length FROM files WHERE torrent_id = ? ORDER BY id ASC").
+		WithArgs(torrentID).
+		WillReturnError(errors.New("fake error reading files"))
+
+	repository := sqlite.NewTorrentRepository(db)
+
+	_, err = repository.Get(context.Background(), torrentID)
+	require.Error(t, err)
 }
