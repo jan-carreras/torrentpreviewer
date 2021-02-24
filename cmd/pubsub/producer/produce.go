@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview/downloadPartials"
+
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		panic(err)
 	}
 	commandBus := pubsub.NewPubSubCommandBus(nil, publisher)
-	
+
 	cmd := downloadPartials.CMD{ID: "c92f656155d0d8e87d21471d7ea43e3ad0d42723"}
 
 	if err := commandBus.Dispatch(context.Background(), cmd); err != nil {
