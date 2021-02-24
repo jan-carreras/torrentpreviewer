@@ -28,8 +28,15 @@ generate: ## generate mocks
 
 .PHONY: test
 test: generate ## run tests
+	go test ./... | grep -v "mocks"
+
+.PHONY: test-cover
+test-cover: generate ## run tests with coverage
 	go test -cover ./... | grep -v "mocks"
 
+.PHONY: test-fast
+test-fast: ## run tests without generating mocks
+	go test -cover ./... | grep -v "mocks"
 
 .PHONY: fmt
 fmt:    ## format the go source files
