@@ -72,7 +72,7 @@ func NewDefaultContainer() (Container, error) {
 	googleSubscriber, err := googlecloud.NewSubscriber(
 		googlecloud.SubscriberConfig{
 			GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-			ProjectID:                "torrentpreview", // TODO: From configuration!!
+			ProjectID:                config.GooglePubSubProjectID,
 		},
 		loggerWindMill,
 	)

@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview/downloadPartials"
+	"prevtorrent/internal/preview/platform/configuration"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
@@ -21,7 +23,12 @@ func main() {
 
 	logger := watermill.NewStdLogger(false, false)
 
-	publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{ProjectID: "torrentpreview"}, logger)
+	config, err := configuration.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{ProjectID: config.GooglePubSubProjectID}, logger)
 	if err != nil {
 		panic(err)
 	}
