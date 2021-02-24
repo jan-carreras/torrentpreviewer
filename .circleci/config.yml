@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  test:
     docker:
       # specify the version
       - image: circleci/golang:1.15
@@ -25,3 +25,14 @@ jobs:
       - run: go get -v -t -d ./...
       - run: go get github.com/vektra/mockery/v2/.../
       - run: make test
+
+  check:
+    docker:
+      - image: circleci/golang:1.15
+
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+
+      - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
+      - run: make check
