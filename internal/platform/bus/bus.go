@@ -15,21 +15,19 @@ var Sync = "sync"
 var PubSub = "pubsub"
 
 func MakeCommandBus(cbType string, c container.Container) (cb command.Bus, err error) {
-	if cbType == Sync {
-		cb = inmemory.NewSyncCommandBus(c.Logger)
-	} else if cbType == PubSub {
-		cb = pubsub.NewPubSubCommandBus(c.Logger, c.Publisher)
-	} else {
-		return cb, fmt.Errorf("unknown command bus type: %v", cbType)
-	}
-
 	srv, err := services.NewServices(c)
 	if err != nil {
 		return nil, err
 	}
 
-	makeBindings(cb, srv)
-
+	if cbType == Sync {
+		cb = inmemory.NewSyncCommandBus(c.Logger)
+		makeBindings(cb, srv)
+	} else if cbType == PubSub {
+		cb = pubsub.NewPubSubCommandBus(c.Logger, c.Publisher())
+	} else {
+		return cb, fmt.Errorf("unknown command bus type: %v", cbType)
+	}
 	return cb, nil
 }
 

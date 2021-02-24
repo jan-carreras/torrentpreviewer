@@ -20,16 +20,15 @@ import (
 )
 
 type Container struct {
-	Config            configuration.Config
-	Logger            *logrus.Logger
-	MagnetClient      preview.MagnetClient
-	TorrentDownloader preview.TorrentDownloader
-	TorrentRepo       preview.TorrentRepository
-	ImageExtractor    preview.ImageExtractor
-	ImagePersister    preview.ImagePersister
-	ImageRepository   preview.ImageRepository
-	Subscriber        command.Subscriber
-	Publisher         message.Publisher
+	Config             configuration.Config
+	Logger             *logrus.Logger
+	torrentIntegration *bittorrentproto.TorrentClient
+	TorrentRepo        preview.TorrentRepository
+	imageExtractor     preview.ImageExtractor
+	ImagePersister     preview.ImagePersister
+	ImageRepository    preview.ImageRepository
+	subscriber         command.Subscriber
+	publisher          message.Publisher
 }
 
 func NewDefaultContainer() (Container, error) {
@@ -47,11 +46,6 @@ func NewDefaultContainer() (Container, error) {
 	}
 	logger.Level = logLevel
 
-	imageExtractor, err := ffmpeg.NewInMemoryFfmpeg(logger)
-	if err != nil {
-		return Container{}, err
-	}
-
 	imagePersister := file.NewImagePersister(logger, config.ImageDir)
 
 	sqliteDatabase, err := sql.Open("sqlite3", config.SqlitePath)
@@ -60,50 +54,82 @@ func NewDefaultContainer() (Container, error) {
 	}
 
 	torrentRepo := sqlite.NewTorrentRepository(sqliteDatabase)
-
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
-	torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(config))
-	if err != nil {
-		return Container{}, err
-	}
-
-	torrentIntegration := bittorrentproto.NewTorrentClient(torrentClient, logger)
-
-	loggerWindMill := watermill.NewStdLogger(false, false)
-	googleSubscriber, err := googlecloud.NewSubscriber(
-		googlecloud.SubscriberConfig{
-			GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-			ProjectID:                config.GooglePubSubProjectID,
-		},
-		loggerWindMill,
-	)
-	if err != nil {
-		return Container{}, err
-	}
-
-	subscriber, err := pubsub.NewSubscriber(googleSubscriber)
-	if err != nil {
-		return Container{}, err
-	}
-
-	publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
-		ProjectID: config.GooglePubSubProjectID,
-	}, loggerWindMill)
-	if err != nil {
-		return Container{}, err
-	}
-
 	return Container{
-		Config:            config,
-		Logger:            logger,
-		MagnetClient:      torrentIntegration,
-		TorrentDownloader: torrentIntegration,
-		TorrentRepo:       torrentRepo,
-		ImageExtractor:    imageExtractor,
-		ImagePersister:    imagePersister,
-		ImageRepository:   imageRepository,
-		Subscriber:        subscriber,
-		Publisher:         publisher,
+		Config:          config,
+		Logger:          logger,
+		TorrentRepo:     torrentRepo,
+		ImagePersister:  imagePersister,
+		ImageRepository: imageRepository,
 	}, nil
+}
+
+func (c *Container) ImageExtractor() preview.ImageExtractor {
+	if c.imageExtractor == nil {
+		imageExtractor, err := ffmpeg.NewInMemoryFfmpeg(c.Logger)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		c.imageExtractor = imageExtractor
+	}
+	return c.imageExtractor
+}
+
+func (c *Container) getTorrentIntegration() *bittorrentproto.TorrentClient {
+	if c.torrentIntegration == nil {
+		torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(c.Config))
+		if err != nil {
+			panic(err)
+		}
+		c.torrentIntegration = bittorrentproto.NewTorrentClient(torrentClient, c.Logger)
+	}
+	return c.torrentIntegration
+}
+
+func (c *Container) MagnetClient() preview.MagnetClient {
+	return c.getTorrentIntegration()
+}
+
+func (c *Container) TorrentDownloader() preview.TorrentDownloader {
+	return c.getTorrentIntegration()
+}
+
+func (c *Container) Subscriber() command.Subscriber {
+	if c.subscriber == nil {
+		loggerWindMill := watermill.NewStdLogger(false, false)
+		googleSubscriber, err := googlecloud.NewSubscriber(
+			googlecloud.SubscriberConfig{
+				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
+				ProjectID:                c.Config.GooglePubSubProjectID,
+			},
+			loggerWindMill,
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		subscriber, err := pubsub.NewSubscriber(googleSubscriber)
+		if err != nil {
+			panic(err)
+		}
+		c.subscriber = subscriber
+	}
+
+	return c.subscriber
+}
+
+func (c *Container) Publisher() message.Publisher {
+	if c.publisher == nil {
+		loggerWindMill := watermill.NewStdLogger(false, false) // TODO: We are creating this twice...
+		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
+			ProjectID: c.Config.GooglePubSubProjectID,
+		}, loggerWindMill)
+		if err != nil {
+			panic(err)
+		}
+		c.publisher = publisher
+	}
+
+	return c.publisher
 }
