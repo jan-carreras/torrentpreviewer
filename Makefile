@@ -46,9 +46,14 @@ fmt:    ## format the go source files
 .PHONY: check
 check: ## Run linters & gofmt check
 	@test -z $(shell echo $(FILES) | xargs grep --color=always TODO | tee /dev/stderr ) || (echo "[ERR] Some Go file includes a TODO comment" && false)
-	@test -z $(shell gofmt -l $(FILES) | tee /dev/stderr) || (echo "[ERR] Fix formatting issues with 'make fmt'" && false)
+check: check-fmt ## Run linters & gofmt check
 	@which golangci-lint > /dev/null 2>/dev/null || (echo "ERROR: golangci-lint not found" && false)
 	@golangci-lint run
+
+
+check-fmt:
+	@test -z $(shell gofmt -l $(FILES) | tee /dev/stderr) || (echo "[ERR] Fix formatting issues with 'make fmt'" && false)
+
 
 .PHONY: mvp
 mvp: ## Show pending tasks to be done for MVP
