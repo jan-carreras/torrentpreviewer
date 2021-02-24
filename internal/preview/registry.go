@@ -79,7 +79,7 @@ func (m *PieceInMemoryStorage) Get(id int) (*Piece, bool) {
 // It operates reading from pieceIncomingCh channel and outputs to the
 // plansCompletedCh when a PieceRange has all its pieces. Then an outside actor
 // can read the pieces from the storage.
-// TODO: This struct has too many responsabilities, too many channel logic and probably
+// IMPROVEMENT: This struct has too many responsabilities, too many channel logic and probably
 //       a lot of hidden bugs.
 type PieceRegistry struct {
 	logger              *logrus.Logger
