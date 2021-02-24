@@ -24,7 +24,7 @@ func (r *ImageRepository) ByTorrent(ctx context.Context, id string) (*preview.To
 	query.OrderBy("id").Asc()
 
 	sqlRaw, args := query.Build()
-	rows, err := r.db.Query(sqlRaw, args...)
+	rows, err := r.db.QueryContext(ctx, sqlRaw, args...)
 	if err != nil {
 		return nil, err
 	}
