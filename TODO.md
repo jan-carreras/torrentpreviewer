@@ -42,7 +42,7 @@
     - [ ] Test for inmemory storages
     - [ ] All Repositories and Services must return an error
     - [ ] Ensure that all the queries are executed within a Context
-    - [ ] Remove the need to bind the bittorrent client to a port
+    - [x] Remove the need to bind the bittorrent client to a port
 - [ ] Project
     - [x] Publish it to a public repository #mvp
     - [x] Rethink license

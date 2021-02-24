@@ -50,7 +50,7 @@ func NewConfig() (Config, error) {
 	viper.SetDefault("EnableTorrentDebug", false)
 	viper.SetDefault("LogLevel", "debug")
 	viper.SetDefault("ConnectionsPerTorrent", "20")
-	viper.SetDefault("TorrentListeningPort", "12345")
+	viper.SetDefault("TorrentListeningPort", "0")
 	viper.SetDefault("TorrentStorageDriver", "inmemory")
 	viper.SetDefault("GooglePubSubProjectID", "torrentpreview")
 
