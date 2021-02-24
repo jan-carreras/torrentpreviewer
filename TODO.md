@@ -17,9 +17,9 @@
     - [ ] We have OOMKiller around. Use queues to process smaller DownloadPlans
     - [x] Limit the size of the download data in the Download Plan. Provisionally 100MB.
 - [ ] Support other media content
-    - [ ] Support .wmv
-    - [ ] Support .avi
-    - [ ] Support .mov
+    - [x] Support .wmv
+    - [x] Support .avi
+    - [x] Support .mov
     - [ ] Support jpg/jpeg
 - [ ] Implement the HTTP endpoints
     - [x] POST /unmagnetize
