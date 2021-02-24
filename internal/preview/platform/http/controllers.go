@@ -11,7 +11,6 @@ import (
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/importTorrent"
 	"prevtorrent/internal/preview/unmagnetize"
-	"prevtorrent/kit/command"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +18,10 @@ import (
 
 type Server struct {
 	services services.Services
-	bus      command.Bus
 }
 
-func NewServer(services services.Services, bus command.Bus) *Server {
-	return &Server{services: services, bus: bus}
+func NewServer(services services.Services) *Server {
+	return &Server{services: services}
 }
 
 func (s *Server) getTorrentController(c *gin.Context) {
