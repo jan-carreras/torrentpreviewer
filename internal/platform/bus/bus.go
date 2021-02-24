@@ -17,7 +17,7 @@ func MakeCommandBus(cbType string, c container.Container) (cb command.Bus, err e
 	if cbType == Sync {
 		cb = inmemory.NewSyncCommandBus(c.Logger)
 	} else if cbType == PubSub {
-		cb = pubsub.NewPubSubCommandBus(c.Logger, nil) // TODO: We need to be able to pass the publisher here!
+		cb = pubsub.NewPubSubCommandBus(c.Logger, c.Publisher)
 	} else {
 		return cb, fmt.Errorf("unknown command bus type: %v", cbType)
 	}

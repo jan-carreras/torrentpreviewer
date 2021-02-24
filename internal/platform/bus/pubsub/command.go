@@ -3,7 +3,6 @@ package pubsub
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"prevtorrent/kit/command"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -24,7 +23,7 @@ func NewPubSubCommandBus(logger *logrus.Logger, publisher message.Publisher) *Pu
 	}
 }
 
-func (b *PubSubCommandBus) Register(cmdType command.Type, handler command.Handler) {
+func (b *PubSubCommandBus) Register(_ command.Type, _ command.Handler) {
 }
 
 func (b *PubSubCommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
@@ -33,6 +32,5 @@ func (b *PubSubCommandBus) Dispatch(ctx context.Context, cmd command.Command) er
 		return err
 	}
 	msg := message.NewMessage(watermill.NewUUID(), data)
-	fmt.Println("We will queue it here, of course", cmd.Type(), string(data))
 	return b.publisher.Publish(string(cmd.Type()), msg)
 }

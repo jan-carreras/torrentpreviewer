@@ -2,14 +2,10 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
-	"prevtorrent/internal/platform/bus/pubsub"
+	"prevtorrent/internal/platform/bus"
+	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/downloadPartials"
-	"prevtorrent/internal/preview/platform/configuration"
-
-	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 )
 
 func main() {
@@ -19,18 +15,15 @@ func main() {
 		torrentID = args[1]
 	}
 
-	logger := watermill.NewStdLogger(false, false)
-
-	config, err := configuration.NewConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{ProjectID: config.GooglePubSubProjectID}, logger)
+	c, err := container.NewDefaultContainer()
 	if err != nil {
 		panic(err)
 	}
-	commandBus := pubsub.NewPubSubCommandBus(nil, publisher)
+
+	commandBus, err := bus.MakeCommandBus(bus.PubSub, c)
+	if err != nil {
+		panic(err)
+	}
 
 	cmd := downloadPartials.CMD{ID: torrentID}
 

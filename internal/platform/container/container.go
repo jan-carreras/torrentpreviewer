@@ -2,6 +2,7 @@ package container
 
 import (
 	"database/sql"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -28,6 +29,7 @@ type Container struct {
 	ImagePersister    preview.ImagePersister
 	ImageRepository   preview.ImageRepository
 	Subscriber        command.Subscriber
+	Publisher         message.Publisher
 }
 
 func NewDefaultContainer() (Container, error) {
@@ -85,6 +87,13 @@ func NewDefaultContainer() (Container, error) {
 		return Container{}, err
 	}
 
+	publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
+		ProjectID: config.GooglePubSubProjectID,
+	}, loggerWindMill)
+	if err != nil {
+		return Container{}, err
+	}
+
 	return Container{
 		Config:            config,
 		Logger:            logger,
@@ -95,5 +104,6 @@ func NewDefaultContainer() (Container, error) {
 		ImagePersister:    imagePersister,
 		ImageRepository:   imageRepository,
 		Subscriber:        subscriber,
+		Publisher:         publisher,
 	}, nil
 }
