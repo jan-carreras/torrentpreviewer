@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"prevtorrent/internal/platform/bus"
-	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/platform/cli"
 )
@@ -21,8 +20,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	commandBus := inmemory.NewSyncCommandBus(c.Logger)
-	bus.MakeBindings(commandBus, c)
+
+	commandBus, err := bus.MakeCommandBus(bus.Sync, c)
+	if err != nil {
+		return err
+	}
 	c.Config.Print(os.Stdout)
 	return cli.Run(commandBus)
 }

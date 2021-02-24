@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"prevtorrent/internal/platform/bus"
-	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/downloadPartials"
 )
@@ -22,9 +21,10 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	commandBus := inmemory.NewSyncCommandBus(c.Logger)
-
-	bus.MakeBindings(commandBus, c) // TODO: Meh.
+	commandBus, err := bus.MakeCommandBus(bus.Sync, c)
+	if err != nil {
+		return err
+	}
 
 	downloadPartialsChannel, err := c.Subscriber.Subscribe(ctx, string(downloadPartials.CommandType))
 	if err != nil {
