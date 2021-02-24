@@ -1,3 +1,5 @@
+[![torrentPreview](https://circleci.com/gh/jan-carreras/torrentpreviewer.svg?style=shield)](https://app.circleci.com/pipelines/github/jan-carreras/torrentpreviewer)
+
 ## Message for hiring companies engineers
 
 The project is going to be a Torrent Previewer. Definition of the problem:
