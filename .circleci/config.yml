@@ -14,7 +14,6 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go get -v -t -d ./...
-      - run: go get github.com/vektra/mockery/v2/.../
       - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
