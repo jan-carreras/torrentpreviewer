@@ -5,6 +5,7 @@ import (
 	"prevtorrent/internal/platform/bus/inmemory"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/platform/container"
+	"prevtorrent/internal/platform/services"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/unmagnetize"
 	"prevtorrent/kit/command"
@@ -22,34 +23,17 @@ func MakeCommandBus(cbType string, c container.Container) (cb command.Bus, err e
 		return cb, fmt.Errorf("unknown command bus type: %v", cbType)
 	}
 
-	makeBindings(cb, c)
+	srv, err := services.NewServices(c)
+	if err != nil {
+		return nil, err
+	}
+
+	makeBindings(cb, srv)
 
 	return cb, nil
 }
 
-func makeBindings(commandBus command.Bus, c container.Container) {
-	commandBus.Register(
-		unmagnetize.CommandType,
-		unmagnetize.NewTransformCommandHandler(
-			unmagnetize.NewService(
-				c.Logger,
-				c.MagnetClient,
-				c.TorrentRepo,
-			),
-		),
-	)
-
-	commandBus.Register(
-		downloadPartials.CommandType,
-		downloadPartials.NewCommandHandler(
-			downloadPartials.NewService(
-				c.Logger,
-				c.TorrentRepo,
-				c.TorrentDownloader,
-				c.ImageExtractor,
-				c.ImagePersister,
-				c.ImageRepository,
-			),
-		),
-	)
+func makeBindings(bus command.Bus, s services.Services) {
+	bus.Register(unmagnetize.CommandType, unmagnetize.NewTransformCommandHandler(s.Unmagnetize()))
+	bus.Register(downloadPartials.CommandType, downloadPartials.NewCommandHandler(s.DownloadPartials()))
 }
