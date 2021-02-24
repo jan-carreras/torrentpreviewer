@@ -2,7 +2,6 @@ package container
 
 import (
 	"database/sql"
-	"github.com/ThreeDotsLabs/watermill"
 	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -11,6 +10,8 @@ import (
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/kit/command"
+
+	"github.com/ThreeDotsLabs/watermill"
 
 	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 	"github.com/anacrolix/torrent"

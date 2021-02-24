@@ -2,8 +2,9 @@ package pubsub
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill/message"
 	"prevtorrent/kit/command"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 type Message struct {
