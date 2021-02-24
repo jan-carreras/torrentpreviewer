@@ -35,13 +35,14 @@
 - [ ] Refine CLI
     - [x] Use a proper CLI framework for the commands & stuff
     - [ ] Implement graceful shutdown #mvp
-- [ ] Improve tests
+- [ ] Project general improvements
     - [ ] Improve coverage in Domain
     - [x] Test the infrastructure regarding SQLite
     - [x] Test for file storage
     - [ ] Test for inmemory storages
     - [ ] All Repositories and Services must return an error
     - [ ] Ensure that all the queries are executed within a Context
+    - [ ] Remove the need to bind the bittorrent client to a port
 - [ ] Project
     - [x] Publish it to a public repository #mvp
     - [x] Rethink license
