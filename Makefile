@@ -36,7 +36,7 @@ test-cover: generate ## run tests with coverage
 
 .PHONY: test-fast
 test-fast: ## run tests without generating mocks
-	go test -cover ./...
+	go test ./...
 
 .PHONY: fmt
 fmt:    ## format the go source files
