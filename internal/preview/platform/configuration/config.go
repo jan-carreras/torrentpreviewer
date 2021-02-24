@@ -22,6 +22,7 @@ type Config struct {
 	ConnectionsPerTorrent int    `yaml:"ConnectionsPerTorrent"`
 	TorrentListeningPort  int    `yaml:"TorrentListeningPort"`
 	TorrentStorageDriver  string `yaml:"TorrentStorageDriver"`
+	GooglePubSubProjectID string `yaml:"GooglePubSubProjectID"`
 }
 
 func (c Config) Print(w io.Writer) {
@@ -51,6 +52,7 @@ func NewConfig() (Config, error) {
 	viper.SetDefault("ConnectionsPerTorrent", "20")
 	viper.SetDefault("TorrentListeningPort", "12345")
 	viper.SetDefault("TorrentStorageDriver", "inmemory")
+	viper.SetDefault("GooglePubSubProjectID", "torrentpreview")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return Config{}, err
