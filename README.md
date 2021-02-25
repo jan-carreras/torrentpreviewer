@@ -1,28 +1,29 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jan-carreras/torrentpreviewer)](https://goreportcard.com/report/github.com/jan-carreras/torrentpreviewer)
 [![torrentPreview](https://circleci.com/gh/jan-carreras/torrentpreviewer.svg?style=shield)](https://app.circleci.com/pipelines/github/jan-carreras/torrentpreviewer)
 
+
 # Torrent Preview
 
-Is a simple BitTorrent client that generates thumbnails from the videos in Torrent files.
+Is a simple BitTorrent client that generates images from the videos in Torrent files.
 
 ## The problem
 
-To know the content of a torrent there are usually two approaches:
+To know the content of a torrent there are usually those approaches:
 
-1. To include JPG images of the videos in the torrent inside the Torrent. You could download the images alone to check
-   if the content is what you're looking for.
+1. To include JPG images of the videos in the torrent inside the Torrent. You could download just those images to check
+   if the content is what you're looking for
 1. To include links in the description of the torrent as free text to an external service where the images are stored
 1. When sending/posting the torrent to your favourite forum, share a screenshot of your screen of _some_ of the videos
 
 The problem with images inside the torrent is that you cannot download the images if there are no seeders at the moment.
-And the images do not necessary need to match with the video content or quality. The problem with links to images of
-screenshots is that those links can be broken and thus unsuable. We can do better.
+The images do not necessary need to match with the video content or quality. The problem with links to image of
+screenshots is that those links can be broken and thus unusable. We can do better.
 
 ## Solution
 
 > Generate the screenshot from the videos inside the Torrent using TorrentPreview. - Jan Carreras, bored, one random Tuesday
 
-So that's that. Torrent preview recieves a Magnet link, _unmagnetizes_ it converting it to a Torrent file, and downloads
+So, that is that. Torrent Preview receives a Magnet link, _unmagnetizes_ it converting it to a Torrent file, and downloads
 the first 8MB of each video of the torrent to extract a Screenshot at the frame corresponding to the second 5 of the
 video. It stores the screenshot and removes the video.
 
@@ -46,13 +47,11 @@ but the images are not going to be extracted.
 
 You want to start the project locally? You'll need to:
 
-- Install some system dependencies.
-- Install some tooling and the Go programming language
+- Install some system dependencies
+    - make, [go >= 1.15](https://golang.org/dl/), [ffmpeg](https://ffmpeg.org/download.html), [sqlite3](https://www.sqlite.org/download.html)
 - Compile the program
 - Configure and run the various components
 - Consume the API or query the DB for results
-
-System dependencies: make, ffmpeg, sqlite3
 
 ### Build
 

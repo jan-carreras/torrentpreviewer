@@ -20,6 +20,7 @@ clean:
 .PHONY: tools
 tools:  ## fetch and install all required tools
 	go get -u golang.org/x/tools/cmd/goimports
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.37.1
 
 .PHONY: generate
 generate: ## generate mocks
@@ -71,7 +72,7 @@ build-clean:
 	rm -f bin/*
 
 .PHONY: build-linux
-build-linux: bin/linux-torrentprev bin/linux-http-api
+build-linux: build-clean bin/linux-torrentprev bin/linux-http-api
 
 bin/linux-torrentprev:
 	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-torrentprev ./cmd/cli/torrentprev/torrentprev.go
