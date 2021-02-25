@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "03399aba-24ba-4c22-88a6-687875fa6bdd",
+		"name": "TorrentPreview",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Torrent",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/torrent/{{torrentID}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"torrent",
+						"{{torrentID}}"
+					]
+				},
+				"description": "Shows:\n\n- The torrent information\n- The information about the files in the torrent\n- The images of the files, if any"
+			},
+			"response": []
+		},
+		{
+			"name": "Post Magnet",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "magnet",
+							"value": "magnet:?xt=urn:btih:c92f656155d0d8e87d21471d7ea43e3ad0d42723",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://{{baseURL}}/unmagnetize",
+					"protocol": "http",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"unmagnetize"
+					]
+				},
+				"description": "Registers a new Magnet in the database\n\nIt returns the TorrentID.\n\nNote: It does not starts downloading the torrent"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "torrentID",
+			"value": "c92f656155d0d8e87d21471d7ea43e3ad0d42723"
+		},
+		{
+			"key": "baseURL",
+			"value": "localhost:8080"
+		}
+	]
+}

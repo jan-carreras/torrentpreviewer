@@ -103,6 +103,12 @@ DEBU[0016] image persisted successfully                  name=c92f656155d0d8e87d
 
 You can see the very same result at [TorrentPreview](http://torrentpreview.com/?id=c92f656155d0d8e87d21471d7ea43e3ad0d42723)
 
+### Get torrent information from API
+
+See file in `docs/http/api.postman_collection.json` and you'll find the requests and descriptions of what they do. 
+See it [online](https://documenter.getpostman.com/view/10093390/TWDanw8n) as well.
+
+
 ## Testing
 
 ### Generate mocks
