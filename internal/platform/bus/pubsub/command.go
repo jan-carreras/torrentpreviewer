@@ -26,7 +26,7 @@ func NewPubSubCommandBus(logger *logrus.Logger, publisher message.Publisher) *Pu
 func (b *PubSubCommandBus) Register(_ command.Type, _ command.Handler) {
 }
 
-func (b *PubSubCommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
+func (b *PubSubCommandBus) Dispatch(_ context.Context, cmd command.Command) error {
 	data, err := json.Marshal(cmd)
 	if err != nil {
 		return err

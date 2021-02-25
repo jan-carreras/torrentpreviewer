@@ -195,6 +195,8 @@ func (fi FileInfo) DownloadSize() int {
 func (fi FileInfo) IsSupportedExtension() bool {
 	supported := map[string]interface{}{
 		".mp4": struct{}{},
+		".mkv": struct{}{},
+		".mov": struct{}{},
 	}
 
 	ext := filepath.Ext(fi.name)

@@ -2,15 +2,14 @@ package http
 
 import (
 	"prevtorrent/internal/platform/services"
-	"prevtorrent/kit/command"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func Run(s services.Services, bus command.Bus) error {
-	server := NewServer(s, bus)
+func Run(s services.Services) error {
+	server := NewServer(s)
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:  []string{"*", "localhost"},

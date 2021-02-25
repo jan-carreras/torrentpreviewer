@@ -11,7 +11,6 @@ import (
 	"prevtorrent/internal/preview/getTorrent"
 	"prevtorrent/internal/preview/importTorrent"
 	"prevtorrent/internal/preview/unmagnetize"
-	"prevtorrent/kit/command"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,15 +18,14 @@ import (
 
 type Server struct {
 	services services.Services
-	bus      command.Bus
 }
 
-func NewServer(services services.Services, bus command.Bus) *Server {
-	return &Server{services: services, bus: bus}
+func NewServer(services services.Services) *Server {
+	return &Server{services: services}
 }
 
 func (s *Server) getTorrentController(c *gin.Context) {
-	torrent, err := s.services.GetTorrent.Get(c, getTorrent.CMD{
+	torrent, err := s.services.GetTorrent().Get(c, getTorrent.CMD{
 		TorrentID: c.Params.ByName("id"),
 	})
 
@@ -92,7 +90,8 @@ func (s *Server) unmagnetizeController(ctx *gin.Context) {
 	}
 	ctxWithCancellation, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
-	torrentID, err := s.services.Unmagnetize.Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
+
+	torrentID, err := s.services.Unmagnetize().Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
 	if err != nil {
 		s.handleError(ctx, err)
 		return
@@ -123,7 +122,7 @@ func (s *Server) newTorrentController(ctx *gin.Context) {
 		return
 	}
 
-	torrent, err := s.services.ImportTorrent.Import(ctx, importTorrent.CMD{
+	torrent, err := s.services.ImportTorrent().Import(ctx, importTorrent.CMD{
 		TorrentRaw: file,
 	})
 	if err != nil {

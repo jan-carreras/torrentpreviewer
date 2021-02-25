@@ -26,7 +26,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 
-	downloadPartialsChannel, err := c.Subscriber.Subscribe(ctx, string(downloadPartials.CommandType))
+	downloadPartialsChannel, err := c.Subscriber().Subscribe(ctx, string(downloadPartials.CommandType))
 	if err != nil {
 		return err
 	}
