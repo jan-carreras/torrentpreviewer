@@ -1,5 +1,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/jan-carreras/torrentpreviewer)](https://goreportcard.com/report/github.com/jan-carreras/torrentpreviewer)
 [![torrentPreview](https://circleci.com/gh/jan-carreras/torrentpreviewer.svg?style=shield)](https://app.circleci.com/pipelines/github/jan-carreras/torrentpreviewer)
+![Version Beta](https://img.shields.io/badge/version-beta-yellow)
+![Production Ready](https://img.shields.io/badge/production%20ready-nope-red)
 
 
 # Torrent Preview
