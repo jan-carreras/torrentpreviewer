@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
