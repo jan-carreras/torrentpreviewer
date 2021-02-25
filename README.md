@@ -55,7 +55,8 @@ Two paths:
 
 ## Docker usage
 
-- Execute `docker-compose build`. It might take a while. Drink a coffee. Maybe two. Shower. Call mum.
+- Execute `docker-compose build`.
+  - Are you on OSX? It might take a while. Drink a coffee. Maybe two. Shower. Call mum.
 - Create the database (see section below) on the root of the project
 - Execute `docker-compose up` and you'll the HTTP listening on :8080
 
@@ -101,6 +102,26 @@ DEBU[0016] image persisted successfully                  name=c92f656155d0d8e87d
 > or you won't find seeders at this moment. The videos might not download.
 
 You can see the very same result at [TorrentPreview](http://torrentpreview.com/?id=c92f656155d0d8e87d21471d7ea43e3ad0d42723)
+
+## Testing
+
+### Generate mocks
+
+```bash
+docker-compose run cli make generate
+````
+
+### Run tests
+
+Commands:
+
+```bash
+docker-compose run cli make test # Generates mocks
+docker-compose run cli make test-cover # Generates mocks and coverage
+docker-compose run cli make test-fast # Without mock generation
+```
+
+You can run the tests from your IDE or CLI once the mocks are generated.
 
 ## Local install
 

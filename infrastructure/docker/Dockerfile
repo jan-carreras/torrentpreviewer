@@ -6,7 +6,7 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 RUN go mod download
 
-COPY http ./
+COPY ./ ./
 RUN CGO_ENABLED=1 go build --tags "libsqlite3 linux" -o /go/bin/http ./cmd/http/http.go
 RUN CGO_ENABLED=1 go build --tags "libsqlite3 linux" -o /go/bin/torrentprev ./cmd/cli/torrentprev/torrentprev.go
 
@@ -16,3 +16,5 @@ ENTRYPOINT ["/go/bin/http"]
 
 
 FROM build as cli
+RUN cd /tmp && go get github.com/vektra/mockery/v2/.../
+WORKDIR /go/src/github.com/jan-carreras/torrentpreviewer
