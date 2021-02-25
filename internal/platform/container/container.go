@@ -30,6 +30,7 @@ type Container struct {
 	ImageRepository    preview.ImageRepository
 	subscriber         command.Subscriber
 	publisher          message.Publisher
+	loggerWatermill    watermill.LoggerAdapter
 }
 
 func NewDefaultContainer() (Container, error) {
@@ -47,6 +48,8 @@ func NewDefaultContainer() (Container, error) {
 	}
 	logger.Level = logLevel
 
+	loggerWatermill := watermill.NewStdLogger(false, false)
+
 	imagePersister := file.NewImagePersister(logger, config.ImageDir)
 
 	sqliteDatabase, err := sql.Open("sqlite3", config.SqlitePath)
@@ -60,6 +63,7 @@ func NewDefaultContainer() (Container, error) {
 	return Container{
 		Config:          config,
 		Logger:          logger,
+		loggerWatermill: loggerWatermill,
 		TorrentRepo:     torrentRepo,
 		ImagePersister:  imagePersister,
 		ImageRepository: imageRepository,
@@ -98,13 +102,12 @@ func (c *Container) TorrentDownloader() preview.TorrentDownloader {
 
 func (c *Container) Subscriber() command.Subscriber {
 	if c.subscriber == nil {
-		loggerWindMill := watermill.NewStdLogger(false, false)
 		googleSubscriber, err := googlecloud.NewSubscriber(
 			googlecloud.SubscriberConfig{
 				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
 				ProjectID:                c.Config.GooglePubSubProjectID,
 			},
-			loggerWindMill,
+			c.loggerWatermill,
 		)
 		if err != nil {
 			panic(err)
@@ -122,10 +125,9 @@ func (c *Container) Subscriber() command.Subscriber {
 
 func (c *Container) Publisher() message.Publisher {
 	if c.publisher == nil {
-		loggerWindMill := watermill.NewStdLogger(false, false) // TODO: We are creating this twice...
 		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
 			ProjectID: c.Config.GooglePubSubProjectID,
-		}, loggerWindMill)
+		}, c.loggerWatermill)
 		if err != nil {
 			panic(err)
 		}
