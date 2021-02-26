@@ -66,5 +66,7 @@ func (h *handlers) download(c *cli.Context) error {
 
 	// TODO: Verify if the friking commands need to be pointers
 	// TODO: Register the command handlers
-	return h.commandBus.Send(context.Background(), downloadPartials.CMD{ID: torrent})
+	return h.commandBus.Send(context.Background(), downloadPartials.CMD{
+		ID: torrent,
+	})
 }
