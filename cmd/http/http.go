@@ -27,5 +27,7 @@ func run() error {
 		return err
 	}
 
-	return http.Run(s)
+	cqrs := c.CQRS()
+
+	return http.Run(s, cqrs.CommandBus(), cqrs.EventBus())
 }

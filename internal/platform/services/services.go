@@ -2,6 +2,7 @@ package services
 
 import "C"
 import (
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/getTorrent"
@@ -29,9 +30,9 @@ func (s *Services) GetTorrent() getTorrent.Service {
 	return *s.getTorrent
 }
 
-func (s *Services) Unmagnetize() unmagnetize.Service {
+func (s *Services) Unmagnetize(eb *cqrs.EventBus) unmagnetize.Service {
 	if s.unmagnetize == nil {
-		service := unmagnetize.NewService(s.c.Logger, s.c.MagnetClient(), s.c.TorrentRepo)
+		service := unmagnetize.NewService(s.c.Logger, eb, s.c.MagnetClient(), s.c.TorrentRepo)
 		s.unmagnetize = &service
 	}
 

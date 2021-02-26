@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"io/ioutil"
 	"net/http"
 	"prevtorrent/internal/platform/services"
@@ -17,11 +18,13 @@ import (
 )
 
 type Server struct {
-	services services.Services
+	services   services.Services
+	commandBus *cqrs.CommandBus
+	eventBus   *cqrs.EventBus
 }
 
-func NewServer(services services.Services) *Server {
-	return &Server{services: services}
+func NewServer(services services.Services, commandBus *cqrs.CommandBus, eventBus *cqrs.EventBus) *Server {
+	return &Server{services: services, commandBus: commandBus, eventBus: eventBus}
 }
 
 func (s *Server) getTorrentController(c *gin.Context) {
@@ -81,6 +84,8 @@ func (s *Server) handleError(c *gin.Context, err error) {
 }
 
 func (s *Server) unmagnetizeController(ctx *gin.Context) {
+	// IMPROVEMENT: This is not CQRS since we're returning something in a Command execution :/
+	//       How could I return just the ID? IDK yet
 	magnet := ctx.PostForm("magnet")
 	if len(magnet) == 0 {
 		ctx.JSON(http.StatusBadRequest, httpError{
@@ -91,7 +96,7 @@ func (s *Server) unmagnetizeController(ctx *gin.Context) {
 	ctxWithCancellation, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 
-	torrentID, err := s.services.Unmagnetize().Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
+	torrentID, err := s.services.Unmagnetize(s.eventBus).Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
 	if err != nil {
 		s.handleError(ctx, err)
 		return

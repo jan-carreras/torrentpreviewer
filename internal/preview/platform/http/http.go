@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"prevtorrent/internal/platform/services"
 	"time"
 
@@ -8,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Run(s services.Services) error {
-	server := NewServer(s)
+func Run(s services.Services, bus *cqrs.CommandBus, eventBus *cqrs.EventBus) error {
+	server := NewServer(s, bus, eventBus)
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:  []string{"*", "localhost"},

@@ -3,23 +3,22 @@ package cli
 import (
 	"context"
 	"errors"
+	"github.com/urfave/cli/v2"
 	"os"
+	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/unmagnetize"
-	"prevtorrent/kit/command"
-
-	"github.com/urfave/cli/v2"
 )
 
 type handlers struct {
-	bus command.Bus
+	commandBus bus.Command
 }
 
-func newHandlers(bus command.Bus) *handlers {
-	return &handlers{bus: bus}
+func newHandlers(bus bus.Command) *handlers {
+	return &handlers{commandBus: bus}
 }
 
-func Run(bus command.Bus) error {
+func Run(bus bus.Command) error {
 	handlers := newHandlers(bus)
 
 	app := &cli.App{
@@ -52,7 +51,9 @@ func (h *handlers) transform(c *cli.Context) error {
 	}
 	magnet := c.Args().Get(0)
 
-	return h.bus.Dispatch(context.Background(), unmagnetize.CMD{
+	// TODO: Verify if the friking commands need to be pointers
+	// TODO: Register the command handlers
+	return h.commandBus.Send(context.Background(), unmagnetize.CMD{
 		Magnet: magnet,
 	})
 }
@@ -63,5 +64,7 @@ func (h *handlers) download(c *cli.Context) error {
 	}
 	torrent := c.Args().Get(0)
 
-	return h.bus.Dispatch(context.Background(), downloadPartials.CMD{ID: torrent})
+	// TODO: Verify if the friking commands need to be pointers
+	// TODO: Register the command handlers
+	return h.commandBus.Send(context.Background(), downloadPartials.CMD{ID: torrent})
 }
