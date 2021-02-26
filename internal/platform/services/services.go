@@ -41,7 +41,7 @@ func (s *Services) Unmagnetize(eb *cqrs.EventBus) unmagnetize.Service {
 
 func (s *Services) ImportTorrent() importTorrent.Service {
 	if s.importTorrent == nil {
-		service := importTorrent.NewService(s.c.Logger, s.c.TorrentDownloader(), s.c.TorrentRepo)
+		service := importTorrent.NewService(s.c.Logger, s.c.CQRS().CommandBus(), s.c.TorrentDownloader(), s.c.TorrentRepo)
 		s.importTorrent = &service
 	}
 	return *s.importTorrent
