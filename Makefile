@@ -72,7 +72,7 @@ build-clean:
 	rm -f bin/*
 
 .PHONY: build-linux
-build-linux: build-clean bin/linux-torrentprev bin/linux-http-api
+build-linux: build-clean bin/linux-torrentprev bin/linux-http-api bin/linux-events
 
 bin/linux-torrentprev:
 	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-torrentprev ./cmd/cli/torrentprev/torrentprev.go
@@ -80,13 +80,19 @@ bin/linux-torrentprev:
 bin/linux-http-api:
 	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-http ./cmd/http/http.go
 
-build-osx: bin/darwin-torrentprev bin/darwin-http-api
+bin/linux-events:
+	CGO_ENABLED=1 go build --tags "libsqlite3 linux" -o ./bin/linux-events cmd/cli/events/events.go
+
+build-osx: bin/darwin-torrentprev bin/darwin-http-api darwin-events
 
 bin/darwin-torrentprev:
 	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-torrentprev ./cmd/cli/torrentprev/torrentprev.go
 
 bin/darwin-http-api:
 	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-http ./cmd/http/http.go
+
+bin/darwin-events:
+	CGO_ENABLED=1 go build --tags "libsqlite3 darwin" -o ./bin/darwin-events cmd/cli/events/events.go
 
 
 
