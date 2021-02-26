@@ -225,7 +225,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 			return c.EventSubscriber(), nil
 		},
 		Router:                router,
-		CommandEventMarshaler: cqrs.JSONMarshaler{},
+		CommandEventMarshaler: cqrs.ProtobufMarshaler{},
 		Logger:                logger,
 	})
 	if err != nil {
