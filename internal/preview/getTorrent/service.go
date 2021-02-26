@@ -25,10 +25,6 @@ func NewService(
 	}
 }
 
-type CMD struct {
-	TorrentID string
-}
-
 func (s Service) Get(ctx context.Context, cmd CMD) (preview.Info, error) {
 	torrent, err := s.torrentRepo.Get(ctx, cmd.TorrentID)
 	if err != nil {
