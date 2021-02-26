@@ -2,7 +2,6 @@ package getTorrent
 
 import (
 	"context"
-	"fmt"
 	"prevtorrent/internal/preview"
 
 	"github.com/sirupsen/logrus"
@@ -41,7 +40,6 @@ func (s Service) Get(ctx context.Context, cmd CMD) (preview.Info, error) {
 		return preview.Info{}, err
 	}
 
-	fmt.Println(images.Images())
 	for _, img := range images.Images() {
 		file := torrent.File(img.FileID())
 		if err := file.AddImage(img); err != nil {
