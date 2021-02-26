@@ -15,7 +15,7 @@ func NewCommandHandler(eventBus *cqrs.EventBus, service Service) *CommandHandler
 }
 
 func (h CommandHandler) HandlerName() string {
-	return "command.magnet.unmagnetize"
+	return "command.torrent.downloadPartials"
 }
 
 func (h CommandHandler) NewCommand() interface{} {
