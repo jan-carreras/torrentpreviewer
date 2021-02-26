@@ -21,19 +21,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type repositories struct {
+	Torrent preview.TorrentRepository
+	Image   preview.ImageRepository
+}
+
+type eventSourcing struct {
+	cqrsFacade        *cqrs.Facade
+	publisher         message.Publisher
+	messageSubscriber message.Subscriber
+	cqrsRouter        *message.Router
+}
+
 type Container struct {
 	Config             configuration.Config
 	Logger             *logrus.Logger
 	torrentIntegration *bittorrentproto.TorrentClient
-	TorrentRepo        preview.TorrentRepository
 	imageExtractor     preview.ImageExtractor
 	ImagePersister     preview.ImagePersister
-	ImageRepository    preview.ImageRepository
+	Repositories       repositories
 	loggerWatermill    watermill.LoggerAdapter
-	cqrs               *cqrs.Facade
-	publisher          message.Publisher
-	messageSubscriber  message.Subscriber
-	cqrsRouter         *message.Router
+	eventSourcing      eventSourcing
 }
 
 func NewDefaultContainer() (Container, error) {
@@ -67,9 +75,11 @@ func NewDefaultContainer() (Container, error) {
 		Config:          config,
 		Logger:          logger,
 		loggerWatermill: loggerWatermill,
-		TorrentRepo:     torrentRepo,
-		ImagePersister:  imagePersister,
-		ImageRepository: imageRepository,
+		Repositories: repositories{
+			Torrent: torrentRepo,
+			Image:   imageRepository,
+		},
+		ImagePersister: imagePersister,
 	}, nil
 }
 
@@ -104,7 +114,7 @@ func (c *Container) TorrentDownloader() preview.TorrentDownloader {
 }
 
 func (c *Container) CommandSubscriber() message.Subscriber {
-	if c.messageSubscriber == nil {
+	if c.eventSourcing.messageSubscriber == nil {
 		googleSubscriber, err := googlecloud.NewSubscriber(
 			googlecloud.SubscriberConfig{
 				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
@@ -115,14 +125,14 @@ func (c *Container) CommandSubscriber() message.Subscriber {
 		if err != nil {
 			panic(err)
 		}
-		c.messageSubscriber = googleSubscriber
+		c.eventSourcing.messageSubscriber = googleSubscriber
 	}
 
-	return c.messageSubscriber
+	return c.eventSourcing.messageSubscriber
 }
 
 func (c *Container) EventSubscriber() message.Subscriber {
-	if c.messageSubscriber == nil {
+	if c.eventSourcing.messageSubscriber == nil {
 		googleSubscriber, err := googlecloud.NewSubscriber(
 			googlecloud.SubscriberConfig{
 				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
@@ -133,43 +143,43 @@ func (c *Container) EventSubscriber() message.Subscriber {
 		if err != nil {
 			panic(err)
 		}
-		c.messageSubscriber = googleSubscriber
+		c.eventSourcing.messageSubscriber = googleSubscriber
 	}
 
-	return c.messageSubscriber
+	return c.eventSourcing.messageSubscriber
 }
 
 func (c *Container) CommandPublisher() message.Publisher {
-	if c.publisher == nil {
+	if c.eventSourcing.publisher == nil {
 		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
 			ProjectID: c.Config.GooglePubSubProjectID,
 		}, c.loggerWatermill)
 		if err != nil {
 			panic(err)
 		}
-		c.publisher = publisher
+		c.eventSourcing.publisher = publisher
 	}
 
-	return c.publisher
+	return c.eventSourcing.publisher
 }
 
 func (c *Container) EventPublisher() message.Publisher {
-	if c.publisher == nil {
+	if c.eventSourcing.publisher == nil {
 		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
 			ProjectID: c.Config.GooglePubSubProjectID,
 		}, c.loggerWatermill)
 		if err != nil {
 			panic(err)
 		}
-		c.publisher = publisher
+		c.eventSourcing.publisher = publisher
 	}
 
-	return c.publisher
+	return c.eventSourcing.publisher
 }
 
 func (c *Container) CQRS() *cqrs.Facade {
-	if c.cqrs != nil {
-		return c.cqrs
+	if c.eventSourcing.cqrsFacade != nil {
+		return c.eventSourcing.cqrsFacade
 	}
 
 	logger := watermill.NewStdLogger(false, false)
@@ -180,7 +190,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 	}
 	router.AddMiddleware(middleware.Recoverer)
 
-	c.cqrsRouter = router
+	c.eventSourcing.cqrsRouter = router
 
 	cqrsFacade, err := cqrs.NewFacade(cqrs.FacadeConfig{
 		GenerateCommandsTopic: func(commandName string) string {
@@ -188,7 +198,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 		},
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
-				unmagnetize.NewCommandHandler(eb, unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.TorrentRepo)),
+				unmagnetize.NewCommandHandler(eb, unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.Repositories.Torrent)),
 			}
 		},
 		CommandsPublisher: c.CommandPublisher(),
@@ -202,11 +212,11 @@ func (c *Container) CQRS() *cqrs.Facade {
 			return []cqrs.EventHandler{
 				downloadPartials.NewTorrentCreatedEventHandler(eb, downloadPartials.NewService(
 					c.Logger,
-					c.TorrentRepo,
+					c.Repositories.Torrent,
 					c.TorrentDownloader(),
 					c.ImageExtractor(),
 					c.ImagePersister,
-					c.ImageRepository),
+					c.Repositories.Image),
 				),
 			}
 		},
@@ -222,16 +232,16 @@ func (c *Container) CQRS() *cqrs.Facade {
 		panic(err)
 	}
 
-	c.cqrs = cqrsFacade
-	return c.cqrs
+	c.eventSourcing.cqrsFacade = cqrsFacade
+	return c.eventSourcing.cqrsFacade
 }
 
 func (c *Container) CQRSRouter() *message.Router {
-	if c.cqrsRouter != nil {
-		return c.cqrsRouter
+	if c.eventSourcing.cqrsRouter != nil {
+		return c.eventSourcing.cqrsRouter
 	}
 
 	_ = c.CQRS() // It creates the router. A router without bindings is useless.
 
-	return c.cqrsRouter
+	return c.eventSourcing.cqrsRouter
 }
