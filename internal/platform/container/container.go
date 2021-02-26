@@ -3,8 +3,8 @@ package container
 import (
 	"database/sql"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"prevtorrent/internal/platform/bus/pubsub"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -13,9 +13,6 @@ import (
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/internal/preview/unmagnetize"
-	"prevtorrent/kit/command"
-
-	"github.com/ThreeDotsLabs/watermill/message"
 
 	"github.com/ThreeDotsLabs/watermill"
 
@@ -32,12 +29,11 @@ type Container struct {
 	imageExtractor     preview.ImageExtractor
 	ImagePersister     preview.ImagePersister
 	ImageRepository    preview.ImageRepository
-	subscriber         command.Subscriber
-	publisher          message.Publisher
 	loggerWatermill    watermill.LoggerAdapter
-	bus                *cqrs.CommandBus
-	messageSubscriber  message.Subscriber
 	cqrs               *cqrs.Facade
+	bus                *cqrs.CommandBus
+	publisher          message.Publisher
+	messageSubscriber  message.Subscriber
 	cqrsRouter         *message.Router
 }
 
@@ -106,29 +102,6 @@ func (c *Container) MagnetClient() preview.MagnetClient {
 
 func (c *Container) TorrentDownloader() preview.TorrentDownloader {
 	return c.getTorrentIntegration()
-}
-
-func (c *Container) Subscriber() command.Subscriber {
-	if c.subscriber == nil {
-		googleSubscriber, err := googlecloud.NewSubscriber(
-			googlecloud.SubscriberConfig{
-				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-				ProjectID:                c.Config.GooglePubSubProjectID,
-			},
-			c.loggerWatermill,
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		subscriber, err := pubsub.NewSubscriber(googleSubscriber)
-		if err != nil {
-			panic(err)
-		}
-		c.subscriber = subscriber
-	}
-
-	return c.subscriber
 }
 
 func (c *Container) CommandSubscriber() message.Subscriber {

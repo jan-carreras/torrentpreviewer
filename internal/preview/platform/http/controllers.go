@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"io/ioutil"
 	"net/http"
 	"prevtorrent/internal/platform/services"
@@ -18,13 +17,11 @@ import (
 )
 
 type Server struct {
-	services   services.Services
-	commandBus *cqrs.CommandBus
-	eventBus   *cqrs.EventBus
+	services services.Services
 }
 
-func NewServer(services services.Services, commandBus *cqrs.CommandBus, eventBus *cqrs.EventBus) *Server {
-	return &Server{services: services, commandBus: commandBus, eventBus: eventBus}
+func NewServer(services services.Services) *Server {
+	return &Server{services: services}
 }
 
 func (s *Server) getTorrentController(c *gin.Context) {
@@ -96,7 +93,7 @@ func (s *Server) unmagnetizeController(ctx *gin.Context) {
 	ctxWithCancellation, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 
-	torrentID, err := s.services.Unmagnetize(s.eventBus).Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
+	torrentID, err := s.services.Unmagnetize().Handle(ctxWithCancellation, unmagnetize.CMD{Magnet: magnet})
 	if err != nil {
 		s.handleError(ctx, err)
 		return
