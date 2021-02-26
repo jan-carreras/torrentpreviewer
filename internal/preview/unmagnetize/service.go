@@ -3,6 +3,7 @@ package unmagnetize
 import (
 	"context"
 	"errors"
+	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 
 	"github.com/sirupsen/logrus"
@@ -10,26 +11,29 @@ import (
 
 type Service struct {
 	log               *logrus.Logger
+	eventBus          bus.Event
 	magnetResolver    preview.MagnetClient
 	torrentRepository preview.TorrentRepository
 }
 
 func NewService(
 	log *logrus.Logger,
+	eventBus bus.Event,
 	magnetResolver preview.MagnetClient,
 	torrentRepository preview.TorrentRepository,
 ) Service {
 	return Service{
 		log:               log,
+		eventBus:          eventBus,
 		magnetResolver:    magnetResolver,
 		torrentRepository: torrentRepository,
 	}
 }
 
-func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
+func (s Service) Handle(ctx context.Context, cmd CMD) (preview.Info, error) {
 	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
-		return "", err
+		return preview.Info{}, err
 	}
 
 	t, err := s.torrentRepository.Get(ctx, m.ID())
@@ -38,7 +42,7 @@ func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
 			"magnet":   m.Value(),
 			"magnetID": m.ID(),
 		}).Debug("already imported in DB. skipping.")
-		return t.ID(), nil
+		return t, nil
 	}
 
 	if !errors.Is(err, preview.ErrNotFound) {
@@ -47,7 +51,7 @@ func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
 			"magnetID": m.ID(),
 			"error":    err,
 		}).Debug("error when reading torrent")
-		return "", err
+		return preview.Info{}, err
 	}
 
 	s.log.WithFields(logrus.Fields{
@@ -57,8 +61,17 @@ func (s Service) Handle(ctx context.Context, cmd CMD) (string, error) {
 
 	torrent, err := s.magnetResolver.Resolve(ctx, m)
 	if err != nil {
-		return "", err
+		return preview.Info{}, err
 	}
 
-	return torrent.ID(), s.torrentRepository.Persist(ctx, torrent)
+	err = s.torrentRepository.Persist(ctx, torrent)
+	if err != nil {
+		return preview.Info{}, err
+	}
+
+	if err := s.eventBus.Publish(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
+		return preview.Info{}, err
+	}
+
+	return torrent, nil
 }

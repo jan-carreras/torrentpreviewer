@@ -81,6 +81,8 @@ func (s *Server) handleError(c *gin.Context, err error) {
 }
 
 func (s *Server) unmagnetizeController(ctx *gin.Context) {
+	// IMPROVEMENT: This is not CQRS since we're returning something in a Command execution :/
+	//       How could I return just the ID? IDK yet
 	magnet := ctx.PostForm("magnet")
 	if len(magnet) == 0 {
 		ctx.JSON(http.StatusBadRequest, httpError{

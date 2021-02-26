@@ -23,7 +23,7 @@ func NewServices(c container.Container) (Services, error) {
 
 func (s *Services) GetTorrent() getTorrent.Service {
 	if s.getTorrent == nil {
-		service := getTorrent.NewService(s.c.Logger, s.c.TorrentRepo, s.c.ImageRepository)
+		service := getTorrent.NewService(s.c.Logger, s.c.Repositories.Torrent, s.c.Repositories.Image)
 		s.getTorrent = &service
 	}
 	return *s.getTorrent
@@ -31,7 +31,7 @@ func (s *Services) GetTorrent() getTorrent.Service {
 
 func (s *Services) Unmagnetize() unmagnetize.Service {
 	if s.unmagnetize == nil {
-		service := unmagnetize.NewService(s.c.Logger, s.c.MagnetClient(), s.c.TorrentRepo)
+		service := unmagnetize.NewService(s.c.Logger, s.c.CQRS().EventBus(), s.c.MagnetClient(), s.c.Repositories.Torrent)
 		s.unmagnetize = &service
 	}
 
@@ -40,7 +40,7 @@ func (s *Services) Unmagnetize() unmagnetize.Service {
 
 func (s *Services) ImportTorrent() importTorrent.Service {
 	if s.importTorrent == nil {
-		service := importTorrent.NewService(s.c.Logger, s.c.TorrentDownloader(), s.c.TorrentRepo)
+		service := importTorrent.NewService(s.c.Logger, s.c.CQRS().CommandBus(), s.c.TorrentDownloader(), s.c.Repositories.Torrent)
 		s.importTorrent = &service
 	}
 	return *s.importTorrent
@@ -51,11 +51,11 @@ func (s *Services) DownloadPartials() downloadPartials.Service {
 	if s.downloadPartials == nil {
 		service := downloadPartials.NewService(
 			s.c.Logger,
-			s.c.TorrentRepo,
+			s.c.Repositories.Torrent,
 			s.c.TorrentDownloader(),
 			s.c.ImageExtractor(),
 			s.c.ImagePersister,
-			s.c.ImageRepository,
+			s.c.Repositories.Image,
 		)
 		s.downloadPartials = &service
 	}

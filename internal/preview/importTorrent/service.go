@@ -3,6 +3,7 @@ package importTorrent
 import (
 	"context"
 	"errors"
+	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 
 	"github.com/sirupsen/logrus"
@@ -10,24 +11,23 @@ import (
 
 type Service struct {
 	logger            *logrus.Logger
+	commandBus        bus.Command
 	torrentDownloader preview.TorrentDownloader
 	torrentRepository preview.TorrentRepository
 }
 
 func NewService(
 	logger *logrus.Logger,
+	commandBus bus.Command,
 	torrentDownloader preview.TorrentDownloader,
 	torrentRepository preview.TorrentRepository,
 ) Service {
 	return Service{
 		logger:            logger,
+		commandBus:        commandBus,
 		torrentDownloader: torrentDownloader,
 		torrentRepository: torrentRepository,
 	}
-}
-
-type CMD struct {
-	TorrentRaw []byte
 }
 
 func (s Service) Import(ctx context.Context, cmd CMD) (preview.Info, error) {
@@ -45,6 +45,10 @@ func (s Service) Import(ctx context.Context, cmd CMD) (preview.Info, error) {
 		if err := s.torrentRepository.Persist(ctx, torrent); err != nil {
 			return preview.Info{}, err
 		}
+	}
+
+	if err := s.commandBus.Send(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
+		return preview.Info{}, err
 	}
 
 	return torrent, err

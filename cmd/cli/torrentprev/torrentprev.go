@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/platform/cli"
 )
@@ -20,9 +19,5 @@ func run() error {
 		return err
 	}
 
-	commandBus, err := bus.MakeCommandBus(bus.Sync, c)
-	if err != nil {
-		return err
-	}
-	return cli.Run(commandBus)
+	return cli.Run(c.CQRS().CommandBus())
 }
