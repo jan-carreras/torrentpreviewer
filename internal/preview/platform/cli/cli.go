@@ -51,7 +51,7 @@ func (h *handlers) transform(c *cli.Context) error {
 	}
 	magnet := c.Args().Get(0)
 
-	return h.commandBus.Send(context.Background(), unmagnetize.CMD{
+	return h.commandBus.Send(context.Background(), &unmagnetize.CMD{
 		Magnet: magnet,
 	})
 }
@@ -62,7 +62,7 @@ func (h *handlers) download(c *cli.Context) error {
 	}
 	torrent := c.Args().Get(0)
 
-	return h.commandBus.Send(context.Background(), downloadPartials.CMD{
+	return h.commandBus.Send(context.Background(), &downloadPartials.CMD{
 		ID: torrent,
 	})
 }

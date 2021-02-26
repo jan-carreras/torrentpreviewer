@@ -192,6 +192,15 @@ func (c *Container) CQRS() *cqrs.Facade {
 
 	c.eventSourcing.cqrsRouter = router
 
+	downloadPartialsService := downloadPartials.NewService(
+		c.Logger,
+		c.Repositories.Torrent,
+		c.TorrentDownloader(),
+		c.ImageExtractor(),
+		c.ImagePersister,
+		c.Repositories.Image,
+	)
+
 	cqrsFacade, err := cqrs.NewFacade(cqrs.FacadeConfig{
 		GenerateCommandsTopic: func(commandName string) string {
 			return commandName
@@ -199,6 +208,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
 				unmagnetize.NewCommandHandler(eb, unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.Repositories.Torrent)),
+				downloadPartials.NewCommandHandler(eb, downloadPartialsService),
 			}
 		},
 		CommandsPublisher: c.CommandPublisher(),
@@ -210,14 +220,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 		},
 		EventHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 			return []cqrs.EventHandler{
-				downloadPartials.NewTorrentCreatedEventHandler(eb, downloadPartials.NewService(
-					c.Logger,
-					c.Repositories.Torrent,
-					c.TorrentDownloader(),
-					c.ImageExtractor(),
-					c.ImagePersister,
-					c.Repositories.Image),
-				),
+				downloadPartials.NewTorrentCreatedEventHandler(eb, downloadPartialsService),
 			}
 		},
 		EventsPublisher: c.EventPublisher(),
