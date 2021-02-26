@@ -31,7 +31,6 @@ type Container struct {
 	ImageRepository    preview.ImageRepository
 	loggerWatermill    watermill.LoggerAdapter
 	cqrs               *cqrs.Facade
-	bus                *cqrs.CommandBus
 	publisher          message.Publisher
 	messageSubscriber  message.Subscriber
 	cqrsRouter         *message.Router
