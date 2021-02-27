@@ -47,7 +47,7 @@ func parseTorrent(t *torrent.Torrent) (preview.Info, error) {
 	}
 
 	files := make([]preview.FileInfo, 0)
-	for idx, f := range t.Info().Files {
+	for idx, f := range t.Info().UpvertedFiles() {
 		fi, err := preview.NewFileInfo(idx, int(f.Length), f.DisplayPath(t.Info()))
 		if err != nil {
 			return preview.Info{}, err
