@@ -20,8 +20,10 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - run: go get github.com/vektra/mockery/v2/.../
+      - run: apt-get install -y libsqlite3-dev
 
       - run: make test
+      - run: make test-integration
       - run: make check
 
 workflows:
