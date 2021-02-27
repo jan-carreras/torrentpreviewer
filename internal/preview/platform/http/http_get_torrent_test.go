@@ -5,8 +5,6 @@ package http
 import (
 	"database/sql"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +12,9 @@ import (
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/platform/services"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Database is automatically created but we should remove it afterwards

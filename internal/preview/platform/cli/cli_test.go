@@ -1,13 +1,14 @@
 package cli_test
 
 import (
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"prevtorrent/internal/platform/bus/busmocks"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/cli"
 	"prevtorrent/internal/preview/unmagnetize"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTorrentPrev_MagnetEventIsTriggered(t *testing.T) {
