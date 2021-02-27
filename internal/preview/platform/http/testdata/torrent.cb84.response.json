@@ -1,0 +1,29 @@
+{
+    "torrent": {
+        "id": "cb84ccc10f296df72d6c40ba7a07c178a4323a14",
+        "name": "Test Name",
+        "length": 1000,
+        "files": [
+            {
+                "id": 0,
+                "length": 600,
+                "is_supported": true,
+                "name": "film1.mp4",
+                "images": [
+                    {
+                        "source": "fil1.mp4.pjg",
+                        "length": 10,
+                        "is_valid": true
+                    }
+                ]
+            },
+            {
+                "id": 1,
+                "length": 400,
+                "is_supported": false,
+                "name": "img2.jpg",
+                "images": []
+            }
+        ]
+    }
+}

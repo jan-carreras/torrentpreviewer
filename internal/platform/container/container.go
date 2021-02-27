@@ -58,6 +58,12 @@ type container struct {
 	repositories       repositories
 	loggerWatermill    watermill.LoggerAdapter
 	eventSourcing      eventSourcing
+
+	db *sql.DB
+}
+
+type testingContainer struct {
+	*container
 }
 
 func NewDefaultContainer() (*container, error) {
@@ -96,7 +102,19 @@ func NewDefaultContainer() (*container, error) {
 			image:   imageRepository,
 		},
 		imagePersister: imagePersister,
+		db:             sqliteDatabase,
 	}, nil
+}
+
+func NewTestingContainer() (testingContainer, error) {
+	c, err := NewDefaultContainer()
+	return testingContainer{
+		container: c,
+	}, err
+}
+
+func (t *testingContainer) GetSQLDatabase() *sql.DB {
+	return t.db
 }
 
 func (c *container) Config() configuration.Config {
