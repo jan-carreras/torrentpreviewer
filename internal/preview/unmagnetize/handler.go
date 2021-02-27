@@ -2,6 +2,7 @@ package unmagnetize
 
 import (
 	"context"
+
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 )
 

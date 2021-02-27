@@ -2,9 +2,6 @@ package container
 
 import (
 	"database/sql"
-	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -13,6 +10,10 @@ import (
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/internal/preview/unmagnetize"
+
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 
 	"github.com/ThreeDotsLabs/watermill"
 
