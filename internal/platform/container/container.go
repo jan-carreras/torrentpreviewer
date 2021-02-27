@@ -182,24 +182,12 @@ func (c *Container) CQRS() *cqrs.Facade {
 		return c.eventSourcing.cqrsFacade
 	}
 
-	logger := watermill.NewStdLogger(false, false)
-
 	router, err := message.NewRouter(message.RouterConfig{}, c.loggerWatermill)
 	if err != nil {
 		panic(err)
 	}
 	router.AddMiddleware(middleware.Recoverer)
-
 	c.eventSourcing.cqrsRouter = router
-
-	downloadPartialsService := downloadPartials.NewService(
-		c.Logger,
-		c.Repositories.Torrent,
-		c.TorrentDownloader(),
-		c.ImageExtractor(),
-		c.ImagePersister,
-		c.Repositories.Image,
-	)
 
 	cqrsFacade, err := cqrs.NewFacade(cqrs.FacadeConfig{
 		GenerateCommandsTopic: func(commandName string) string {
@@ -207,8 +195,8 @@ func (c *Container) CQRS() *cqrs.Facade {
 		},
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
-				unmagnetize.NewCommandHandler(eb, unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.Repositories.Torrent)),
-				downloadPartials.NewCommandHandler(eb, downloadPartialsService),
+				unmagnetize.NewCommandHandler(eb, c.unmagnetizeService(eb)),
+				downloadPartials.NewCommandHandler(eb, c.downloadPartialsService()),
 			}
 		},
 		CommandsPublisher: c.CommandPublisher(),
@@ -220,7 +208,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 		},
 		EventHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 			return []cqrs.EventHandler{
-				downloadPartials.NewTorrentCreatedEventHandler(eb, downloadPartialsService),
+				downloadPartials.NewTorrentCreatedEventHandler(eb, c.downloadPartialsService()),
 			}
 		},
 		EventsPublisher: c.EventPublisher(),
@@ -229,7 +217,7 @@ func (c *Container) CQRS() *cqrs.Facade {
 		},
 		Router:                router,
 		CommandEventMarshaler: cqrs.JSONMarshaler{},
-		Logger:                logger,
+		Logger:                c.loggerWatermill,
 	})
 	if err != nil {
 		panic(err)
@@ -247,4 +235,19 @@ func (c *Container) CQRSRouter() *message.Router {
 	_ = c.CQRS() // It creates the router. A router without bindings is useless.
 
 	return c.eventSourcing.cqrsRouter
+}
+
+func (c *Container) downloadPartialsService() downloadPartials.Service {
+	return downloadPartials.NewService(
+		c.Logger,
+		c.Repositories.Torrent,
+		c.TorrentDownloader(),
+		c.ImageExtractor(),
+		c.ImagePersister,
+		c.Repositories.Image,
+	)
+}
+
+func (c *Container) unmagnetizeService(eb *cqrs.EventBus) unmagnetize.Service {
+	return unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.Repositories.Torrent)
 }
