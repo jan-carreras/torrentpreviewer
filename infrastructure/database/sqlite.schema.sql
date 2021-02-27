@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS media
     FOREIGN KEY (torrent_id, file_id) REFERENCES files (torrent_id, id),
     UNIQUE (torrent_id, file_id, name)
 );
-CREATE INDEX media_torrent_id_file_id ON media (torrent_id, file_id);
+CREATE INDEX IF NOT EXISTS media_torrent_id_file_id ON media (torrent_id, file_id);
