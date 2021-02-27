@@ -2,6 +2,7 @@ package container
 
 import (
 	"database/sql"
+	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
@@ -22,9 +23,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//go:generate mockery --case=snake --outpkg=containermocks --output=containermocks --name=Container
+type Container interface {
+	Config() configuration.Config
+	Logger() *logrus.Logger
+	ImagePersister() preview.ImagePersister
+	ImageExtractor() preview.ImageExtractor
+	MagnetClient() preview.MagnetClient
+	TorrentDownloader() preview.TorrentDownloader
+	CommandBus() bus.Command
+	EventBus() bus.Event
+	TorrentRepository() preview.TorrentRepository
+	ImageRepository() preview.ImageRepository
+}
+
 type repositories struct {
-	Torrent preview.TorrentRepository
-	Image   preview.ImageRepository
+	torrent preview.TorrentRepository
+	image   preview.ImageRepository
 }
 
 type eventSourcing struct {
@@ -34,21 +49,21 @@ type eventSourcing struct {
 	cqrsRouter        *message.Router
 }
 
-type Container struct {
-	Config             configuration.Config
-	Logger             *logrus.Logger
+type container struct {
+	config             configuration.Config
+	logger             *logrus.Logger
 	torrentIntegration *bittorrentproto.TorrentClient
 	imageExtractor     preview.ImageExtractor
-	ImagePersister     preview.ImagePersister
-	Repositories       repositories
+	imagePersister     preview.ImagePersister
+	repositories       repositories
 	loggerWatermill    watermill.LoggerAdapter
 	eventSourcing      eventSourcing
 }
 
-func NewDefaultContainer() (Container, error) {
+func NewDefaultContainer() (*container, error) {
 	config, err := configuration.NewConfig()
 	if err != nil {
-		return Container{}, err
+		return nil, err
 	}
 
 	logger := logrus.New()
@@ -56,7 +71,7 @@ func NewDefaultContainer() (Container, error) {
 
 	logLevel, err := logrus.ParseLevel(config.LogLevel)
 	if err != nil {
-		return Container{}, err
+		return nil, err
 	}
 	logger.Level = logLevel
 
@@ -66,27 +81,39 @@ func NewDefaultContainer() (Container, error) {
 
 	sqliteDatabase, err := sql.Open("sqlite3", config.SqlitePath)
 	if err != nil {
-		return Container{}, err
+		return nil, err
 	}
 
 	torrentRepo := sqlite.NewTorrentRepository(sqliteDatabase)
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
-	return Container{
-		Config:          config,
-		Logger:          logger,
+	return &container{
+		config:          config,
+		logger:          logger,
 		loggerWatermill: loggerWatermill,
-		Repositories: repositories{
-			Torrent: torrentRepo,
-			Image:   imageRepository,
+		repositories: repositories{
+			torrent: torrentRepo,
+			image:   imageRepository,
 		},
-		ImagePersister: imagePersister,
+		imagePersister: imagePersister,
 	}, nil
 }
 
-func (c *Container) ImageExtractor() preview.ImageExtractor {
+func (c *container) Config() configuration.Config {
+	return c.config
+}
+
+func (c *container) Logger() *logrus.Logger {
+	return c.logger
+}
+
+func (c *container) ImagePersister() preview.ImagePersister {
+	return c.imagePersister
+}
+
+func (c *container) ImageExtractor() preview.ImageExtractor {
 	if c.imageExtractor == nil {
-		imageExtractor, err := ffmpeg.NewInMemoryFfmpeg(c.Logger)
+		imageExtractor, err := ffmpeg.NewInMemoryFfmpeg(c.logger)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -95,90 +122,41 @@ func (c *Container) ImageExtractor() preview.ImageExtractor {
 	return c.imageExtractor
 }
 
-func (c *Container) getTorrentIntegration() *bittorrentproto.TorrentClient {
-	if c.torrentIntegration == nil {
-		torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(c.Config))
-		if err != nil {
-			panic(err)
-		}
-		c.torrentIntegration = bittorrentproto.NewTorrentClient(torrentClient, c.Logger)
-	}
-	return c.torrentIntegration
-}
-
-func (c *Container) MagnetClient() preview.MagnetClient {
+func (c *container) MagnetClient() preview.MagnetClient {
 	return c.getTorrentIntegration()
 }
 
-func (c *Container) TorrentDownloader() preview.TorrentDownloader {
+func (c *container) TorrentDownloader() preview.TorrentDownloader {
 	return c.getTorrentIntegration()
 }
 
-func (c *Container) CommandSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber == nil {
-		googleSubscriber, err := googlecloud.NewSubscriber(
-			googlecloud.SubscriberConfig{
-				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-				ProjectID:                c.Config.GooglePubSubProjectID,
-			},
-			c.loggerWatermill,
-		)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.messageSubscriber = googleSubscriber
-	}
-
-	return c.eventSourcing.messageSubscriber
+func (c *container) CommandBus() bus.Command {
+	return c.cqrs().CommandBus()
 }
 
-func (c *Container) EventSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber == nil {
-		googleSubscriber, err := googlecloud.NewSubscriber(
-			googlecloud.SubscriberConfig{
-				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-				ProjectID:                c.Config.GooglePubSubProjectID,
-			},
-			c.loggerWatermill,
-		)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.messageSubscriber = googleSubscriber
-	}
-
-	return c.eventSourcing.messageSubscriber
+func (c *container) EventBus() bus.Event {
+	return c.cqrs().EventBus()
 }
 
-func (c *Container) CommandPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
-			ProjectID: c.Config.GooglePubSubProjectID,
-		}, c.loggerWatermill)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.publisher = publisher
+func (c *container) CQRSRouter() *message.Router {
+	if c.eventSourcing.cqrsRouter != nil {
+		return c.eventSourcing.cqrsRouter
 	}
 
-	return c.eventSourcing.publisher
+	_ = c.cqrs() // It creates the router. A router without bindings is useless.
+
+	return c.eventSourcing.cqrsRouter
 }
 
-func (c *Container) EventPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
-			ProjectID: c.Config.GooglePubSubProjectID,
-		}, c.loggerWatermill)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.publisher = publisher
-	}
-
-	return c.eventSourcing.publisher
+func (c *container) TorrentRepository() preview.TorrentRepository {
+	return c.repositories.torrent
 }
 
-func (c *Container) CQRS() *cqrs.Facade {
+func (c *container) ImageRepository() preview.ImageRepository {
+	return c.repositories.image
+}
+
+func (c *container) cqrs() *cqrs.Facade {
 	if c.eventSourcing.cqrsFacade != nil {
 		return c.eventSourcing.cqrsFacade
 	}
@@ -200,9 +178,9 @@ func (c *Container) CQRS() *cqrs.Facade {
 				downloadPartials.NewCommandHandler(eb, c.downloadPartialsService()),
 			}
 		},
-		CommandsPublisher: c.CommandPublisher(),
+		CommandsPublisher: c.commandPublisher(),
 		CommandsSubscriberConstructor: func(handlerName string) (message.Subscriber, error) {
-			return c.CommandSubscriber(), nil
+			return c.commandSubscriber(), nil
 		},
 		GenerateEventsTopic: func(eventName string) string {
 			return eventName
@@ -212,9 +190,9 @@ func (c *Container) CQRS() *cqrs.Facade {
 				downloadPartials.NewTorrentCreatedEventHandler(eb, c.downloadPartialsService()),
 			}
 		},
-		EventsPublisher: c.EventPublisher(),
+		EventsPublisher: c.eventPublisher(),
 		EventsSubscriberConstructor: func(handlerName string) (message.Subscriber, error) {
-			return c.EventSubscriber(), nil
+			return c.eventSubscriber(), nil
 		},
 		Router:                router,
 		CommandEventMarshaler: cqrs.JSONMarshaler{},
@@ -228,27 +206,92 @@ func (c *Container) CQRS() *cqrs.Facade {
 	return c.eventSourcing.cqrsFacade
 }
 
-func (c *Container) CQRSRouter() *message.Router {
-	if c.eventSourcing.cqrsRouter != nil {
-		return c.eventSourcing.cqrsRouter
+func (c *container) commandSubscriber() message.Subscriber {
+	if c.eventSourcing.messageSubscriber == nil {
+		googleSubscriber, err := googlecloud.NewSubscriber(
+			googlecloud.SubscriberConfig{
+				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
+				ProjectID:                c.config.GooglePubSubProjectID,
+			},
+			c.loggerWatermill,
+		)
+		if err != nil {
+			panic(err)
+		}
+		c.eventSourcing.messageSubscriber = googleSubscriber
 	}
 
-	_ = c.CQRS() // It creates the router. A router without bindings is useless.
-
-	return c.eventSourcing.cqrsRouter
+	return c.eventSourcing.messageSubscriber
 }
 
-func (c *Container) downloadPartialsService() downloadPartials.Service {
+func (c *container) eventSubscriber() message.Subscriber {
+	if c.eventSourcing.messageSubscriber == nil {
+		googleSubscriber, err := googlecloud.NewSubscriber(
+			googlecloud.SubscriberConfig{
+				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
+				ProjectID:                c.config.GooglePubSubProjectID,
+			},
+			c.loggerWatermill,
+		)
+		if err != nil {
+			panic(err)
+		}
+		c.eventSourcing.messageSubscriber = googleSubscriber
+	}
+
+	return c.eventSourcing.messageSubscriber
+}
+
+func (c *container) commandPublisher() message.Publisher {
+	if c.eventSourcing.publisher == nil {
+		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
+			ProjectID: c.config.GooglePubSubProjectID,
+		}, c.loggerWatermill)
+		if err != nil {
+			panic(err)
+		}
+		c.eventSourcing.publisher = publisher
+	}
+
+	return c.eventSourcing.publisher
+}
+
+func (c *container) eventPublisher() message.Publisher {
+	if c.eventSourcing.publisher == nil {
+		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
+			ProjectID: c.config.GooglePubSubProjectID,
+		}, c.loggerWatermill)
+		if err != nil {
+			panic(err)
+		}
+		c.eventSourcing.publisher = publisher
+	}
+
+	return c.eventSourcing.publisher
+}
+
+func (c *container) getTorrentIntegration() *bittorrentproto.TorrentClient {
+	if c.torrentIntegration == nil {
+		torrentClient, err := torrent.NewClient(configuration.GetTorrentConf(c.config))
+		if err != nil {
+			panic(err)
+		}
+		c.torrentIntegration = bittorrentproto.NewTorrentClient(torrentClient, c.logger)
+	}
+	return c.torrentIntegration
+}
+
+func (c *container) downloadPartialsService() downloadPartials.Service {
 	return downloadPartials.NewService(
-		c.Logger,
-		c.Repositories.Torrent,
+		c.logger,
+		c.repositories.torrent,
 		c.TorrentDownloader(),
 		c.ImageExtractor(),
-		c.ImagePersister,
-		c.Repositories.Image,
+		c.imagePersister,
+		c.repositories.image,
 	)
 }
 
-func (c *Container) unmagnetizeService(eb *cqrs.EventBus) unmagnetize.Service {
-	return unmagnetize.NewService(c.Logger, eb, c.MagnetClient(), c.Repositories.Torrent)
+func (c *container) unmagnetizeService(eb *cqrs.EventBus) unmagnetize.Service {
+	return unmagnetize.NewService(c.logger, eb, c.MagnetClient(), c.repositories.torrent)
 }

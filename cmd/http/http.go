@@ -20,7 +20,7 @@ func run() error {
 		return err
 	}
 
-	c.Config.Print(os.Stdout)
+	c.Config().Print(os.Stdout)
 
 	s, err := services.NewServices(c)
 	if err != nil {
