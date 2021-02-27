@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"os"
 	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview/downloadPartials"
 	"prevtorrent/internal/preview/unmagnetize"
@@ -19,7 +18,7 @@ func newHandlers(bus bus.Command) *handlers {
 	return &handlers{commandBus: bus}
 }
 
-func Run(bus bus.Command) error {
+func Run(args []string, bus bus.Command) error {
 	handlers := newHandlers(bus)
 
 	app := &cli.App{
@@ -37,16 +36,16 @@ func Run(bus bus.Command) error {
 				Name:  "magnet",
 				Usage: "transforms a magnet link into a torrent and imports it",
 				Action: func(c *cli.Context) error {
-					return handlers.transform(c)
+					return handlers.magnet(c)
 				},
 			},
 		},
 	}
 
-	return app.Run(os.Args)
+	return app.Run(args)
 }
 
-func (h *handlers) transform(c *cli.Context) error {
+func (h *handlers) magnet(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return errors.New("invalid arguments. Second parameter must be a magnet")
 	}

@@ -2,22 +2,19 @@ package main
 
 import (
 	"log"
+	"os"
 	"prevtorrent/internal/platform/container"
 	"prevtorrent/internal/preview/platform/cli"
 )
 
 func main() {
-	err := run()
+	c, err := container.NewDefaultContainer()
 	if err != nil {
 		log.Fatal(err)
 	}
-}
 
-func run() error {
-	c, err := container.NewDefaultContainer()
+	err = cli.Run(os.Args, c.CommandBus())
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-
-	return cli.Run(c.CQRS().CommandBus())
 }
