@@ -14,46 +14,46 @@
 - [ ] Reduce disk/memory usage
     - [x] We're never cleaning up boldDB and will get huge. #mvp
     - [x] In big torrents we are not liberating memory for the downloaded parts until the whole process is finished
-    - [ ] We have OOMKiller around. Use queues to process smaller DownloadPlans
+    - [~] We have OOMKiller around. Use queues to process smaller DownloadPlans
     - [x] Limit the size of the download data in the Download Plan. Provisionally 100MB.
 - [ ] Support other media content
     - [x] Support .wmv
     - [x] Support .avi
     - [x] Support .mov
-    - [ ] Support jpg/jpeg
+    - [~] Support jpg/jpeg
 - [ ] Implement the HTTP endpoints
     - [x] POST /unmagnetize
     - [x] POST /torrent #mvp
     - [x] GET /torrent/:id #mvp
-    - [ ] DELETE /torrent/:id
-    - [ ] Document API using OpenAPI specification
-    - [ ] Redis Cache
+    - [~] DELETE /torrent/:id
+    - [x] Document API using OpenAPI specification
+    - [~] Redis Cache
         - [ ] This endpoint should make intensive use of Redis for caching for reading
         - [ ] Think a way to reflect all changes from sqlite to the cache with minimal performance impact
-    - [ ] Simple auth
-        - [ ] Is there a simplified JWT? If not, basic auth will be more than nothing
-- [ ] Refine CLI
+    - [/] Simple auth
+        - [/] Is there a simplified JWT? If not, basic auth will be more than nothing
+- [x] Refine CLI
     - [x] Use a proper CLI framework for the commands & stuff
-    - [ ] Implement graceful shutdown #mvp
-- [ ] Project general improvements
-    - [ ] Improve coverage in Domain
+    - [x] Implement graceful shutdown #mvp
+- [~] Project general improvements
+    - [~] Improve coverage in Domain
     - [x] Test the infrastructure regarding SQLite
     - [x] Test for file storage
-    - [ ] Test for inmemory storages
-    - [ ] All Repositories and Services must return an error
+    - [x] Test for inmemory storages
+    - [/] All Repositories and Services must return an error on creation
     - [x] Ensure that all the queries are executed within a Context
     - [x] Remove the need to bind the bittorrent client to a port
-- [ ] Project
+- [~] Project
     - [x] Publish it to a public repository #mvp
     - [x] Rethink license
     - [x] Add linters & checkers to ensure source code is good #mvp
-    - [ ] Add usual automation stuff
+    - [~] Add usual automation stuff
 - [ ] Front end.... sigh. Can someone help with that? I don't really fancy doing it...
     - [ ] Make an MVP
         - [x] Magnet input
-        - [ ] Torrent uploader #mvp
+        - [] Torrent uploader #mvp
         - [x] Static torrent view with thumbnails
-        - [ ] Automatically refresh new images using AJAX
+        - [~] Automatically refresh new images using AJAX
 - Prepare for Production #mvp
     - [ ] Create a virtual credit card to pay for all this shite
     - [ ] Image storage: Check in lowendbox.com something with proper storage
@@ -65,11 +65,9 @@
 - Bugs
     - [x] In production, we have a bug that "go-libutp@v1.0.4/conn.go:73" seems to deathlock or whatever. Be able to
       disable uTP should fix it.
-    - [ ] Add more seeders per torrent. Right now everything is going crazy slow
+    - [/] Add more seeders per torrent. Right now everything is going crazy slow
 - Improvements
-    - [ ] Support for GIF creation of all images of the torrent
-    - [ ] ... or webm
-    - [ ] Links to GIF/webm in torrent file
-    - [ ] Download images from torrent to show as videos
+    - [~] Links to GIF/webm in torrent file
+    - [~] Download images from torrent to show as videos
 - Other search capabilities
-    - [ ] Full text search on files inside torrent
+    - [~] Full text search on files inside torrent
