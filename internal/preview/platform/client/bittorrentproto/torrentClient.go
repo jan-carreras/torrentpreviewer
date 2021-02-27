@@ -47,7 +47,7 @@ func parseTorrent(t *torrent.Torrent) (preview.Info, error) {
 	}
 
 	files := make([]preview.FileInfo, 0)
-	for idx, f := range t.Info().Files {
+	for idx, f := range t.Info().UpvertedFiles() {
 		fi, err := preview.NewFileInfo(idx, int(f.Length), f.DisplayPath(t.Info()))
 		if err != nil {
 			return preview.Info{}, err
@@ -268,7 +268,7 @@ func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
 	return buf
 }
 
-func (r *TorrentClient) Import(ctx context.Context, raw []byte) (preview.Info, error) {
+func (r *TorrentClient) Import(_ context.Context, raw []byte) (preview.Info, error) {
 	data := bytes.NewBuffer(raw)
 	metaInfo, err := metainfo.Load(data)
 	if err != nil {

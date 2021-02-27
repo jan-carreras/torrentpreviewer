@@ -45,10 +45,9 @@ func (s Service) Import(ctx context.Context, cmd CMD) (preview.Info, error) {
 		if err := s.torrentRepository.Persist(ctx, torrent); err != nil {
 			return preview.Info{}, err
 		}
-	}
-
-	if err := s.commandBus.Send(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
-		return preview.Info{}, err
+		if err := s.commandBus.Send(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
+			return preview.Info{}, err
+		}
 	}
 
 	return torrent, err
