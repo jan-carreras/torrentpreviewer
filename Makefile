@@ -1,6 +1,14 @@
 #!/usr/bin/make -f
 FILES		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
+CGO_ENABLED = 1
+ifeq ($(shell uname -s),Linux)
+	OSFLAG = linux
+endif
+ifeq ($(shell uname -s),Darwin)
+	OSFLAG = darwin
+endif
+
 
 .PHONY: default
 default: help
@@ -39,6 +47,9 @@ test-cover: generate ## run tests with coverage
 test-fast: ## run tests without generating mocks
 	go test ./...
 
+test-integration: ## run the integration tests without generating mocks
+	go test --tags "libsqlite3 ${OSFLAG} integration" ./...
+
 .PHONY: fmt
 fmt:    ## format the go source files
 	go fmt ./...
@@ -65,34 +76,17 @@ mvp: ## Show pending tasks to be done for MVP
 	@grep "\[ \]" TODO | grep mvp
 
 .PHONY: build
-build: build-clean build-osx
+build: build-clean bin/torrentprev bin/http-api bin/http-events
 
 .PHONY: build-clean
 build-clean:
 	rm -f bin/*
 
-.PHONY: build-linux
-build-linux: build-clean bin/linux-torrentprev bin/linux-http-api bin/linux-events
+bin/torrentprev:
+	go build --tags "libsqlite3 ${OSFLAG}" -o ./bin/torrentprev ./cmd/cli/torrentprev/torrentprev.go
 
-bin/linux-torrentprev:
-	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-torrentprev ./cmd/cli/torrentprev/torrentprev.go
+bin/http-api:
+	go build --tags "libsqlite3 ${OSFLAG}" -o ./bin/http ./cmd/http/http.go
 
-bin/linux-http-api:
-	CGO_ENABLED=1 GOOS=linux go build --tags "libsqlite3 linux" -o ./bin/linux-http ./cmd/http/http.go
-
-bin/linux-events:
-	CGO_ENABLED=1 go build --tags "libsqlite3 linux" -o ./bin/linux-events cmd/cli/events/events.go
-
-build-osx: bin/darwin-torrentprev bin/darwin-http-api darwin-events
-
-bin/darwin-torrentprev:
-	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-torrentprev ./cmd/cli/torrentprev/torrentprev.go
-
-bin/darwin-http-api:
-	GOOS=darwin go build --tags "libsqlite3 darwin" -o ./bin/darwin-http ./cmd/http/http.go
-
-bin/darwin-events:
-	CGO_ENABLED=1 go build --tags "libsqlite3 darwin" -o ./bin/darwin-events cmd/cli/events/events.go
-
-
-
+bin/http-events:
+	go build --tags "libsqlite3 ${OSFLAG}" -o ./bin/events cmd/cli/events/events.go
