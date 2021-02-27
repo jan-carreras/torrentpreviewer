@@ -37,25 +37,25 @@ func NewMagnet(value string) (Magnet, error) {
 	if err != nil {
 		return Magnet{}, err
 	}
-
-	if len(id) != 40 {
-		return Magnet{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
-	}
-
 	return Magnet{id: strings.ToLower(id), value: value}, nil
 }
 
 func toBase32(encoded string) (string, error) {
-	if len(encoded) != 32 {
-		return encoded, nil
+	if len(encoded) == 32 {
+		b := make([]byte, 20)
+		_, err := base32.StdEncoding.Decode(b, []byte(strings.ToUpper(encoded)))
+		if err != nil {
+			return "", err
+		}
+
+		encoded = fmt.Sprintf("%x", b[:])
 	}
 
-	b := make([]byte, 20)
-	_, err := base32.StdEncoding.Decode(b, []byte(strings.ToUpper(encoded)))
-	if err != nil {
-		return "", err
+	if len(encoded) != 40 {
+		return "", errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
 	}
-	return fmt.Sprintf("%x", b[:]), nil
+
+	return encoded, nil
 }
 
 // Value returns the URI of the magnet
