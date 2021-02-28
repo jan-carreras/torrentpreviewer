@@ -19,7 +19,9 @@ func TestConfiguration(t *testing.T) {
 		ConnectionsPerTorrent: 100,
 		TorrentListeningPort:  1234,
 		TorrentStorageDriver:  "TorrentStorageDriver",
+		PubSubDriver:          "PubSubDriver",
 		GooglePubSubProjectID: "GooglePubSubProjectID",
+		AMQPURI:               "AMQPURI",
 	}
 
 	config, err := configuration.NewConfig()

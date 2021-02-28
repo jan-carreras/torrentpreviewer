@@ -12,13 +12,10 @@ import (
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/internal/preview/unmagnetize"
 
+	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-
-	"github.com/ThreeDotsLabs/watermill"
-
-	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 	"github.com/anacrolix/torrent"
 	"github.com/sirupsen/logrus"
 )
@@ -43,6 +40,7 @@ type repositories struct {
 }
 
 type eventSourcing struct {
+	eventDriver       events
 	cqrsFacade        *cqrs.Facade
 	publisher         message.Publisher
 	messageSubscriber message.Subscriber
@@ -93,6 +91,8 @@ func NewDefaultContainer() (*container, error) {
 	torrentRepo := sqlite.NewTorrentRepository(sqliteDatabase)
 	imageRepository := sqlite.NewImageRepository(sqliteDatabase)
 
+	eventDriver := makeEventDriver(config, loggerWatermill)
+
 	return &container{
 		config:          config,
 		logger:          logger,
@@ -103,6 +103,9 @@ func NewDefaultContainer() (*container, error) {
 		},
 		imagePersister: imagePersister,
 		db:             sqliteDatabase,
+		eventSourcing: eventSourcing{
+			eventDriver: eventDriver,
+		},
 	}, nil
 }
 
@@ -208,13 +211,11 @@ func (c *container) cqrs() *cqrs.Facade {
 				downloadPartials.NewTorrentCreatedEventHandler(eb, c.downloadPartialsService()),
 			}
 		},
-		EventsPublisher: c.eventPublisher(),
-		EventsSubscriberConstructor: func(handlerName string) (message.Subscriber, error) {
-			return c.eventSubscriber(), nil
-		},
-		Router:                router,
-		CommandEventMarshaler: cqrs.JSONMarshaler{},
-		Logger:                c.loggerWatermill,
+		EventsPublisher:             c.eventPublisher(),
+		EventsSubscriberConstructor: c.eventSourcing.eventDriver.eventSubscriber,
+		Router:                      router,
+		CommandEventMarshaler:       cqrs.JSONMarshaler{},
+		Logger:                      c.loggerWatermill,
 	})
 	if err != nil {
 		panic(err)
@@ -224,65 +225,25 @@ func (c *container) cqrs() *cqrs.Facade {
 	return c.eventSourcing.cqrsFacade
 }
 
-func (c *container) commandSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber == nil {
-		googleSubscriber, err := googlecloud.NewSubscriber(
-			googlecloud.SubscriberConfig{
-				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-				ProjectID:                c.config.GooglePubSubProjectID,
-			},
-			c.loggerWatermill,
-		)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.messageSubscriber = googleSubscriber
-	}
-
-	return c.eventSourcing.messageSubscriber
-}
-
-func (c *container) eventSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber == nil {
-		googleSubscriber, err := googlecloud.NewSubscriber(
-			googlecloud.SubscriberConfig{
-				GenerateSubscriptionName: googlecloud.TopicSubscriptionName,
-				ProjectID:                c.config.GooglePubSubProjectID,
-			},
-			c.loggerWatermill,
-		)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.messageSubscriber = googleSubscriber
-	}
-
-	return c.eventSourcing.messageSubscriber
-}
-
 func (c *container) commandPublisher() message.Publisher {
 	if c.eventSourcing.publisher == nil {
-		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
-			ProjectID: c.config.GooglePubSubProjectID,
-		}, c.loggerWatermill)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.publisher = publisher
+		c.eventSourcing.publisher = c.eventSourcing.eventDriver.commandPublisher()
 	}
 
 	return c.eventSourcing.publisher
 }
 
+func (c *container) commandSubscriber() message.Subscriber {
+	if c.eventSourcing.messageSubscriber != nil {
+		return c.eventSourcing.messageSubscriber
+	}
+	c.eventSourcing.messageSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
+	return c.eventSourcing.messageSubscriber
+}
+
 func (c *container) eventPublisher() message.Publisher {
 	if c.eventSourcing.publisher == nil {
-		publisher, err := googlecloud.NewPublisher(googlecloud.PublisherConfig{
-			ProjectID: c.config.GooglePubSubProjectID,
-		}, c.loggerWatermill)
-		if err != nil {
-			panic(err)
-		}
-		c.eventSourcing.publisher = publisher
+		c.eventSourcing.publisher = c.eventSourcing.eventDriver.eventPublisher()
 	}
 
 	return c.eventSourcing.publisher
