@@ -38,7 +38,7 @@ func Test_MagnetService_Transform_DownloadByNetwork(t *testing.T) {
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrent).Return(nil)
 	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, preview.ErrNotFound)
+		Return(preview.Torrent{}, preview.ErrNotFound)
 
 	eventBus := new(busmocks.Event)
 	eventBus.On(
@@ -88,7 +88,7 @@ func Test_MagnetService_Transform_RepositoryErrorGetTorrent(t *testing.T) {
 
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Persist", mock.Anything, torrentData).Return(nil)
-	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").Return(preview.Info{}, errors.New("fake error"))
+	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").Return(preview.Torrent{}, errors.New("fake error"))
 
 	eventBus := new(busmocks.Event)
 
@@ -118,7 +118,7 @@ func Test_MagnetService_Inspect_RepositoryError(t *testing.T) {
 
 	torrentRepo := new(storagemocks.TorrentRepository)
 	torrentRepo.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, preview.ErrNotFound)
+		Return(preview.Torrent{}, preview.ErrNotFound)
 
 	eventBus := new(busmocks.Event)
 

@@ -22,7 +22,7 @@ func TestService_DownloadPartials_GetTorrentError(t *testing.T) {
 	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
 
 	torrentRepository := new(storagemocks.TorrentRepository)
-	torrentRepository.On("Get", mock.Anything, torrentID).Return(preview.Info{}, errors.New("fake error"))
+	torrentRepository.On("Get", mock.Anything, torrentID).Return(preview.Torrent{}, errors.New("fake error"))
 
 	torrentDownloader := new(clientmocks.TorrentDownloader)
 
@@ -52,7 +52,7 @@ func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
 	f, err := preview.NewFileInfo(0, 100, "video.mp4")
 	assert.NoError(t, err)
 
-	var files []preview.FileInfo
+	var files []preview.File
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 100, files, []byte("torrent-data"))
@@ -93,7 +93,7 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 	f, err := preview.NewFileInfo(0, 100, "video.mp4")
 	require.NoError(t, err)
 
-	var files []preview.FileInfo
+	var files []preview.File
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 100, files, []byte("torrent-data"))
@@ -144,7 +144,7 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	require.NoError(t, err)
 
-	var files []preview.FileInfo
+	var files []preview.File
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))
@@ -198,7 +198,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	require.NoError(t, err)
 
-	var files []preview.FileInfo
+	var files []preview.File
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))
@@ -254,7 +254,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 	f, err := preview.NewFileInfo(0, 10, "video.mp4")
 	require.NoError(t, err)
 
-	var files []preview.FileInfo
+	var files []preview.File
 	files = append(files, f)
 
 	torrent, err := preview.NewInfo(torrentID, "test torrent", 5, files, []byte("torrent-data"))

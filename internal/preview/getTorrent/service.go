@@ -25,21 +25,21 @@ func NewService(
 	}
 }
 
-func (s Service) Get(ctx context.Context, cmd CMD) (preview.Info, error) {
+func (s Service) Get(ctx context.Context, cmd CMD) (preview.Torrent, error) {
 	torrent, err := s.torrentRepo.Get(ctx, cmd.TorrentID)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	images, err := s.imageRepository.ByTorrent(ctx, torrent.ID())
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	for _, img := range images.Images() {
 		file := torrent.File(img.FileID())
 		if err := file.AddImage(img); err != nil {
-			return preview.Info{}, err
+			return preview.Torrent{}, err
 		}
 	}
 

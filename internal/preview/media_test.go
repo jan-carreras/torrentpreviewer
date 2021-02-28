@@ -17,7 +17,7 @@ func TestMediaPart(t *testing.T) {
 
 	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
 	assert.NoError(t, err)
-	files := []preview.FileInfo{fi}
+	files := []preview.File{fi}
 
 	torrent, err := preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
 	assert.NoError(t, err)
@@ -103,7 +103,7 @@ func TestBundlePlan_Bundle(t *testing.T) {
 
 	fi, err := preview.NewFileInfo(0, 100, "movie.mp4")
 	assert.NoError(t, err)
-	files := []preview.FileInfo{fi}
+	files := []preview.File{fi}
 
 	torrent, err := preview.NewInfo(torrentID, "test movie", 25, files, []byte(""))
 	assert.NoError(t, err)

@@ -7,12 +7,12 @@ import (
 
 // DownloadPlan helps to describe what we want to download from the torrent.
 type DownloadPlan struct {
-	torrent     Info
+	torrent     Torrent
 	pieceRanges []PieceRange
 }
 
 // NewDownloadPlan returns a DownloadPlan
-func NewDownloadPlan(torrent Info) *DownloadPlan {
+func NewDownloadPlan(torrent Torrent) *DownloadPlan {
 	return &DownloadPlan{
 		torrent:     torrent,
 		pieceRanges: make([]PieceRange, 0),
@@ -20,7 +20,7 @@ func NewDownloadPlan(torrent Info) *DownloadPlan {
 }
 
 // GetTorrent returns the Torrent to download
-func (dp *DownloadPlan) GetTorrent() Info {
+func (dp *DownloadPlan) GetTorrent() Torrent {
 	return dp.torrent
 }
 
@@ -62,7 +62,7 @@ func (dp *DownloadPlan) DownloadSize() int {
 	return dp.CountPieces() * dp.torrent.pieceLength
 }
 
-func (dp *DownloadPlan) addDownloadToPlan(fi FileInfo, torrentImages *TorrentImages) error {
+func (dp *DownloadPlan) addDownloadToPlan(fi File, torrentImages *TorrentImages) error {
 	length := fi.DownloadSize()
 	offset := 0
 
@@ -98,8 +98,8 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
 // PieceRange describes a section of a file we want to download
 // We need to store various indexes an offsets commented in the struct.
 type PieceRange struct {
-	torrent          Info
-	fi               FileInfo
+	torrent          Torrent
+	fi               File
 	pieceStart       int // Piece pieceStart
 	pieceEnd         int // Piece pieceEnd
 	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
@@ -108,7 +108,7 @@ type PieceRange struct {
 }
 
 // NewPieceRange returns a PieceRange
-func NewPieceRange(torrent Info, fi FileInfo, start, offset, length int) PieceRange {
+func NewPieceRange(torrent Torrent, fi File, start, offset, length int) PieceRange {
 	startPosition := start + offset
 	length = length - 1
 	return PieceRange{
@@ -172,11 +172,11 @@ func (p PieceRange) PieceCount() int {
 }
 
 // Torrent returns the obvious
-func (p PieceRange) Torrent() Info {
+func (p PieceRange) Torrent() Torrent {
 	return p.torrent
 }
 
-func findStartingByteOfFile(t Info, fi FileInfo) int {
+func findStartingByteOfFile(t Torrent, fi File) int {
 	start := 0
 	for _, f := range t.files {
 		if f.IsEqual(fi) {
