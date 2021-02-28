@@ -62,16 +62,16 @@ func (dp *DownloadPlan) DownloadSize() int {
 	return dp.CountPieces() * dp.torrent.pieceLength
 }
 
-func (dp *DownloadPlan) addDownloadToPlan(fi File, torrentImages *TorrentImages) error {
-	length := fi.DownloadSize()
+func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages) error {
+	length := f.DownloadSize()
 	offset := 0
 
-	if !fi.IsSupportedExtension() {
-		return fmt.Errorf("file %s has not a supported extension", fi.name)
+	if !f.IsSupportedExtension() {
+		return fmt.Errorf("file %s has not a supported extension", f.name)
 	}
 
-	if length+offset > fi.length {
-		return fmt.Errorf("length+offset should be less than the total size of the file. having=%v, expecting <= %v", length+offset, fi.length)
+	if length+offset > f.length {
+		return fmt.Errorf("length+offset should be less than the total size of the file. having=%v, expecting <= %v", length+offset, f.length)
 	}
 	if length <= 0 {
 		return fmt.Errorf("only valid positive non-zero lengths. having=%v", length)
@@ -80,8 +80,8 @@ func (dp *DownloadPlan) addDownloadToPlan(fi File, torrentImages *TorrentImages)
 		return fmt.Errorf("only valid positive or zero offsets. having=%v", offset)
 	}
 
-	start := findStartingByteOfFile(dp.torrent, fi)
-	pr := NewPieceRange(dp.torrent, fi, start, offset, length)
+	start := findStartingByteOfFile(dp.torrent, f)
+	pr := NewPieceRange(dp.torrent, f, start, offset, length)
 
 	if torrentImages.HaveImage(pr.Name()) {
 		return nil
@@ -99,7 +99,7 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
 // We need to store various indexes an offsets commented in the struct.
 type PieceRange struct {
 	torrent          Torrent
-	fi               File
+	file             File
 	pieceStart       int // Piece pieceStart
 	pieceEnd         int // Piece pieceEnd
 	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
@@ -108,12 +108,12 @@ type PieceRange struct {
 }
 
 // NewPieceRange returns a PieceRange
-func NewPieceRange(torrent Torrent, fi File, start, offset, length int) PieceRange {
+func NewPieceRange(torrent Torrent, file File, start, offset, length int) PieceRange {
 	startPosition := start + offset
 	length = length - 1
 	return PieceRange{
 		torrent:          torrent,
-		fi:               fi,
+		file:             file,
 		pieceStart:       startPosition / torrent.PieceLength(),
 		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
 		firstPieceOffset: startPosition % torrent.PieceLength(),
@@ -124,11 +124,11 @@ func NewPieceRange(torrent Torrent, fi File, start, offset, length int) PieceRan
 
 // Name returns the name of the file. It's supposed to be HTTP friendly
 func (p PieceRange) Name() string {
-	name := strings.ReplaceAll(p.fi.name, "/", "--")
+	name := strings.ReplaceAll(p.file.name, "/", "--")
 	name = strings.ReplaceAll(name, " ", "-")
 	return fmt.Sprintf("%v.%v.%v-%v.%v.jpg",
 		p.Torrent().ID(),
-		p.fi.idx,
+		p.file.idx,
 		p.Start(),
 		p.End(),
 		name,
@@ -137,7 +137,7 @@ func (p PieceRange) Name() string {
 
 // FileID returns the obvious
 func (p PieceRange) FileID() int {
-	return p.fi.ID()
+	return p.file.ID()
 }
 
 // Starts returns the piece we're going to start with
@@ -176,10 +176,10 @@ func (p PieceRange) Torrent() Torrent {
 	return p.torrent
 }
 
-func findStartingByteOfFile(t Torrent, fi File) int {
+func findStartingByteOfFile(t Torrent, file File) int {
 	start := 0
 	for _, f := range t.files {
-		if f.IsEqual(fi) {
+		if f.IsEqual(file) {
 			break
 		}
 		start += f.length
