@@ -30,10 +30,10 @@ func NewService(
 	}
 }
 
-func (s Service) Import(ctx context.Context, cmd CMD) (preview.Info, error) {
+func (s Service) Import(ctx context.Context, cmd CMD) (preview.Torrent, error) {
 	torrent, err := s.torrentDownloader.Import(ctx, cmd.TorrentRaw)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	if _, err = s.torrentRepository.Get(ctx, torrent.ID()); err == nil {
@@ -43,10 +43,10 @@ func (s Service) Import(ctx context.Context, cmd CMD) (preview.Info, error) {
 	if errors.Is(err, preview.ErrNotFound) {
 		err = nil
 		if err := s.torrentRepository.Persist(ctx, torrent); err != nil {
-			return preview.Info{}, err
+			return preview.Torrent{}, err
 		}
 		if err := s.commandBus.Send(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
-			return preview.Info{}, err
+			return preview.Torrent{}, err
 		}
 	}
 

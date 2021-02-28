@@ -44,7 +44,7 @@ func (s *Server) getTorrentController(c *gin.Context) {
 	})
 }
 
-func makeFiles(torrent preview.Info) []File {
+func makeFiles(torrent preview.Torrent) []File {
 	files := make([]File, 0, len(torrent.Files()))
 	for _, f := range torrent.Files() {
 		images := make([]Image, 0)

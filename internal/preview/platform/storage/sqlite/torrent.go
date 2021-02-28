@@ -20,7 +20,7 @@ func NewTorrentRepository(db *sql.DB) *TorrentRepository {
 	return &TorrentRepository{db: db}
 }
 
-func (r *TorrentRepository) Persist(ctx context.Context, t preview.Info) error {
+func (r *TorrentRepository) Persist(ctx context.Context, t preview.Torrent) error {
 	torrentSQLStruct := sqlbuilder.NewStruct(new(torrent))
 	query, args := torrentSQLStruct.InsertInto(sqlTorrentTable, torrent{
 		ID:          t.ID(),
@@ -47,7 +47,7 @@ func (r *TorrentRepository) Persist(ctx context.Context, t preview.Info) error {
 	return tx.Commit()
 }
 
-func (r *TorrentRepository) storeFiles(tx *sql.Tx, t preview.Info) error {
+func (r *TorrentRepository) storeFiles(tx *sql.Tx, t preview.Torrent) error {
 	fileSQLStructure := sqlbuilder.NewStruct(new(file))
 	for _, f := range t.Files() {
 		newF := file{
@@ -65,7 +65,7 @@ func (r *TorrentRepository) storeFiles(tx *sql.Tx, t preview.Info) error {
 	return nil
 }
 
-func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, error) {
+func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Torrent, error) {
 	id = strings.ToLower(id)
 
 	torrentSQLStruct := sqlbuilder.NewStruct(new(torrent))
@@ -75,28 +75,28 @@ func (r *TorrentRepository) Get(ctx context.Context, id string) (preview.Info, e
 	sqlRaw, args := query.Build()
 	rows, err := r.db.QueryContext(ctx, sqlRaw, args...)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 	defer rows.Close()
 
 	if !rows.Next() {
-		return preview.Info{}, preview.ErrNotFound
+		return preview.Torrent{}, preview.ErrNotFound
 	}
 
 	var t torrent
 	if err := rows.Scan(torrentSQLStruct.Addr(&t)...); err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	files, err := r.readFiles(ctx, id)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	return preview.NewInfo(id, t.Name, t.PieceLength, files, t.Raw)
 }
 
-func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview.FileInfo, error) {
+func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview.File, error) {
 	fileSQLStructure := sqlbuilder.NewStruct(new(file))
 	query := fileSQLStructure.SelectFrom(sqlFileTable)
 	query.Where(query.Equal("torrent_id", id))
@@ -109,7 +109,7 @@ func (r *TorrentRepository) readFiles(ctx context.Context, id string) ([]preview
 	}
 	defer rows.Close()
 
-	var files []preview.FileInfo
+	var files []preview.File
 	for rows.Next() {
 		var f file
 		if err := rows.Scan(fileSQLStructure.Addr(&f)...); err != nil {

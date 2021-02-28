@@ -24,7 +24,7 @@ func TestNewTorrentRepository_StoreTorrentAndImages(t *testing.T) {
 	require.NoError(t, err)
 	f2, err := preview.NewFileInfo(1, 150, "img2.jpg")
 	require.NoError(t, err)
-	files := []preview.FileInfo{f1, f2}
+	files := []preview.File{f1, f2}
 
 	raw := []byte("1234")
 
@@ -68,7 +68,7 @@ func TestNewTorrentRepository_ErrorOnPersist(t *testing.T) {
 	require.NoError(t, err)
 	f2, err := preview.NewFileInfo(1, 150, "img2.jpg")
 	require.NoError(t, err)
-	files := []preview.FileInfo{f1, f2}
+	files := []preview.File{f1, f2}
 
 	raw := []byte("1234")
 

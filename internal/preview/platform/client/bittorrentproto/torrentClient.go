@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anacrolix/torrent"
+	torrent2 "github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/sirupsen/logrus"
 )
@@ -19,38 +19,38 @@ const (
 )
 
 type TorrentClient struct {
-	client *torrent.Client
+	client *torrent2.Client
 	logger *logrus.Logger
 }
 
-func NewTorrentClient(client *torrent.Client, logger *logrus.Logger) *TorrentClient {
+func NewTorrentClient(client *torrent2.Client, logger *logrus.Logger) *TorrentClient {
 	return &TorrentClient{client: client, logger: logger}
 }
 
-func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) (preview.Info, error) {
+func (r *TorrentClient) Resolve(ctx context.Context, m preview.Magnet) (preview.Torrent, error) {
 	t, err := r.client.AddMagnet(m.Value())
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	if err := r.waitForInfo(ctx, t); err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 	return parseTorrent(t)
 }
 
-func parseTorrent(t *torrent.Torrent) (preview.Info, error) {
+func parseTorrent(t *torrent2.Torrent) (preview.Torrent, error) {
 	buf := new(bytes.Buffer)
 	err := t.Metainfo().Write(buf)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
-	files := make([]preview.FileInfo, 0)
+	files := make([]preview.File, 0)
 	for idx, f := range t.Info().UpvertedFiles() {
 		fi, err := preview.NewFileInfo(idx, int(f.Length), f.DisplayPath(t.Info()))
 		if err != nil {
-			return preview.Info{}, err
+			return preview.Torrent{}, err
 		}
 
 		files = append(files, fi)
@@ -65,7 +65,7 @@ func parseTorrent(t *torrent.Torrent) (preview.Info, error) {
 	)
 }
 
-func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent.Torrent) error {
+func (r *TorrentClient) waitForInfo(ctx context.Context, t *torrent2.Torrent) error {
 	select {
 	case <-t.GotInfo():
 		return nil
@@ -100,7 +100,7 @@ func (r *TorrentClient) DownloadParts(ctx context.Context, downloadPlan preview.
 	return registry, nil
 }
 
-func (r *TorrentClient) getTorrent(plan preview.DownloadPlan) (*torrent.Torrent, error) {
+func (r *TorrentClient) getTorrent(plan preview.DownloadPlan) (*torrent2.Torrent, error) {
 	buff := bytes.NewBuffer(plan.GetTorrent().Raw())
 	metaInfo, err := metainfo.Load(buff)
 	if err != nil {
@@ -109,7 +109,7 @@ func (r *TorrentClient) getTorrent(plan preview.DownloadPlan) (*torrent.Torrent,
 	return r.client.AddTorrent(metaInfo)
 }
 
-func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.DownloadPlan) int {
+func countNumberPiecesWaitingFor(t *torrent2.Torrent, downloadPlan preview.DownloadPlan) int {
 	uniquePartsWaitingFor := make(map[int]interface{})
 	for _, plan := range downloadPlan.GetPlan() {
 		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
@@ -122,7 +122,7 @@ func countNumberPiecesWaitingFor(t *torrent.Torrent, downloadPlan preview.Downlo
 	return len(uniquePartsWaitingFor)
 }
 
-func (r *TorrentClient) publishPartsThatWeAlreadyHave(wg *sync.WaitGroup, t *torrent.Torrent, registry *preview.PieceRegistry, downloadPlan preview.DownloadPlan) {
+func (r *TorrentClient) publishPartsThatWeAlreadyHave(wg *sync.WaitGroup, t *torrent2.Torrent, registry *preview.PieceRegistry, downloadPlan preview.DownloadPlan) {
 	defer wg.Done()
 	for _, plan := range downloadPlan.GetPlan() {
 		for pIdx := plan.Start(); pIdx <= plan.End(); pIdx++ {
@@ -134,14 +134,14 @@ func (r *TorrentClient) publishPartsThatWeAlreadyHave(wg *sync.WaitGroup, t *tor
 	}
 }
 
-func startTorrentDownload(t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
+func startTorrentDownload(t *torrent2.Torrent, downloadPlan preview.DownloadPlan) {
 	// Idempotent. All the pieces already downloaded are ignored.
 	for _, plan := range downloadPlan.GetPlan() {
 		t.DownloadPieces(plan.Start(), plan.End()+1) //  (start, end]
 	}
 }
 
-func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitGroup, registry *preview.PieceRegistry, t *torrent.Torrent, downloadPlan preview.DownloadPlan) {
+func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitGroup, registry *preview.PieceRegistry, t *torrent2.Torrent, downloadPlan preview.DownloadPlan) {
 	defer wg.Done()
 	defer t.Drop() // Delete all the chunks we have in the storage
 
@@ -175,7 +175,7 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 					},
 				).Info("transmissions subscriber closed")
 			}
-			v, ok := _v.(torrent.PieceStateChange)
+			v, ok := _v.(torrent2.PieceStateChange)
 			if !ok || !v.Complete {
 				continue
 			}
@@ -220,7 +220,7 @@ func (r *TorrentClient) waitPiecesToDownload(ctx context.Context, wg *sync.WaitG
 	}
 }
 
-func (r *TorrentClient) hasSeeders(ctx context.Context, t *torrent.Torrent, duration time.Duration) bool {
+func (r *TorrentClient) hasSeeders(ctx context.Context, t *torrent2.Torrent, duration time.Duration) bool {
 	ctxSeederTimeout, cancel := context.WithTimeout(ctx, duration)
 	defer cancel()
 	for t.Stats().ConnectedSeeders == 0 {
@@ -240,7 +240,7 @@ func (r *TorrentClient) hasSeeders(ctx context.Context, t *torrent.Torrent, dura
 	return true
 }
 
-func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
+func (r *TorrentClient) readPiece(t *torrent2.Torrent, idx int) []byte {
 	buf := make([]byte, t.Info().PieceLength)
 	n, err := t.Piece(idx).Storage().ReadAt(buf, 0)
 	if err != nil {
@@ -268,15 +268,15 @@ func (r *TorrentClient) readPiece(t *torrent.Torrent, idx int) []byte {
 	return buf
 }
 
-func (r *TorrentClient) Import(_ context.Context, raw []byte) (preview.Info, error) {
+func (r *TorrentClient) Import(_ context.Context, raw []byte) (preview.Torrent, error) {
 	data := bytes.NewBuffer(raw)
 	metaInfo, err := metainfo.Load(data)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 	t, err := r.client.AddTorrent(metaInfo)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	return parseTorrent(t)
