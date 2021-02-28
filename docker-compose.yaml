@@ -18,3 +18,9 @@ services:
       target: cli
     environment:
       CGO_ENABLED: 1
+
+  rabbit:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
