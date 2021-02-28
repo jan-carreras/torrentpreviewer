@@ -2,11 +2,12 @@ package container
 
 import (
 	"fmt"
+	"prevtorrent/internal/preview/platform/configuration"
+
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/pkg/amqp"
 	"github.com/ThreeDotsLabs/watermill-googlecloud/pkg/googlecloud"
 	"github.com/ThreeDotsLabs/watermill/message"
-	"prevtorrent/internal/preview/platform/configuration"
 )
 
 type events interface {
