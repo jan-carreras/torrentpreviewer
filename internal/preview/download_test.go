@@ -226,7 +226,7 @@ func Test_DownloadPlan_GetCappedPlans(t *testing.T) {
 	f4, err := preview.NewFileInfo(4, 200, "movie4.mp4")
 	require.NoError(t, err)
 
-	files := []preview.FileInfo{f0, f1, f2, f3, f4}
+	files := []preview.File{f0, f1, f2, f3, f4}
 
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
 	require.NoError(t, err)
@@ -255,7 +255,7 @@ func Test_DownloadPlan_GetCappedPlans_ErrorOnPieceRangeBiggerThanDownloadSize(t 
 	f1, err := preview.NewFileInfo(1, 100, "movie1.mp4")
 	require.NoError(t, err)
 
-	files := []preview.FileInfo{f0, f1}
+	files := []preview.File{f0, f1}
 
 	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
 	require.NoError(t, err)
@@ -277,7 +277,7 @@ func TestDownloadPlan_DownloadSize(t *testing.T) {
 	assert.NoError(t, err)
 	f2, err := preview.NewFileInfo(1, 500, "movie2.xxx")
 	assert.NoError(t, err)
-	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.File{fi, f2}, []byte(""))
 	assert.NoError(t, err)
 
 	torrentImages := preview.NewTorrentImages(nil)

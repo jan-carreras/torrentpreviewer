@@ -74,7 +74,8 @@ func (dp *DownloadPlan) GetCappedPlans(maxSizeDownloaded int) ([][]PieceRange, e
 // Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
 func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
 	for _, file := range dp.torrent.SupportedFiles() {
-		if err := dp.addDownloadToPlan(file, torrentImages); err != nil {
+		start := 0
+		if err := dp.addDownloadToPlan(file, torrentImages, start, file.DownloadSize()); err != nil {
 			return err
 		}
 	}
@@ -97,10 +98,12 @@ func (dp *DownloadPlan) DownloadSize() int {
 	return dp.CountPieces() * dp.torrent.pieceLength
 }
 
-func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages) error {
-	length := f.DownloadSize()
-	offset := 0
+func (dp *DownloadPlan) Add(torrentImages *TorrentImages, file *File, start int, length int) error {
+	// IMPROVEMENT: Move the torrentImages back to the constructor. I don't like it here
+	return dp.addDownloadToPlan(*file, torrentImages, start, length)
+}
 
+func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages, offset int, length int) error {
 	if !f.IsSupportedExtension() {
 		return fmt.Errorf("file %s has not a supported extension", f.name)
 	}
@@ -122,11 +125,11 @@ func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages) 
 		return nil
 	}
 
-	dp.addToDownloadPlan(pr, length)
+	dp.addToDownloadPlan(pr)
 	return nil
 }
 
-func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
+func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 	dp.pieceRanges = append(dp.pieceRanges, piece)
 }
 
@@ -140,15 +143,20 @@ type PieceRange struct {
 	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
 	lastPieceOffset  int // In Bytes. The file not necessarily ends at the pieceEnd of the last Piece. This offset indicates when it ends inside the piece
 	pieceLength      int // In Bytes. The length of each piece of this torrent
+	fileStart        int // In Bytes. The portion of the file we want. Not relative to any piece, but with itself. 0 <= fileStart < len(file)
+	fileLength       int // In Bytes. The number of bytes we want from the file. Not relative to any piece, but with itself. 0 <= fileLength < len(file
 }
 
 // NewPieceRange returns a PieceRange
 func NewPieceRange(torrent Torrent, file File, start, offset, length int) PieceRange {
+	// TODO: Validate that start & offset are in bounds
 	startPosition := start + offset
 	length = length - 1
 	return PieceRange{
 		torrent:          torrent,
 		file:             file,
+		fileStart:        offset,
+		fileLength:       length,
 		pieceStart:       startPosition / torrent.PieceLength(),
 		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
 		firstPieceOffset: startPosition % torrent.PieceLength(),
@@ -199,6 +207,14 @@ func (p PieceRange) EndOffset(idx int) int {
 		return p.lastPieceOffset + 1
 	}
 	return p.pieceLength
+}
+
+func (p PieceRange) FileStart() int {
+	return p.fileStart
+}
+
+func (p PieceRange) FileLength() int {
+	return p.fileLength
 }
 
 // PieceCount returns the number of pieces for this PieceRange
