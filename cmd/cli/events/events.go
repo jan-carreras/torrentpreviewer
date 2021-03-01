@@ -25,7 +25,7 @@ func main() {
 }
 
 func gracefulShutdown(cancelCtx context.CancelFunc) {
-	termChan := make(chan os.Signal)
+	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
 	<-termChan
 	cancelCtx()
