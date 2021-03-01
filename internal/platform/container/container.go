@@ -5,6 +5,7 @@ import (
 	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
+	"prevtorrent/internal/preview/makeDownloadPlan"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/file"
@@ -195,8 +196,8 @@ func (c *container) cqrs() *cqrs.Facade {
 		},
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
-				unmagnetize.NewCommandHandler(eb, c.unmagnetizeService(eb)),
-				downloadPartials.NewCommandHandler(eb, c.downloadPartialsService()),
+				unmagnetize.NewCommandHandler(c.unmagnetizeService(eb)),
+				makeDownloadPlan.NewCommandHandler(c.makeDownloadPlan(cb)),
 			}
 		},
 		CommandsPublisher: c.commandPublisher(),
@@ -208,7 +209,7 @@ func (c *container) cqrs() *cqrs.Facade {
 		},
 		EventHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 			return []cqrs.EventHandler{
-				downloadPartials.NewTorrentCreatedEventHandler(eb, c.downloadPartialsService()),
+				downloadPartials.NewTorrentCreatedEventHandler(c.downloadPartialsService()),
 			}
 		},
 		EventsPublisher:             c.eventPublisher(),
@@ -260,6 +261,15 @@ func (c *container) getTorrentIntegration() *bittorrentproto.TorrentClient {
 	return c.torrentIntegration
 }
 
+func (c *container) makeDownloadPlan(cb bus.Command) makeDownloadPlan.Service {
+	return makeDownloadPlan.NewService(
+		c.logger,
+		cb,
+		c.repositories.torrent,
+		c.repositories.image,
+	)
+}
+
 func (c *container) downloadPartialsService() downloadPartials.Service {
 	return downloadPartials.NewService(
 		c.logger,
@@ -271,6 +281,6 @@ func (c *container) downloadPartialsService() downloadPartials.Service {
 	)
 }
 
-func (c *container) unmagnetizeService(eb *cqrs.EventBus) unmagnetize.Service {
+func (c *container) unmagnetizeService(eb bus.Event) unmagnetize.Service {
 	return unmagnetize.NewService(c.logger, eb, c.MagnetClient(), c.repositories.torrent)
 }

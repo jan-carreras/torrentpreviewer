@@ -1,22 +1,19 @@
-package downloadPartials
+package makeDownloadPlan
 
 import (
 	"context"
-
-	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 )
 
 type CommandHandler struct {
-	eventBus *cqrs.EventBus
-	service  Service
+	service Service
 }
 
-func NewCommandHandler(eventBus *cqrs.EventBus, service Service) *CommandHandler {
-	return &CommandHandler{eventBus: eventBus, service: service}
+func NewCommandHandler(service Service) *CommandHandler {
+	return &CommandHandler{service: service}
 }
 
 func (h CommandHandler) HandlerName() string {
-	return "command.torrent.downloadPartials"
+	return "command.torrent.makeDownloadPlan"
 }
 
 func (h CommandHandler) NewCommand() interface{} {
@@ -24,5 +21,5 @@ func (h CommandHandler) NewCommand() interface{} {
 }
 
 func (h CommandHandler) Handle(ctx context.Context, c interface{}) error {
-	return h.service.DownloadPartials(ctx, *c.(*CMD))
+	return h.service.Download(ctx, *c.(*CMD))
 }
