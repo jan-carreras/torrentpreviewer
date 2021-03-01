@@ -39,6 +39,7 @@ func TestPieceRange(t *testing.T) {
 	}
 	type want struct {
 		name             string
+		fileID           int
 		pieceStart       int
 		pieceEnd         int
 		startOffsetBytes int
@@ -61,6 +62,7 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -79,6 +81,7 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -97,6 +100,7 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 25,
@@ -115,6 +119,7 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.test--movie.mp4.jpg",
+				fileID:           0,
 				pieceStart:       0,
 				pieceEnd:         1,
 				startOffsetBytes: 25,
@@ -133,6 +138,7 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.10-11.test--movie.mp4.jpg",
+				fileID:           0,
 				pieceStart:       10,
 				pieceEnd:         11,
 				startOffsetBytes: 50,
@@ -147,6 +153,7 @@ func TestPieceRange(t *testing.T) {
 
 			assert.Equal(t, torrent, got.Torrent())
 			assert.Equal(t, tt.want.name, got.Name())
+			assert.Equal(t, tt.want.fileID, got.FileID())
 			assert.Equal(t, tt.want.pieceStart, got.Start())
 			assert.Equal(t, tt.want.pieceEnd, got.End())
 			assert.Equal(t, tt.want.startOffsetBytes, got.StartOffset(got.Start()))
@@ -261,4 +268,24 @@ func Test_DownloadPlan_GetCappedPlans_ErrorOnPieceRangeBiggerThanDownloadSize(t 
 
 	_, err = plan.GetCappedPlans(50)
 	require.Error(t, err)
+}
+
+func TestDownloadPlan_DownloadSize(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 500, "movie2.xxx")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.FileInfo{fi, f2}, []byte(""))
+	assert.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages, 0)
+	assert.NoError(t, err)
+
+	assert.Equal(t, plan.CountPieces(), 10)
+	assert.Equal(t, plan.DownloadSize(), 10*100)
 }
