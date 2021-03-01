@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	frameTimeToExtract = 5             // in seconds
-	mb                 = 1 << (10 * 2) // MiB, really
+	frameTimeToExtract = 5 // in seconds
 )
 
 type Service struct {
@@ -63,8 +62,7 @@ func (s Service) DownloadPartials(ctx context.Context, cmd CMD) error {
 	}).Debug("images that we already have for the torrent")
 
 	plan := preview.NewDownloadPlan(torrent)
-	maxDownloaded := 100 * mb
-	if err := plan.AddAll(torrentImages, maxDownloaded); err != nil {
+	if err := plan.AddAll(torrentImages); err != nil {
 		return err
 	}
 

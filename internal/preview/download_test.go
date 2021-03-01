@@ -202,7 +202,7 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 15, plan.CountPieces())
@@ -234,7 +234,7 @@ func Test_DownloadPlan_GetCappedPlans(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	require.NoError(t, err)
 
 	plans, err := plan.GetCappedPlans(200)
@@ -263,7 +263,7 @@ func Test_DownloadPlan_GetCappedPlans_ErrorOnPieceRangeBiggerThanDownloadSize(t 
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	require.NoError(t, err)
 
 	_, err = plan.GetCappedPlans(50)
@@ -283,7 +283,7 @@ func TestDownloadPlan_DownloadSize(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	assert.NoError(t, err)
 
 	assert.Equal(t, plan.CountPieces(), 10)
