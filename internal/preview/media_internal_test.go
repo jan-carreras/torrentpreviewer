@@ -12,7 +12,7 @@ func TestPieceRangeCounter_TwoPieces(t *testing.T) {
 
 	fi, err := NewFileInfo(0, 1000, "test/movie.mp4")
 	assert.NoError(t, err)
-	torrent, err := NewInfo(torrentID, "generic movie", pieceLength, []FileInfo{fi}, []byte(""))
+	torrent, err := NewInfo(torrentID, "generic movie", pieceLength, []File{fi}, []byte(""))
 	assert.NoError(t, err)
 
 	pr := NewPieceRange(torrent, fi, 0, 0, 150)

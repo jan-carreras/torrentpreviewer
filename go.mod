@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ThreeDotsLabs/watermill v1.2.0-rc.3
+	github.com/ThreeDotsLabs/watermill-amqp v1.1.0
 	github.com/ThreeDotsLabs/watermill-googlecloud v1.0.6
 	github.com/anacrolix/torrent v1.24.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect

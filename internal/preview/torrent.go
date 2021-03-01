@@ -18,28 +18,27 @@ var torrentIDValidation = regexp.MustCompile("^([a-zA-Z0-9]+)$")
 
 //go:generate mockery --case=snake --outpkg=storagemocks --output=platform/storage/storagemocks --name=TorrentRepository
 type TorrentRepository interface {
-	Persist(ctx context.Context, torrent Info) error
-	Get(ctx context.Context, id string) (Info, error)
+	Persist(ctx context.Context, torrent Torrent) error
+	Get(ctx context.Context, id string) (Torrent, error)
 }
 
 //go:generate mockery --case=snake --outpkg=clientmocks --output=platform/client/clientmocks --name=TorrentDownloader
 type TorrentDownloader interface {
 	DownloadParts(context.Context, DownloadPlan) (*PieceRegistry, error)
-	Import(ctx context.Context, raw []byte) (Info, error)
+	Import(ctx context.Context, raw []byte) (Torrent, error)
 }
 
 var ErrNotFound = errors.New("record not found in storage")
 
-// Info represents a Torrent information. For a torrent-related library it might be the **worst**
-// name of all times. I feel ashamed.
+// Torrent represents the torrent meta info.
 // It's not a 1-1 map of a torrent file, just what we need to download some parts
-type Info struct {
-	id          string     // id of the torrent
-	name        string     // name of the torrent. might be empty
-	pieceLength int        // pieceLength for the whole torrent
-	totalLength int        // totalLength is the sum in bytes of all files
-	files       []FileInfo // files is a list of all the files present in the torrent. should never be empty
-	filesByID   map[int]*FileInfo
+type Torrent struct {
+	id          string // id of the torrent
+	name        string // name of the torrent. might be empty
+	pieceLength int    // pieceLength for the whole torrent
+	totalLength int    // totalLength is the sum in bytes of all files
+	files       []File // files is a list of all the files present in the torrent. should never be empty
+	filesByID   map[int]*File
 	raw         []byte // raw is the bencoded representation of a .torrent
 }
 
@@ -50,26 +49,26 @@ func NewInfo(
 	id string,
 	name string,
 	pieceLength int,
-	files []FileInfo,
+	files []File,
 	raw []byte,
-) (Info, error) {
+) (Torrent, error) {
 	if !torrentIDValidation.MatchString(id) {
-		return Info{}, ErrInvalidTorrentID
+		return Torrent{}, ErrInvalidTorrentID
 	}
 
 	id, err := toBase32(id)
 	if err != nil {
-		return Info{}, err
+		return Torrent{}, err
 	}
 	if len(id) != 40 {
-		return Info{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
+		return Torrent{}, errors.New("id must have 32 chars (hex encoded) or 40 chars (base32 encoded)")
 	}
 
 	if err := validateFiles(files); err != nil {
-		return Info{}, err
+		return Torrent{}, err
 	}
 
-	return Info{
+	return Torrent{
 		id:          strings.ToLower(id),
 		name:        name,
 		pieceLength: pieceLength,
@@ -81,42 +80,42 @@ func NewInfo(
 }
 
 // ID returns the torrent ID
-func (i Info) ID() string {
+func (i Torrent) ID() string {
 	return i.id
 }
 
 // Raw returns the bencoded representation of a torrent
-func (i Info) Raw() []byte {
+func (i Torrent) Raw() []byte {
 	return i.raw
 }
 
 // Name returns the name of the torrent. Might be empty
-func (i Info) Name() string {
+func (i Torrent) Name() string {
 	return i.name
 }
 
 // TotalLength return the sum of all files in bytes
-func (i Info) TotalLength() int {
+func (i Torrent) TotalLength() int {
 	return i.totalLength
 }
 
 // PieceLength returns the size of each piece
-func (i Info) PieceLength() int {
+func (i Torrent) PieceLength() int {
 	return i.pieceLength
 }
 
 // Files is a list of files that this torrent holds. Should not be empty
-func (i Info) Files() []FileInfo {
+func (i Torrent) Files() []File {
 	return i.files
 }
 
-func (i Info) File(idx int) *FileInfo {
+func (i Torrent) File(idx int) *File {
 	return i.filesByID[idx]
 }
 
 // SupportedFiles returns from all the files, the ones that have an extension supported by ffmpeg
-func (i Info) SupportedFiles() []FileInfo {
-	fi := make([]FileInfo, 0)
+func (i Torrent) SupportedFiles() []File {
+	fi := make([]File, 0)
 	for _, f := range i.files {
 		_f := f
 		if f.IsSupportedExtension() {
@@ -126,42 +125,42 @@ func (i Info) SupportedFiles() []FileInfo {
 	return fi
 }
 
-// FileInfo describes each file on the torrent. Is the second worst name in the project.
+// File describes each file on the torrent.
 // Each file is identified by its position (which is important), the length and an arbitrary name
-type FileInfo struct {
+type File struct {
 	idx    int
 	length int
 	name   string
 	images []Image
 }
 
-// NewFileInfo creates a FileInfo
-func NewFileInfo(idx int, length int, name string) (FileInfo, error) {
-	return FileInfo{idx: idx, length: length, name: name, images: make([]Image, 0)}, nil
+// NewFileInfo creates a File
+func NewFileInfo(idx int, length int, name string) (File, error) {
+	return File{idx: idx, length: length, name: name, images: make([]Image, 0)}, nil
 }
 
-func (fi FileInfo) IsEqual(fi2 FileInfo) bool {
+func (fi File) IsEqual(fi2 File) bool {
 	return fi.idx == fi2.idx
 }
 
 // ID returns the ID, which is the index on the list of files of the torrent. zero indexed.
-func (fi FileInfo) ID() int {
+func (fi File) ID() int {
 	return fi.idx
 }
 
 // Length returns the length of the file
-func (fi FileInfo) Length() int {
+func (fi File) Length() int {
 	return fi.length
 }
 
 // Name returns the name of the file
-func (fi FileInfo) Name() string {
+func (fi File) Name() string {
 	return fi.name
 }
 
 // DownloadSize is how much are we going to download from the file.
 // Either a fixed amount or the whole file is smaller
-func (fi FileInfo) DownloadSize() int {
+func (fi File) DownloadSize() int {
 	size := DownloadSize
 	if size > fi.length {
 		return fi.length
@@ -170,7 +169,7 @@ func (fi FileInfo) DownloadSize() int {
 }
 
 // IsSupportedExtension returns is the file has a supported extension to generate a preview
-func (fi FileInfo) IsSupportedExtension() bool {
+func (fi File) IsSupportedExtension() bool {
 	supported := map[string]interface{}{
 		".mp4": struct{}{},
 		".mkv": struct{}{},
@@ -182,7 +181,7 @@ func (fi FileInfo) IsSupportedExtension() bool {
 	return found
 }
 
-func (fi *FileInfo) AddImage(image Image) error {
+func (fi *File) AddImage(image Image) error {
 	if image.fileID != fi.ID() {
 		return fmt.Errorf("the image with name '%v' and fileID '%v' does not match fileID %v ",
 			image.Name(),
@@ -194,6 +193,6 @@ func (fi *FileInfo) AddImage(image Image) error {
 	return nil
 }
 
-func (fi FileInfo) Images() []Image {
+func (fi File) Images() []Image {
 	return fi.images
 }

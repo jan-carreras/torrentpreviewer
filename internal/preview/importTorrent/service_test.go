@@ -23,7 +23,7 @@ func TestService_Import_TorrentImportError(t *testing.T) {
 	commandBus := new(busmocks.Command)
 	torrentDownloader := new(clientmocks.TorrentDownloader)
 	torrentDownloader.On("Import", mock.Anything, raw).
-		Return(preview.Info{}, errors.New("fake error"))
+		Return(preview.Torrent{}, errors.New("fake error"))
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 
@@ -49,7 +49,7 @@ func TestService_Import_TorrentAlreadyExists(t *testing.T) {
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, nil)
+		Return(preview.Torrent{}, nil)
 
 	service := importTorrent.NewService(fakeLogger(), commandBus, torrentDownloader, torrentRepository)
 
@@ -74,7 +74,7 @@ func TestService_Import_ErrorOnPersist(t *testing.T) {
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, preview.ErrNotFound)
+		Return(preview.Torrent{}, preview.ErrNotFound)
 	torrentRepository.On("Persist", mock.Anything, fakeTorrent).
 		Return(errors.New("fake error on persist"))
 
@@ -102,7 +102,7 @@ func TestService_Import_ErrorOnEvent(t *testing.T) {
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, preview.ErrNotFound)
+		Return(preview.Torrent{}, preview.ErrNotFound)
 	torrentRepository.On("Persist", mock.Anything, fakeTorrent).
 		Return(nil)
 
@@ -130,7 +130,7 @@ func TestService_Import_BaseCase(t *testing.T) {
 
 	torrentRepository := new(storagemocks.TorrentRepository)
 	torrentRepository.On("Get", mock.Anything, "cb84ccc10f296df72d6c40ba7a07c178a4323a14").
-		Return(preview.Info{}, preview.ErrNotFound)
+		Return(preview.Torrent{}, preview.ErrNotFound)
 	torrentRepository.On("Persist", mock.Anything, fakeTorrent).
 		Return(nil)
 

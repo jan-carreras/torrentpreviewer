@@ -30,10 +30,10 @@ func NewService(
 	}
 }
 
-func (s Service) Handle(ctx context.Context, cmd CMD) (preview.Info, error) {
+func (s Service) Handle(ctx context.Context, cmd CMD) (preview.Torrent, error) {
 	m, err := preview.NewMagnet(cmd.Magnet)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	t, err := s.torrentRepository.Get(ctx, m.ID())
@@ -51,7 +51,7 @@ func (s Service) Handle(ctx context.Context, cmd CMD) (preview.Info, error) {
 			"magnetID": m.ID(),
 			"error":    err,
 		}).Debug("error when reading torrent")
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	s.log.WithFields(logrus.Fields{
@@ -61,16 +61,16 @@ func (s Service) Handle(ctx context.Context, cmd CMD) (preview.Info, error) {
 
 	torrent, err := s.magnetResolver.Resolve(ctx, m)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	err = s.torrentRepository.Persist(ctx, torrent)
 	if err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	if err := s.eventBus.Publish(ctx, preview.NewTorrentCreatedEvent(torrent.ID())); err != nil {
-		return preview.Info{}, err
+		return preview.Torrent{}, err
 	}
 
 	return torrent, nil
