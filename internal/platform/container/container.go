@@ -197,6 +197,7 @@ func (c *container) cqrs() *cqrs.Facade {
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
 				unmagnetize.NewCommandHandler(c.unmagnetizeService(eb)),
+				downloadPartials.NewCommandHandler(c.downloadPartialsService()),
 				makeDownloadPlan.NewCommandHandler(c.makeDownloadPlan(cb)),
 			}
 		},
@@ -209,7 +210,7 @@ func (c *container) cqrs() *cqrs.Facade {
 		},
 		EventHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 			return []cqrs.EventHandler{
-				downloadPartials.NewTorrentCreatedEventHandler(c.downloadPartialsService()),
+				makeDownloadPlan.NewTorrentCreatedEventHandler(c.makeDownloadPlan(cb)),
 			}
 		},
 		EventsPublisher:             c.eventPublisher(),

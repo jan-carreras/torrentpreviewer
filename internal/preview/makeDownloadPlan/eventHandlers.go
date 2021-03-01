@@ -1,4 +1,4 @@
-package downloadPartials
+package makeDownloadPlan
 
 import (
 	"context"
@@ -24,9 +24,7 @@ func (TorrentCreatedEventHandler) NewEvent() interface{} {
 func (b *TorrentCreatedEventHandler) Handle(ctx context.Context, e interface{}) error {
 	event := e.(*preview.TorrentCreatedEvent)
 
-	// TODO: Migrate this event handler to makeDownloadPlan!!!
-
-	return b.service.DownloadPartials(ctx, CMD{
-		ID: event.TorrentID,
+	return b.service.Download(ctx, CMD{
+		TorrentID: event.TorrentID,
 	})
 }
