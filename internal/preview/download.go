@@ -1,6 +1,7 @@
 package preview
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -28,6 +29,45 @@ func (dp *DownloadPlan) GetTorrent() Torrent {
 // but could describe various data ranges from the same file.
 func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
+}
+
+// TODO: We do not want to return pieceRanges, really. Do we? We want to return a new type that is
+//   the start of the file, and end of the file. Within itself.
+func (dp *DownloadPlan) GetCappedPlans(maxSizeDownloaded int) ([][]PieceRange, error) {
+	plans := make([][]PieceRange, 0)
+	plan := make([]PieceRange, 0)
+	planSize := 0
+
+	pieces := make(map[int]int)
+	for _, p := range dp.pieceRanges {
+		if p.PiecesSize() > maxSizeDownloaded {
+			return nil, errors.New("a piece range is bigger that the maxSizeDownloaded thus cannot be put in any plan")
+		}
+
+		rangeSize := 0
+		for i := p.Start(); i <= p.End(); i++ {
+			if _, found := pieces[i]; !found {
+				rangeSize += p.pieceLength
+			}
+			pieces[i] = i
+		}
+
+		if rangeSize+planSize > maxSizeDownloaded {
+			plans = append(plans, plan)
+			plan = []PieceRange{p}
+			planSize = p.PiecesSize()
+			continue
+		}
+
+		plan = append(plan, p)
+		planSize += rangeSize
+	}
+
+	if len(plan) != 0 {
+		plans = append(plans, plan)
+	}
+
+	return plans, nil
 }
 
 // AddAll adds all the supported files of the torrent to download with a pre-set settings:
@@ -169,6 +209,11 @@ func (p PieceRange) EndOffset(idx int) int {
 // PieceCount returns the number of pieces for this PieceRange
 func (p PieceRange) PieceCount() int {
 	return p.pieceEnd - p.pieceStart + 1 // pieceStart is zero index
+}
+
+// PieceSize return the size in bits that all the pieced add up to
+func (p PieceRange) PiecesSize() int {
+	return p.PieceCount() * p.pieceLength
 }
 
 // Torrent returns the obvious

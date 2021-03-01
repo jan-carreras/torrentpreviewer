@@ -1,6 +1,7 @@
 package preview_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"prevtorrent/internal/preview"
 	"testing"
 
@@ -202,4 +203,62 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	pieceRanges := plan.GetPlan()
 
 	assert.Len(t, pieceRanges, 2)
+}
+
+func Test_DownloadPlan_GetCappedPlans(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	f0, err := preview.NewFileInfo(0, 150, "movie0.mp4")
+	require.NoError(t, err)
+	f1, err := preview.NewFileInfo(1, 100, "movie1.mp4")
+	require.NoError(t, err)
+	f2, err := preview.NewFileInfo(2, 30, "movie2.mp4")
+	require.NoError(t, err)
+	f3, err := preview.NewFileInfo(3, 20, "movie3.mp4")
+	require.NoError(t, err)
+	f4, err := preview.NewFileInfo(4, 200, "movie4.mp4")
+	require.NoError(t, err)
+
+	files := []preview.FileInfo{f0, f1, f2, f3, f4}
+
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
+	require.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages, 0)
+	require.NoError(t, err)
+
+	plans, err := plan.GetCappedPlans(200)
+	require.NoError(t, err)
+
+	require.Len(t, plans, 3)
+
+	assert.Len(t, plans[0], 1)
+	assert.Len(t, plans[1], 3)
+	assert.Len(t, plans[2], 1)
+}
+
+func Test_DownloadPlan_GetCappedPlans_ErrorOnPieceRangeBiggerThanDownloadSize(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	f0, err := preview.NewFileInfo(0, 50, "movie0.mp4")
+	require.NoError(t, err)
+	f1, err := preview.NewFileInfo(1, 100, "movie1.mp4")
+	require.NoError(t, err)
+
+	files := []preview.FileInfo{f0, f1}
+
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
+	require.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages, 0)
+	require.NoError(t, err)
+
+	_, err = plan.GetCappedPlans(50)
+	require.Error(t, err)
 }
