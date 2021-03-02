@@ -14,7 +14,7 @@ func NewTorrentCreatedEventHandler(service Service) *TorrentCreatedEventHandler 
 }
 
 func (b TorrentCreatedEventHandler) HandlerName() string {
-	return "event.torrent.downloadPartials"
+	return "event.torrent.makeDownloadPlan"
 }
 
 func (TorrentCreatedEventHandler) NewEvent() interface{} {
