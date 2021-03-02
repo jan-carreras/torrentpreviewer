@@ -78,7 +78,7 @@ func (s Service) makeDownloadPartialCommands(plan *preview.DownloadPlan) ([]down
 
 	commands := make([]downloadPartials.CMD, 0)
 	for _, partialPlan := range plans {
-		files := make([]downloadPartials.File, len(partialPlan))
+		files := make([]downloadPartials.File, 0, len(partialPlan))
 		for _, fileRange := range partialPlan {
 			files = append(files, downloadPartials.File{
 				FileID: fileRange.FileID(),
