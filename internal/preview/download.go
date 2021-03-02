@@ -138,13 +138,13 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 type PieceRange struct {
 	torrent          Torrent
 	file             File
+	fileStart        int // In Bytes. The portion of the file we want. Not relative to any piece, but with itself. 0 <= fileStart < len(file)
+	fileLength       int // In Bytes. The number of bytes we want from the file. Not relative to any piece, but with itself. 0 <= fileLength < len(file
 	pieceStart       int // Piece pieceStart
 	pieceEnd         int // Piece pieceEnd
 	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
 	lastPieceOffset  int // In Bytes. The file not necessarily ends at the pieceEnd of the last Piece. This offset indicates when it ends inside the piece
 	pieceLength      int // In Bytes. The length of each piece of this torrent
-	fileStart        int // In Bytes. The portion of the file we want. Not relative to any piece, but with itself. 0 <= fileStart < len(file)
-	fileLength       int // In Bytes. The number of bytes we want from the file. Not relative to any piece, but with itself. 0 <= fileLength < len(file
 }
 
 // NewPieceRange returns a PieceRange
