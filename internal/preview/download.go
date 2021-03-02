@@ -148,14 +148,14 @@ type PieceRange struct {
 }
 
 // NewPieceRange returns a PieceRange
-func NewPieceRange(torrent Torrent, file File, start, offset, length int) PieceRange {
+func NewPieceRange(torrent Torrent, file File, fileStartingByteInTorrent, fileStartingByte, length int) PieceRange {
 	// TODO: Validate that start & offset are in bounds
-	startPosition := start + offset
+	startPosition := fileStartingByteInTorrent + fileStartingByte
 	length = length - 1
 	return PieceRange{
 		torrent:          torrent,
 		file:             file,
-		fileStart:        offset,
+		fileStart:        fileStartingByte,
 		fileLength:       length,
 		pieceStart:       startPosition / torrent.PieceLength(),
 		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
