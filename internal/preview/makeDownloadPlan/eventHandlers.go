@@ -18,7 +18,7 @@ func (b TorrentCreatedEventHandler) HandlerName() string {
 }
 
 func (TorrentCreatedEventHandler) NewEvent() interface{} {
-	return &preview.TorrentCreatedEvent{}
+	return new(preview.TorrentCreatedEvent)
 }
 
 func (b *TorrentCreatedEventHandler) Handle(ctx context.Context, e interface{}) error {
