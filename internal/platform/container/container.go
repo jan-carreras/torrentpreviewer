@@ -43,8 +43,10 @@ type repositories struct {
 type eventSourcing struct {
 	eventDriver       events
 	cqrsFacade        *cqrs.Facade
-	publisher         message.Publisher
-	messageSubscriber message.Subscriber
+	commandPublisher  message.Publisher
+	commandSubscriber message.Subscriber
+	eventPublisher    message.Publisher
+	eventSubscriber   message.Subscriber
 	cqrsRouter        *message.Router
 }
 
@@ -228,27 +230,27 @@ func (c *container) cqrs() *cqrs.Facade {
 }
 
 func (c *container) commandPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		c.eventSourcing.publisher = c.eventSourcing.eventDriver.commandPublisher()
+	if c.eventSourcing.commandPublisher == nil {
+		c.eventSourcing.commandPublisher = c.eventSourcing.eventDriver.commandPublisher()
 	}
 
-	return c.eventSourcing.publisher
+	return c.eventSourcing.commandPublisher
 }
 
 func (c *container) commandSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber != nil {
-		return c.eventSourcing.messageSubscriber
+	if c.eventSourcing.eventSubscriber != nil {
+		return c.eventSourcing.eventSubscriber
 	}
-	c.eventSourcing.messageSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
-	return c.eventSourcing.messageSubscriber
+	c.eventSourcing.eventSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
+	return c.eventSourcing.eventSubscriber
 }
 
 func (c *container) eventPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		c.eventSourcing.publisher = c.eventSourcing.eventDriver.eventPublisher()
+	if c.eventSourcing.eventPublisher == nil {
+		c.eventSourcing.eventPublisher = c.eventSourcing.eventDriver.eventPublisher()
 	}
 
-	return c.eventSourcing.publisher
+	return c.eventSourcing.eventPublisher
 }
 
 func (c *container) getTorrentIntegration() *bittorrentproto.TorrentClient {
