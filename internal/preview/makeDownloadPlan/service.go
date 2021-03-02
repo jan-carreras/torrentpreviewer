@@ -2,10 +2,11 @@ package makeDownloadPlan
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (

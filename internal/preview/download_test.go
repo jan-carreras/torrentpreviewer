@@ -1,9 +1,10 @@
 package preview_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"prevtorrent/internal/preview"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
