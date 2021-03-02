@@ -214,7 +214,7 @@ func (p PieceRange) FileStart() int {
 }
 
 func (p PieceRange) FileLength() int {
-	return p.fileLength
+	return p.fileLength + 1 // TODO: I'm sick of those +1
 }
 
 // PieceCount returns the number of pieces for this PieceRange
