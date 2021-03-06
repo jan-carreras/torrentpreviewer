@@ -82,7 +82,12 @@ func TestService_DownloadPartials_DownloadPartsFails(t *testing.T) {
 		imageRepository,
 	)
 
-	cmd := downloadPartials.CMD{ID: torrentID}
+	cmd := downloadPartials.CMD{
+		ID: torrentID,
+		Files: []downloadPartials.File{
+			{FileID: 0, Start: 0, Length: 100},
+		},
+	}
 	err = service.DownloadPartials(context.Background(), cmd)
 	require.Error(t, err)
 }
@@ -105,7 +110,7 @@ func TestService_DownloadPartials_RegistryClosesWithNoParts(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	require.NoError(t, err)
 
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
@@ -156,7 +161,7 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	assert.NoError(t, plan.AddAll(torrentImages, 0))
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
 	assert.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
@@ -187,7 +192,12 @@ func TestService_DownloadPartials_ExtractImageFails(t *testing.T) {
 		imageRepository,
 	)
 
-	cmd := downloadPartials.CMD{ID: torrentID}
+	cmd := downloadPartials.CMD{
+		ID: torrentID,
+		Files: []downloadPartials.File{
+			{FileID: 0, Start: 0, Length: 10},
+		},
+	}
 	err = service.DownloadPartials(context.Background(), cmd)
 	require.Error(t, err)
 }
@@ -209,7 +219,7 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 
 	torrentImages := preview.NewTorrentImages(nil)
 	plan := preview.NewDownloadPlan(torrent)
-	assert.NoError(t, plan.AddAll(torrentImages, 0))
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
 	require.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))
@@ -243,7 +253,12 @@ func TestService_DownloadPartials_PersistingImageFails(t *testing.T) {
 		imageRepository,
 	)
 
-	cmd := downloadPartials.CMD{ID: torrentID}
+	cmd := downloadPartials.CMD{
+		ID: torrentID,
+		Files: []downloadPartials.File{
+			{FileID: 0, Start: 0, Length: 10},
+		},
+	}
 	err = service.DownloadPartials(context.Background(), cmd)
 	require.Error(t, err)
 }
@@ -265,7 +280,7 @@ func TestService_DownloadPartials_BaseCase(t *testing.T) {
 
 	torrentImages := preview.NewTorrentImages(nil)
 	plan := preview.NewDownloadPlan(torrent)
-	assert.NoError(t, plan.AddAll(torrentImages, 0))
+	assert.NoError(t, plan.AddAll(torrentImages))
 	registry, err := preview.NewPieceRegistry(context.Background(), fakeLogger(), plan, preview.NewPieceInMemoryStorage(*plan))
 	require.NoError(t, err)
 	registry.RegisterPiece(preview.NewPiece(torrentID, 0, []byte("12345")))

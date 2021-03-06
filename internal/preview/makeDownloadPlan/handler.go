@@ -1,4 +1,4 @@
-package downloadPartials
+package makeDownloadPlan
 
 import (
 	"context"
@@ -13,7 +13,7 @@ func NewCommandHandler(service Service) *CommandHandler {
 }
 
 func (h CommandHandler) HandlerName() string {
-	return "command.torrent.downloadPartials"
+	return "command.torrent.makeDownloadPlan"
 }
 
 func (h CommandHandler) NewCommand() interface{} {
@@ -21,5 +21,5 @@ func (h CommandHandler) NewCommand() interface{} {
 }
 
 func (h CommandHandler) Handle(ctx context.Context, c interface{}) error {
-	return h.service.DownloadPartials(ctx, *c.(*CMD))
+	return h.service.Download(ctx, *c.(*CMD))
 }

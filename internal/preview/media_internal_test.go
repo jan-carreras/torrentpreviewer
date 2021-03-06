@@ -1,6 +1,7 @@
 package preview
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,8 @@ func TestPieceRangeCounter_TwoPieces(t *testing.T) {
 	torrent, err := NewInfo(torrentID, "generic movie", pieceLength, []File{fi}, []byte(""))
 	assert.NoError(t, err)
 
-	pr := NewPieceRange(torrent, fi, 0, 0, 150)
+	pr, err := NewPieceRange(torrent, fi, 0, 0, 150)
+	require.NoError(t, err)
 
 	counter := newPieceRangeCounter(pr)
 	assert.False(t, counter.areAllPiecesDownloaded())

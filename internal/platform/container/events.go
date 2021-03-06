@@ -109,8 +109,14 @@ func (r rabbit) commandPublisher() message.Publisher {
 }
 
 func (r rabbit) eventPublisher() message.Publisher {
+	fnx := func(topic string) string {
+		return topic
+	}
+
+	config := amqp.NewDurablePubSubConfig(r.config.AMQPURI, nil)
+	config.Exchange.GenerateName = fnx
 	eventsPublisher, err := amqp.NewPublisher(
-		amqp.NewDurablePubSubConfig(r.config.AMQPURI, nil),
+		config,
 		r.loggerWatermill,
 	)
 	if err != nil {

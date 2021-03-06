@@ -4,6 +4,8 @@ import (
 	"prevtorrent/internal/preview"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,6 +40,9 @@ func TestPieceRange(t *testing.T) {
 	}
 	type want struct {
 		name             string
+		fileID           int
+		fileStart        int
+		fileLength       int
 		pieceStart       int
 		pieceEnd         int
 		startOffsetBytes int
@@ -60,6 +65,9 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
+				fileStart:        0,
+				fileLength:       50,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -78,6 +86,9 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
+				fileStart:        0,
+				fileLength:       100,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 0,
@@ -96,6 +107,9 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-0.test--movie.mp4.jpg",
+				fileID:           0,
+				fileStart:        25,
+				fileLength:       75,
 				pieceStart:       0,
 				pieceEnd:         0,
 				startOffsetBytes: 25,
@@ -114,6 +128,9 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.0-1.test--movie.mp4.jpg",
+				fileID:           0,
+				fileStart:        25,
+				fileLength:       175,
 				pieceStart:       0,
 				pieceEnd:         1,
 				startOffsetBytes: 25,
@@ -132,6 +149,9 @@ func TestPieceRange(t *testing.T) {
 			},
 			want: want{
 				name:             "cb84ccc10f296df72d6c40ba7a07c178a4323a14.0.10-11.test--movie.mp4.jpg",
+				fileID:           0,
+				fileStart:        50,
+				fileLength:       100,
 				pieceStart:       10,
 				pieceEnd:         11,
 				startOffsetBytes: 50,
@@ -142,10 +162,14 @@ func TestPieceRange(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := preview.NewPieceRange(tt.args.t, tt.args.fi, tt.args.start, tt.args.offset, tt.args.length)
+			got, err := preview.NewPieceRange(tt.args.t, tt.args.fi, tt.args.start, tt.args.offset, tt.args.length)
+			require.NoError(t, err)
 
 			assert.Equal(t, torrent, got.Torrent())
 			assert.Equal(t, tt.want.name, got.Name())
+			assert.Equal(t, tt.want.fileID, got.FileID())
+			assert.Equal(t, tt.want.fileStart, got.FileStart())
+			assert.Equal(t, tt.want.fileLength, got.FileLength())
 			assert.Equal(t, tt.want.pieceStart, got.Start())
 			assert.Equal(t, tt.want.pieceEnd, got.End())
 			assert.Equal(t, tt.want.startOffsetBytes, got.StartOffset(got.Start()))
@@ -153,6 +177,62 @@ func TestPieceRange(t *testing.T) {
 			assert.Equal(t, tt.want.pieceCount, got.PieceCount())
 		})
 	}
+}
+
+func TestPieceRange_ValidationRanges(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 500, "movie2.mp4")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.File{fi, f2}, []byte(""))
+	assert.NoError(t, err)
+
+	t.Run("error on starting byte in torrent is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, -1, 0, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on starting byte bigger than the torrent size", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 2000, 0, 1)
+		require.Error(t, err)
+	})
+	t.Run("error on starting byte exactly like torrent file size", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, torrent.TotalLength(), 0, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file starting byte in torrent is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, -1, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file starting byte at the length of the file", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, fi.Length(), 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, -1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is 0", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, 0)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is greater then the file itself", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, fi.Length()+1)
+		require.Error(t, err)
+	})
+
+	t.Run("success on file length is equal then the file itself", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, fi.Length())
+		require.NoError(t, err)
+	})
+
 }
 
 func TestDownloadPlan_GetTorrent(t *testing.T) {
@@ -194,7 +274,7 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	torrentImages := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	err = plan.AddAll(torrentImages, 0)
+	err = plan.AddAll(torrentImages)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 15, plan.CountPieces())
@@ -202,4 +282,82 @@ func TestDownloadPlan_AddAll(t *testing.T) {
 	pieceRanges := plan.GetPlan()
 
 	assert.Len(t, pieceRanges, 2)
+}
+
+func Test_DownloadPlan_GetCappedPlans(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	f0, err := preview.NewFileInfo(0, 150, "movie0.mp4")
+	require.NoError(t, err)
+	f1, err := preview.NewFileInfo(1, 100, "movie1.mp4")
+	require.NoError(t, err)
+	f2, err := preview.NewFileInfo(2, 30, "movie2.mp4")
+	require.NoError(t, err)
+	f3, err := preview.NewFileInfo(3, 20, "movie3.mp4")
+	require.NoError(t, err)
+	f4, err := preview.NewFileInfo(4, 200, "movie4.mp4")
+	require.NoError(t, err)
+
+	files := []preview.File{f0, f1, f2, f3, f4}
+
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
+	require.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages)
+	require.NoError(t, err)
+
+	plans, err := plan.GetCappedPlans(200)
+	require.NoError(t, err)
+
+	require.Len(t, plans, 3)
+
+	assert.Len(t, plans[0], 1)
+	assert.Len(t, plans[1], 3)
+	assert.Len(t, plans[2], 1)
+}
+
+func Test_DownloadPlan_GetCappedPlans_ErrorOnPieceRangeBiggerThanDownloadSize(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	f0, err := preview.NewFileInfo(0, 50, "movie0.mp4")
+	require.NoError(t, err)
+	f1, err := preview.NewFileInfo(1, 100, "movie1.mp4")
+	require.NoError(t, err)
+
+	files := []preview.File{f0, f1}
+
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, files, []byte(""))
+	require.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages)
+	require.NoError(t, err)
+
+	_, err = plan.GetCappedPlans(50)
+	require.Error(t, err)
+}
+
+func TestDownloadPlan_DownloadSize(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 500, "movie2.xxx")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.File{fi, f2}, []byte(""))
+	assert.NoError(t, err)
+
+	torrentImages := preview.NewTorrentImages(nil)
+
+	plan := preview.NewDownloadPlan(torrent)
+	err = plan.AddAll(torrentImages)
+	assert.NoError(t, err)
+
+	assert.Equal(t, plan.CountPieces(), 10)
+	assert.Equal(t, plan.DownloadSize(), 10*100)
 }

@@ -5,6 +5,7 @@ import (
 	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
+	"prevtorrent/internal/preview/makeDownloadPlan"
 	"prevtorrent/internal/preview/platform/client/bittorrentproto"
 	"prevtorrent/internal/preview/platform/configuration"
 	"prevtorrent/internal/preview/platform/storage/file"
@@ -42,8 +43,10 @@ type repositories struct {
 type eventSourcing struct {
 	eventDriver       events
 	cqrsFacade        *cqrs.Facade
-	publisher         message.Publisher
-	messageSubscriber message.Subscriber
+	commandPublisher  message.Publisher
+	commandSubscriber message.Subscriber
+	eventPublisher    message.Publisher
+	eventSubscriber   message.Subscriber
 	cqrsRouter        *message.Router
 }
 
@@ -195,8 +198,9 @@ func (c *container) cqrs() *cqrs.Facade {
 		},
 		CommandHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.CommandHandler {
 			return []cqrs.CommandHandler{
-				unmagnetize.NewCommandHandler(eb, c.unmagnetizeService(eb)),
-				downloadPartials.NewCommandHandler(eb, c.downloadPartialsService()),
+				unmagnetize.NewCommandHandler(c.unmagnetizeService(eb)),
+				downloadPartials.NewCommandHandler(c.downloadPartialsService()),
+				makeDownloadPlan.NewCommandHandler(c.makeDownloadPlan(cb)),
 			}
 		},
 		CommandsPublisher: c.commandPublisher(),
@@ -208,7 +212,7 @@ func (c *container) cqrs() *cqrs.Facade {
 		},
 		EventHandlers: func(cb *cqrs.CommandBus, eb *cqrs.EventBus) []cqrs.EventHandler {
 			return []cqrs.EventHandler{
-				downloadPartials.NewTorrentCreatedEventHandler(eb, c.downloadPartialsService()),
+				makeDownloadPlan.NewTorrentCreatedEventHandler(c.makeDownloadPlan(cb)),
 			}
 		},
 		EventsPublisher:             c.eventPublisher(),
@@ -226,27 +230,27 @@ func (c *container) cqrs() *cqrs.Facade {
 }
 
 func (c *container) commandPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		c.eventSourcing.publisher = c.eventSourcing.eventDriver.commandPublisher()
+	if c.eventSourcing.commandPublisher == nil {
+		c.eventSourcing.commandPublisher = c.eventSourcing.eventDriver.commandPublisher()
 	}
 
-	return c.eventSourcing.publisher
+	return c.eventSourcing.commandPublisher
 }
 
 func (c *container) commandSubscriber() message.Subscriber {
-	if c.eventSourcing.messageSubscriber != nil {
-		return c.eventSourcing.messageSubscriber
+	if c.eventSourcing.eventSubscriber != nil {
+		return c.eventSourcing.eventSubscriber
 	}
-	c.eventSourcing.messageSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
-	return c.eventSourcing.messageSubscriber
+	c.eventSourcing.eventSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
+	return c.eventSourcing.eventSubscriber
 }
 
 func (c *container) eventPublisher() message.Publisher {
-	if c.eventSourcing.publisher == nil {
-		c.eventSourcing.publisher = c.eventSourcing.eventDriver.eventPublisher()
+	if c.eventSourcing.eventPublisher == nil {
+		c.eventSourcing.eventPublisher = c.eventSourcing.eventDriver.eventPublisher()
 	}
 
-	return c.eventSourcing.publisher
+	return c.eventSourcing.eventPublisher
 }
 
 func (c *container) getTorrentIntegration() *bittorrentproto.TorrentClient {
@@ -260,6 +264,15 @@ func (c *container) getTorrentIntegration() *bittorrentproto.TorrentClient {
 	return c.torrentIntegration
 }
 
+func (c *container) makeDownloadPlan(cb bus.Command) makeDownloadPlan.Service {
+	return makeDownloadPlan.NewService(
+		c.logger,
+		cb,
+		c.repositories.torrent,
+		c.repositories.image,
+	)
+}
+
 func (c *container) downloadPartialsService() downloadPartials.Service {
 	return downloadPartials.NewService(
 		c.logger,
@@ -271,6 +284,6 @@ func (c *container) downloadPartialsService() downloadPartials.Service {
 	)
 }
 
-func (c *container) unmagnetizeService(eb *cqrs.EventBus) unmagnetize.Service {
+func (c *container) unmagnetizeService(eb bus.Event) unmagnetize.Service {
 	return unmagnetize.NewService(c.logger, eb, c.MagnetClient(), c.repositories.torrent)
 }

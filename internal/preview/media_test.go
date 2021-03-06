@@ -2,6 +2,7 @@ package preview_test
 
 import (
 	"context"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/preview"
 	"testing"
@@ -22,7 +23,8 @@ func TestMediaPart(t *testing.T) {
 	torrent, err := preview.NewInfo(torrentID, "test movie", 100, files, []byte("12345"))
 	assert.NoError(t, err)
 
-	pr := preview.NewPieceRange(torrent, fi, 0, 150, 100)
+	pr, err := preview.NewPieceRange(torrent, fi, 0, 150, 100)
+	require.NoError(t, err)
 	data := []byte("1234")
 
 	media := preview.NewMediaPart(torrentID, pr, data)
@@ -111,7 +113,7 @@ func TestBundlePlan_Bundle(t *testing.T) {
 	ti := preview.NewTorrentImages(nil)
 
 	plan := preview.NewDownloadPlan(torrent)
-	assert.NoError(t, plan.AddAll(ti, 0))
+	assert.NoError(t, plan.AddAll(ti))
 
 	part0 := []byte("0123456789012345678912345")
 	part1 := []byte("1111111111111111111111111")
@@ -130,7 +132,8 @@ func TestBundlePlan_Bundle(t *testing.T) {
 
 			time.Sleep(time.Millisecond * 100) // Wait for the goroutines to spawn and queue the pieces
 
-			pieceRange := preview.NewPieceRange(torrent, fi, tt.args.start, tt.args.offset, tt.args.length)
+			pieceRange, err := preview.NewPieceRange(torrent, fi, tt.args.start, tt.args.offset, tt.args.length)
+			require.NoError(t, err)
 
 			bundlePlan := preview.NewBundlePlan()
 

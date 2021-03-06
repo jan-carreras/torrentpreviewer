@@ -1,6 +1,7 @@
 package preview
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -30,16 +31,49 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
 }
 
-// AddAll adds all the supported files of the torrent to download with a pre-set settings:
-//       Start at the beginning of the file and download the recommended file.DownloadSize()
-// Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
-func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages, maxSizeDownloaded int) error {
-	for _, file := range dp.torrent.SupportedFiles() {
-		if maxSizeDownloaded != 0 && dp.DownloadSize() > maxSizeDownloaded {
-			break
+func (dp *DownloadPlan) GetCappedPlans(maxSizeDownloaded int) ([][]PieceRange, error) {
+	plans := make([][]PieceRange, 0)
+	plan := make([]PieceRange, 0)
+	planSize := 0
+
+	pieces := make(map[int]int)
+	for _, p := range dp.pieceRanges {
+		if p.PiecesSize() > maxSizeDownloaded {
+			return nil, errors.New("a piece range is bigger that the maxSizeDownloaded thus cannot be put in any plan")
 		}
 
-		if err := dp.addDownloadToPlan(file, torrentImages); err != nil {
+		rangeSize := 0
+		for i := p.Start(); i <= p.End(); i++ {
+			if _, found := pieces[i]; !found {
+				rangeSize += p.pieceLength
+			}
+			pieces[i] = i
+		}
+
+		if rangeSize+planSize > maxSizeDownloaded {
+			plans = append(plans, plan)
+			plan = []PieceRange{p}
+			planSize = p.PiecesSize()
+			continue
+		}
+
+		plan = append(plan, p)
+		planSize += rangeSize
+	}
+
+	if len(plan) != 0 {
+		plans = append(plans, plan)
+	}
+
+	return plans, nil
+}
+
+// AddAll adds all the supported files of the torrent to download with a pre-set settings:
+// Note that AddAll with check in TorrentImages for the files already downloaded and will skip those
+func (dp *DownloadPlan) AddAll(torrentImages *TorrentImages) error {
+	for _, file := range dp.torrent.SupportedFiles() {
+		start := 0
+		if err := dp.addDownloadToPlan(file, torrentImages, start, file.DownloadSize()); err != nil {
 			return err
 		}
 	}
@@ -62,10 +96,12 @@ func (dp *DownloadPlan) DownloadSize() int {
 	return dp.CountPieces() * dp.torrent.pieceLength
 }
 
-func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages) error {
-	length := f.DownloadSize()
-	offset := 0
+func (dp *DownloadPlan) Add(torrentImages *TorrentImages, file *File, start int, length int) error {
+	// IMPROVEMENT: Move the torrentImages back to the constructor. I don't like it here
+	return dp.addDownloadToPlan(*file, torrentImages, start, length)
+}
 
+func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages, offset int, length int) error {
 	if !f.IsSupportedExtension() {
 		return fmt.Errorf("file %s has not a supported extension", f.name)
 	}
@@ -81,17 +117,20 @@ func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages) 
 	}
 
 	start := findStartingByteOfFile(dp.torrent, f)
-	pr := NewPieceRange(dp.torrent, f, start, offset, length)
+	pr, err := NewPieceRange(dp.torrent, f, start, offset, length)
+	if err != nil {
+		return err
+	}
 
 	if torrentImages.HaveImage(pr.Name()) {
 		return nil
 	}
 
-	dp.addToDownloadPlan(pr, length)
+	dp.addToDownloadPlan(pr)
 	return nil
 }
 
-func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
+func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange) {
 	dp.pieceRanges = append(dp.pieceRanges, piece)
 }
 
@@ -100,6 +139,8 @@ func (dp *DownloadPlan) addToDownloadPlan(piece PieceRange, downloadSize int) {
 type PieceRange struct {
 	torrent          Torrent
 	file             File
+	fileStart        int // In Bytes. The portion of the file we want. Not relative to any piece, but with itself. 0 <= fileStart < len(file)
+	fileLength       int // In Bytes. The number of bytes we want from the file. Not relative to any piece, but with itself. 0 <= fileLength < len(file
 	pieceStart       int // Piece pieceStart
 	pieceEnd         int // Piece pieceEnd
 	firstPieceOffset int // In Bytes. The file not necessarily starts at the byte 0 of the Piece. This offset indicates when it starts inside the piece
@@ -108,18 +149,44 @@ type PieceRange struct {
 }
 
 // NewPieceRange returns a PieceRange
-func NewPieceRange(torrent Torrent, file File, start, offset, length int) PieceRange {
-	startPosition := start + offset
-	length = length - 1
+func NewPieceRange(
+	torrent Torrent,
+	file File,
+	fileStartingByteInTorrent, fileStartingByte, length int,
+) (PieceRange, error) {
+	if fileStartingByteInTorrent < 0 || fileStartingByteInTorrent > (torrent.totalLength-1) {
+		return PieceRange{}, fmt.Errorf("fileStartingByteInTorrent out of bounds. expected [0, %v[, having %v",
+			torrent.TotalLength(),
+			fileStartingByteInTorrent,
+		)
+	}
+
+	if fileStartingByte < 0 || fileStartingByte > (file.Length()-1) {
+		return PieceRange{}, fmt.Errorf("fileStartingByte out of bounds. expected [0, %v[ . having %v instead",
+			file.Length(),
+			fileStartingByte,
+		)
+	}
+
+	if length <= 0 || fileStartingByte+length > (file.Length()) {
+		return PieceRange{}, fmt.Errorf("fileStartingByte+length out of bounds. expected [1, %v] . having %v instead",
+			file.Length(),
+			fileStartingByte+length,
+		)
+	}
+
+	startPosition := fileStartingByteInTorrent + fileStartingByte
 	return PieceRange{
 		torrent:          torrent,
 		file:             file,
+		fileStart:        fileStartingByte,
+		fileLength:       length,
 		pieceStart:       startPosition / torrent.PieceLength(),
-		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
+		pieceEnd:         (startPosition + length - 1) / torrent.PieceLength(),
 		firstPieceOffset: startPosition % torrent.PieceLength(),
-		lastPieceOffset:  (startPosition + length) % torrent.PieceLength(),
+		lastPieceOffset:  (startPosition + length - 1) % torrent.PieceLength(),
 		pieceLength:      torrent.PieceLength(),
-	}
+	}, nil
 }
 
 // Name returns the name of the file. It's supposed to be HTTP friendly
@@ -166,9 +233,22 @@ func (p PieceRange) EndOffset(idx int) int {
 	return p.pieceLength
 }
 
+func (p PieceRange) FileStart() int {
+	return p.fileStart
+}
+
+func (p PieceRange) FileLength() int {
+	return p.fileLength
+}
+
 // PieceCount returns the number of pieces for this PieceRange
 func (p PieceRange) PieceCount() int {
 	return p.pieceEnd - p.pieceStart + 1 // pieceStart is zero index
+}
+
+// PieceSize return the size in bits that all the pieced add up to
+func (p PieceRange) PiecesSize() int {
+	return p.PieceCount() * p.pieceLength
 }
 
 // Torrent returns the obvious

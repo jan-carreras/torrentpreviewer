@@ -2,17 +2,14 @@ package unmagnetize
 
 import (
 	"context"
-
-	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 )
 
 type CommandHandler struct {
-	eventBus *cqrs.EventBus
-	service  Service
+	service Service
 }
 
-func NewCommandHandler(eventBus *cqrs.EventBus, service Service) *CommandHandler {
-	return &CommandHandler{eventBus: eventBus, service: service}
+func NewCommandHandler(service Service) *CommandHandler {
+	return &CommandHandler{service: service}
 }
 
 func (h CommandHandler) HandlerName() string {
