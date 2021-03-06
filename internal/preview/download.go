@@ -31,8 +31,6 @@ func (dp *DownloadPlan) GetPlan() []PieceRange {
 	return dp.pieceRanges
 }
 
-// TODO: We do not want to return pieceRanges, really. Do we? We want to return a new type that is
-//   the start of the file, and end of the file. Within itself.
 func (dp *DownloadPlan) GetCappedPlans(maxSizeDownloaded int) ([][]PieceRange, error) {
 	plans := make([][]PieceRange, 0)
 	plan := make([]PieceRange, 0)
@@ -151,16 +149,15 @@ type PieceRange struct {
 func NewPieceRange(torrent Torrent, file File, fileStartingByteInTorrent, fileStartingByte, length int) PieceRange {
 	// TODO: Validate that start & offset are in bounds
 	startPosition := fileStartingByteInTorrent + fileStartingByte
-	length = length - 1
 	return PieceRange{
 		torrent:          torrent,
 		file:             file,
 		fileStart:        fileStartingByte,
 		fileLength:       length,
 		pieceStart:       startPosition / torrent.PieceLength(),
-		pieceEnd:         (startPosition + length) / torrent.PieceLength(),
+		pieceEnd:         (startPosition + length - 1) / torrent.PieceLength(),
 		firstPieceOffset: startPosition % torrent.PieceLength(),
-		lastPieceOffset:  (startPosition + length) % torrent.PieceLength(),
+		lastPieceOffset:  (startPosition + length - 1) % torrent.PieceLength(),
 		pieceLength:      torrent.PieceLength(),
 	}
 }
@@ -214,7 +211,7 @@ func (p PieceRange) FileStart() int {
 }
 
 func (p PieceRange) FileLength() int {
-	return p.fileLength + 1 // TODO: I'm sick of those +1
+	return p.fileLength
 }
 
 // PieceCount returns the number of pieces for this PieceRange
