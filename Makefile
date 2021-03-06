@@ -37,11 +37,11 @@ generate: ## generate mocks
 
 .PHONY: test
 test: generate ## run tests
-	go test ./...
+	go test -race ./...
 
 .PHONY: test-cover
-test-cover: generate ## run tests with coverage
-	go test -cover ./...
+test-cover: ## run tests with coverage
+	go test -cover -coverprofile=cover.txt -covermode=atomic ./...
 
 .PHONY: test-fast
 test-fast: ## run tests without generating mocks

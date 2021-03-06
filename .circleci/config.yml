@@ -1,6 +1,8 @@
 # Golang CircleCI 2.0 configuration file
 # Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
 jobs:
   test:
     docker:
@@ -22,9 +24,14 @@ jobs:
       - run: go get github.com/vektra/mockery/v2/.../
       - run: sudo apt-get install -y libsqlite3-dev
 
-      - run: make test
-      - run: make test-integration
       - run: make check
+      - run: make generate
+      - run: make test-cover
+      - run: make test-integration
+
+      - codecov/upload:
+          file: ./cover.txt
+
 
 workflows:
   version: 2
