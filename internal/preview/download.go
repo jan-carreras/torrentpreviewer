@@ -117,7 +117,10 @@ func (dp *DownloadPlan) addDownloadToPlan(f File, torrentImages *TorrentImages, 
 	}
 
 	start := findStartingByteOfFile(dp.torrent, f)
-	pr := NewPieceRange(dp.torrent, f, start, offset, length)
+	pr, err := NewPieceRange(dp.torrent, f, start, offset, length)
+	if err != nil {
+		return err
+	}
 
 	if torrentImages.HaveImage(pr.Name()) {
 		return nil
@@ -146,8 +149,32 @@ type PieceRange struct {
 }
 
 // NewPieceRange returns a PieceRange
-func NewPieceRange(torrent Torrent, file File, fileStartingByteInTorrent, fileStartingByte, length int) PieceRange {
-	// TODO: Validate that start & offset are in bounds
+func NewPieceRange(
+	torrent Torrent,
+	file File,
+	fileStartingByteInTorrent, fileStartingByte, length int,
+) (PieceRange, error) {
+	if fileStartingByteInTorrent < 0 || fileStartingByteInTorrent > (torrent.totalLength-1) {
+		return PieceRange{}, fmt.Errorf("fileStartingByteInTorrent out of bounds. expected [0, %v[, having %v",
+			torrent.TotalLength(),
+			fileStartingByteInTorrent,
+		)
+	}
+
+	if fileStartingByte < 0 || fileStartingByte > (file.Length()-1) {
+		return PieceRange{}, fmt.Errorf("fileStartingByte out of bounds. expected [0, %v[ . having %v instead",
+			file.Length(),
+			fileStartingByte,
+		)
+	}
+
+	if length <= 0 || fileStartingByte+length > (file.Length()) {
+		return PieceRange{}, fmt.Errorf("fileStartingByte+length out of bounds. expected [1, %v] . having %v instead",
+			file.Length(),
+			fileStartingByte+length,
+		)
+	}
+
 	startPosition := fileStartingByteInTorrent + fileStartingByte
 	return PieceRange{
 		torrent:          torrent,
@@ -159,7 +186,7 @@ func NewPieceRange(torrent Torrent, file File, fileStartingByteInTorrent, fileSt
 		firstPieceOffset: startPosition % torrent.PieceLength(),
 		lastPieceOffset:  (startPosition + length - 1) % torrent.PieceLength(),
 		pieceLength:      torrent.PieceLength(),
-	}
+	}, nil
 }
 
 // Name returns the name of the file. It's supposed to be HTTP friendly

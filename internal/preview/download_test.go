@@ -162,7 +162,8 @@ func TestPieceRange(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := preview.NewPieceRange(tt.args.t, tt.args.fi, tt.args.start, tt.args.offset, tt.args.length)
+			got, err := preview.NewPieceRange(tt.args.t, tt.args.fi, tt.args.start, tt.args.offset, tt.args.length)
+			require.NoError(t, err)
 
 			assert.Equal(t, torrent, got.Torrent())
 			assert.Equal(t, tt.want.name, got.Name())
@@ -176,6 +177,62 @@ func TestPieceRange(t *testing.T) {
 			assert.Equal(t, tt.want.pieceCount, got.PieceCount())
 		})
 	}
+}
+
+func TestPieceRange_ValidationRanges(t *testing.T) {
+	torrentID := "cb84ccc10f296df72d6c40ba7a07c178a4323a14"
+
+	fi, err := preview.NewFileInfo(0, 1000, "movie.mp4")
+	assert.NoError(t, err)
+	f2, err := preview.NewFileInfo(1, 500, "movie2.mp4")
+	assert.NoError(t, err)
+	torrent, err := preview.NewInfo(torrentID, "generic movie", 100, []preview.File{fi, f2}, []byte(""))
+	assert.NoError(t, err)
+
+	t.Run("error on starting byte in torrent is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, -1, 0, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on starting byte bigger than the torrent size", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 2000, 0, 1)
+		require.Error(t, err)
+	})
+	t.Run("error on starting byte exactly like torrent file size", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, torrent.TotalLength(), 0, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file starting byte in torrent is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, -1, 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file starting byte at the length of the file", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, fi.Length(), 1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is negative", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, -1)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is 0", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, 0)
+		require.Error(t, err)
+	})
+
+	t.Run("error on file length is greater then the file itself", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, fi.Length()+1)
+		require.Error(t, err)
+	})
+
+	t.Run("success on file length is equal then the file itself", func(t *testing.T) {
+		_, err = preview.NewPieceRange(torrent, fi, 0, 0, fi.Length())
+		require.NoError(t, err)
+	})
+
 }
 
 func TestDownloadPlan_GetTorrent(t *testing.T) {
