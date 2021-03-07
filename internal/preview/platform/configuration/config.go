@@ -25,6 +25,7 @@ type Config struct {
 	PubSubDriver          string `yaml:"PubSubDriver"`
 	GooglePubSubProjectID string `yaml:"GooglePubSubProjectID"`
 	AMQPURI               string `yaml:"AMQPURI"`
+	LogFormatter          string `yaml:"LogFormatter"`
 }
 
 func (c Config) Print(w io.Writer) {
@@ -57,6 +58,7 @@ func NewConfig() (Config, error) {
 	viper.SetDefault("GooglePubSubProjectID", "torrentpreview")
 	viper.SetDefault("PubSubDriver", "rabbit")
 	viper.SetDefault("AMQPURI", "amqp://localhost:5672")
+	viper.SetDefault("LogFormatter", "text")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return Config{}, err

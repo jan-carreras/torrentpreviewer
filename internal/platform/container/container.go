@@ -2,6 +2,12 @@ package container
 
 import (
 	"database/sql"
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/components/cqrs"
+	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
+	"github.com/anacrolix/torrent"
+	"github.com/sirupsen/logrus"
 	"prevtorrent/internal/platform/bus"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/downloadPartials"
@@ -12,13 +18,6 @@ import (
 	"prevtorrent/internal/preview/platform/storage/inmemory/ffmpeg"
 	"prevtorrent/internal/preview/platform/storage/sqlite"
 	"prevtorrent/internal/preview/unmagnetize"
-
-	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"github.com/anacrolix/torrent"
-	"github.com/sirupsen/logrus"
 )
 
 //go:generate mockery --case=snake --outpkg=containermocks --output=containermocks --name=Container
@@ -74,7 +73,12 @@ func NewDefaultContainer() (*container, error) {
 	}
 
 	logger := logrus.New()
-	logger.Formatter = &logrus.TextFormatter{}
+
+	if config.LogFormatter == "text" {
+		logger.SetFormatter(&logrus.TextFormatter{})
+	} else {
+		logger.SetFormatter(&logrus.JSONFormatter{})
+	}
 
 	logLevel, err := logrus.ParseLevel(config.LogLevel)
 	if err != nil {
