@@ -1,18 +1,26 @@
 package http
 
 import (
-	"github.com/cnjack/throttle"
+	http2 "net/http"
 	"prevtorrent/internal/platform/services"
 	"time"
+
+	"github.com/cnjack/throttle"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func Run(s services.Services) error {
+func Run(s services.Services) *http2.Server {
 	server := NewServer(s)
 	router := setupServer(server)
-	return router.Run()
+
+	srv := &http2.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	return srv
 }
 
 func setupServer(server *Server) *gin.Engine {
