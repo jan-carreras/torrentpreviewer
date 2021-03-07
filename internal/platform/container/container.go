@@ -238,11 +238,11 @@ func (c *container) commandPublisher() message.Publisher {
 }
 
 func (c *container) commandSubscriber() message.Subscriber {
-	if c.eventSourcing.eventSubscriber != nil {
+	if c.eventSourcing.commandSubscriber != nil {
 		return c.eventSourcing.eventSubscriber
 	}
-	c.eventSourcing.eventSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
-	return c.eventSourcing.eventSubscriber
+	c.eventSourcing.commandSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
+	return c.eventSourcing.commandSubscriber
 }
 
 func (c *container) eventPublisher() message.Publisher {
