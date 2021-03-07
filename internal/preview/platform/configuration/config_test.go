@@ -22,6 +22,7 @@ func TestConfiguration(t *testing.T) {
 		PubSubDriver:          "PubSubDriver",
 		GooglePubSubProjectID: "GooglePubSubProjectID",
 		AMQPURI:               "AMQPURI",
+		LogFormatter:          "LogFormatter",
 	}
 
 	config, err := configuration.NewConfig()
