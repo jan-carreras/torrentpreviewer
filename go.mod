@@ -8,6 +8,7 @@ require (
 	github.com/ThreeDotsLabs/watermill-amqp v1.1.0
 	github.com/ThreeDotsLabs/watermill-googlecloud v1.0.6
 	github.com/anacrolix/torrent v1.24.0
+	github.com/cnjack/throttle v0.0.0-20160727064406-525175b56e18
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
