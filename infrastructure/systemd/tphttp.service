@@ -1,0 +1,15 @@
+[Unit]
+Description=Torrent Preview HTTP service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+WorkingDirectory=/opt/torrentpreview
+Type=simple
+Environment=GOOGLE_APPLICATION_CREDENTIALS=/etc/torrentpreview/pubsub-google.json
+Restart=always
+RestartSec=1
+User=torrent
+ExecStart=/opt/torrentpreview/bin/http
+
+[Install]
+WantedBy=multi-user.target
