@@ -3,15 +3,16 @@ package makeDownloadPlan_test
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"prevtorrent/internal/platform/bus/busmocks"
 	"prevtorrent/internal/preview"
 	"prevtorrent/internal/preview/makeDownloadPlan"
 	"prevtorrent/internal/preview/platform/storage/storagemocks"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestService_Download_ErrorOnGettingTorrent(t *testing.T) {
