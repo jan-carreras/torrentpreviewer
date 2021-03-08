@@ -243,7 +243,7 @@ func (c *container) commandPublisher() message.Publisher {
 
 func (c *container) commandSubscriber() message.Subscriber {
 	if c.eventSourcing.commandSubscriber != nil {
-		return c.eventSourcing.eventSubscriber
+		return c.eventSourcing.commandSubscriber
 	}
 	c.eventSourcing.commandSubscriber = c.eventSourcing.eventDriver.commandSubscriber()
 	return c.eventSourcing.commandSubscriber
